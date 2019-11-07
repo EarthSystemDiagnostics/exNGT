@@ -5,13 +5,8 @@
 ## relation:
 ## https://github.com/EarthSystemDiagnostics/exNGT
 ##
-## Maria Hoerhold and Thomas Muench, 10/2019
+## Maria Hoerhold and Thomas Muench, 11/2019
 ##
-
-# ------------------------------------------------------------------------------
-# Set path to your base directory of "optimalcores"
-
-path <- "~/programming/R/exNGT"
 
 
 # ------------------------------------------------------------------------------
@@ -34,7 +29,7 @@ sourceDir <- function (path, trace = TRUE, local = FALSE, ...) {
 
 
 # ------------------------------------------------------------------------------
-# Source the "optimalcores" library directory
+# Source the "exNGT" library directory
 
 sourceDir(file.path(path, "lib"))
 
