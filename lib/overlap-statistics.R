@@ -14,6 +14,9 @@ sdError <- function(x, na.rm = FALSE) {
 
 calculateOverlapStatistics <- function(data, site = "B18") {
 
+  if (!site %in% c("B18", "B21", "B23", "B26", "NGRIP", "stack"))
+    stop("Unsuitable site requested.")
+
   pairID <- c("Year", site, paste(site, "12", sep = "_"))
 
   pairData <- data[, pairID]
