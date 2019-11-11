@@ -26,3 +26,25 @@ readArctic2k<-function(path = "data/Reconstruction_Arc2kv1.1.1.csv") {
   return(dat)
   
 }
+
+processNGT <- function(path = NULL, reference.period = 1990 : 1961) {
+
+  # Read data
+  if (is.null(path)) {
+    ngt <- readNGT()
+  } else {
+    ngt <- readNGT(path = path)
+  }
+
+  # Skip one record which is not used
+  ngt$`B22_12` <- NULL
+
+  # Produce anomaly time series
+  for (i in 2 : ncol(ngt)) {
+    ngt[, i] <- makeAnomalies(ngt[, i], ngt$Year,
+                              reference.period = reference.period)
+  }
+
+  return(ngt)
+
+}
