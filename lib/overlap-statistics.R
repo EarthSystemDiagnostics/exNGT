@@ -8,22 +8,29 @@
 #' 
 
 # function to calculate the standard error
-sd_error<-function(x)
-{result <- sd(x)/ sqrt(length(x))
-return(result)}
+sdError <- function(x, na.rm = FALSE) {
+  sd(x, na.rm = na.rm) / sqrt(length(x))
+}
 
-calculateOverlapStatistics<-function(data, site = "B18") {
+calculateOverlapStatistics <- function(data, site = "B18") {
+
   pairID <- c("Year", site, paste(site, "12", sep = "_"))
+
   pairData <- data[, pairID]
   overlap <- na.omit(pairData)
+  meanOverlap <- colMeans(overlap[, -1])
   
   output <- list(
-    startOverlap = min(overlap$Year),
-    endOverlap = max(overlap$Year),
-    meanOverlap = colMeans(overlap[, -1]),
-    diffMeanOverlap = diff(colMeans(overlap[, -1])),
-    corrMeanOverlap = cor(overlap[, -1]),
-    sderrorOverlap = apply(overlap[, -1], 2, sd_error))
+
+    dat  = list(pairData = pairData, overlapData = overlap),
+    stat = list(
+      startOverlap = min(overlap$Year),
+      endOverlap = max(overlap$Year),
+      meanOverlap = meanOverlap,
+      diffMeanOverlap = diff(meanOverlap),
+      corrOverlap = cor(overlap[, 2], overlap[, 3]),
+      sdErrorOverlap = apply(overlap[, -1], 2, sdError))
+  )
   
   return(output)
   
