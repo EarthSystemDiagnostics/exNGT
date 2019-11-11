@@ -8,7 +8,11 @@
 #' @return dataframe
 
 readNGT<-function(path = "data/NGT2012_AnnualMean_FINAL.csv") {
-  read.csv(path, header = TRUE)
+  if (file.exists(path)) {
+    read.csv(path, header = TRUE)
+  } else {
+    stop("No such file or directory; check path or permissions.")
+  }
 }
 
 
