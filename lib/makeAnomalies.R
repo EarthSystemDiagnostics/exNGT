@@ -8,5 +8,5 @@
 ##' @author Thomas Münch
 makeAnomalies <- function(data, age, reference.period = 1990 : 1961) {
 
-  data - mean(data[match(reference.period, age)])
+  data - mean(data[match(reference.period, age)], na.rm = TRUE)
 }
