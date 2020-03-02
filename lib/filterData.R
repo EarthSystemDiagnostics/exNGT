@@ -1,22 +1,31 @@
-#Function to filter annual mean isotope record with different window size
-#function for filter
-#by Thom Laepple, following Mann et al.,2003
-#' @title  Apply a filter to a timeseries
-#' @description Apply a filter to a timeseries the timestep provided by ts is
-#'   not used!!!! Thus for timeseries with a different spacing than 1, the
-#'   filter has to be adapted Using endpoint constrains as describen in  Mann et
-#'   al., GRL 2003 no constraint (loss at both ends) (method=0) minimum norm
-#'   constraint (method=1) minimum slope constraint (method=2) minimum roughness
-#'   constraint (method=3) circular filtering (method=4)
-#' @param data Input timeseries (ts object)
-#' @param filter vector of filter weights
-#' @param method constraint method choice 0-4
-#' @return filtered timeseries (ts object)
+#' Filter time series
+#'
+#' Apply a given filter to a time series using different endpoint constraints as
+#' described below.
+#'
+#' Note that when passing objects of class \code{ts}, the time step provided is
+#' not used; thus, for time series with a time step different from 1, the filter
+#' has to be adapted accordingly.
+#'
+#' The function applies endpoint constrains following Mann et al., GRL, 2003.
+#' Available methods are:
+#' method = 0: no constraint (loss at both ends);
+#' method = 1: minimum norm constraint;
+#' method = 2: minimum slope constraint;
+#' method = 3: minimum roughness constraint;
+#' method = 4: circular filtering.
+#'
+#' @param data numeric vector with the input timeseries (ts object).
+#' @param filter numeric vector of filter weights.
+#' @param method single integer for choosing an endpoint constraint method;
+#'   available choices are integers 0-4.
+#' @return filtered timeseries (ts object).
 #' @author Thomas Laepple
-#' @export
-
+#'
 ApplyFilter <- function(data, filter, method = 0) {
-  N <- floor(length(filter)/2)
+
+  N <- floor(length(filter) / 2)
+
   if (method == 0) {
     result <- stats::filter(c(data), filter, circular = FALSE)
     return(ts(result, frequency = frequency(data)))
@@ -50,12 +59,22 @@ ApplyFilter <- function(data, filter, method = 0) {
   }
 }
 
-#---------------------------------------------
-
-# input vector or dataframe (rows are time!)
-# input window length of filter
-# output filtered vector or dataframe
-# using Thoms Apply Filter for end member treatment
+#' Calculate running mean of a set of time series
+#'
+#' Calculate the running mean of a set of time series, given as a data frame or
+#' matrix, following different endpoint constraints.
+#'
+#' @param data a single numeric vector to filter with a running mean window, or
+#'   a data frame or matrix for which the columns are filtered.
+#' @param window single integer giving the size of the running mean window.
+#' @param method single integer for choosing an endpoint constraint method;
+#'   available choices are integers 0-4 (see \code{\link{ApplyFilter}} for
+#'   details).
+#' @param hasAgeColumn logical; do the supplied data contain an age column as
+#'   the first column?
+#' @return the running mean of the input \code{data}.
+#' @author Maria Hoerhold
+#'
 filterData <-function(data, window = 5, method = 2, hasAgeColumn = TRUE) {
   
   if (hasAgeColumn) {
@@ -65,16 +84,18 @@ filterData <-function(data, window = 5, method = 2, hasAgeColumn = TRUE) {
   
   if (is.null(dim(data))) {
     
-    Datafilt<- ApplyFilter(data, filter = (rep(1 / window, window)), method = method)
+    result <- ApplyFilter(data, filter = (rep(1 / window, window)),
+                          method = method)
     
   } else {
     
-    Datafilt<- apply(data, 2, ApplyFilter, filter = (rep(1 / window, window)), method = method)
+    result <- apply(data, 2, ApplyFilter, filter = (rep(1 / window, window)),
+                    method = method)
     
   }
   
-  if (hasAgeColumn) Datafilt <- as.data.frame(cbind(Year, Datafilt))
+  if (hasAgeColumn) result <- as.data.frame(cbind(Year, result))
     
-  return(Datafilt)
+  return(result)
   
 }
