@@ -14,7 +14,8 @@
 #'   end of the common overlap period.
 #' @param adjustMean logical; shall the mean values of the two records within
 #'   the common overlap period be adjusted prior to the merging? Defaults to
-#'   \code{FALSE}.
+#'   \code{FALSE}. If \code{TRUE}, mean adjustment is always performed for the
+#'   new record relative to the old one.
 #' @return numeric vector with the merged record.
 #' @author Thomas Münch
 doMerge <- function(site = "B18", data, method = 1, adjustMean = FALSE) {
@@ -64,7 +65,8 @@ doMerge <- function(site = "B18", data, method = 1, adjustMean = FALSE) {
 #'   end of the common overlap period.
 #' @param adjustMean logical; shall the mean values of the two records within
 #'   the common overlap period be adjusted prior to the merging? Defaults to
-#'   \code{FALSE}.
+#'   \code{FALSE}. If \code{TRUE}, mean adjustment is always performed for the
+#'   new record relative to the old one.
 #' @return a data frame with an age column and the merged versions of the
 #'   records specified in \code{sites}.
 #' @author Thomas Münch
