@@ -24,39 +24,47 @@
 #'
 ApplyFilter <- function(data, filter, method = 0) {
 
-  N <- floor(length(filter) / 2)
+  if (!method %in% (0 : 4))
+    stop("Unknown method; only 0 : 4 available.")
 
-  if (method == 0) {
-    result <- stats::filter(c(data), filter, circular = FALSE)
-    return(ts(result, frequency = frequency(data)))
-  }
-  
-  if (method == 4) {
-    result <- stats::filter(c(data), filter, circular = TRUE)
-    return(ts(result, frequency = frequency(data)))
-  }
-  
-  {
-    if (method == 1) # Minimum Norm
-    {
+  circular = FALSE
+
+  if (method == 0 | method == 4) {
+
+    if (method == 4) {circular = TRUE}
+
+    result <- stats::filter(c(data), filter, circular = circular)
+
+  } else {
+
+    N <- floor(length(filter) / 2)
+
+    if (method == 1) {
+
       before <- rep(mean(data), N)
-      after <- rep(mean(data), N)
-    }
-    if (method == 2) {
-      before <- c(data)[N:1]
-      after <- c(data)[length(data):(length(data) - N + 1)]
-    }
-    if (method == 3) {
-      before <- c(data)[N:1]
-      after <- c(data)[length(data):(length(data) - N + 1)]
+      after  <- rep(mean(data), N)
+
+    } else if (method == 2) {
+
+      before <- c(data)[N : 1]
+      after  <- c(data)[length(data) : (length(data) - N + 1)]
+
+    } else if (method == 3) {
+
+      before <- c(data)[N : 1]
+      after  <- c(data)[length(data) : (length(data) - N + 1)]
       
       before <- c(data)[1] - (before - mean(before))
-      
-      after <- c(data)[length(data)] - (after - mean(after))
+      after  <- c(data)[length(data)] - (after - mean(after))
+
     }
-    result <- stats::filter(c(before, data, after), filter, circular = F)[(N + 1):(N + length(data))]
-    return(ts(result, frequency = frequency(data)))
+
+    result <- stats::filter(c(before, data, after), filter, circular = circular)
+    result <- result[(N + 1) : (N + length(data))]
   }
+
+  return(ts(result, frequency = frequency(data)))
+
 }
 
 #' Calculate running mean of a set of time series
