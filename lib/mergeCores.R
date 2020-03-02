@@ -9,9 +9,9 @@
 #'   available.
 #' @param data data frame with the NGT and associated oxygen isotope records.
 #' @param method integer signalling the merging method: for \code{method = 1}
-#'   the new record is used for the merged record only till the start of the
-#'   common overlap period (as counted from the most recent year), for
-#'   \code{method = 2} it is used till the end of the common overlap period.
+#'   the new record is used over the entire length of the common overlap period
+#'   until its start (year CE), for \code{method = 2} it is used only until the
+#'   end of the common overlap period.
 #' @param adjustMean logical; shall the mean values of the two records within
 #'   the common overlap period be adjusted prior to the merging? Defaults to
 #'   \code{FALSE}.
@@ -59,9 +59,9 @@ doMerge <- function(site = "B18", data, method = 1, adjustMean = FALSE) {
 #'   shall be conducted; defaults to the list of sites with available paired
 #'   records.
 #' @param method integer signalling the merging method: for \code{method = 1}
-#'   the new record is used for the merged record only till the start of the
-#'   common overlap period (as counted from the most recent year), for
-#'   \code{method = 2} it is used till the end of the common overlap period.
+#'   the new record is used over the entire length of the common overlap period
+#'   until its start (year CE), for \code{method = 2} it is used only until the
+#'   end of the common overlap period.
 #' @param adjustMean logical; shall the mean values of the two records within
 #'   the common overlap period be adjusted prior to the merging? Defaults to
 #'   \code{FALSE}.
