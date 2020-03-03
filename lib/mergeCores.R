@@ -77,6 +77,9 @@ mergeCores <- function(data,
   if (!method %in% c(1, 2))
     stop("Only 'method = 1' or 'method = 2' available.")
 
+  if (any(is.na(match(sites, names(data)))))
+    stop("Requested site(s) not found in given data.")
+
   merged <- sapply(sites, doMerge, data, method, adjustMean)
   merged <- as.data.frame(cbind(Year = data$Year, merged))
 
