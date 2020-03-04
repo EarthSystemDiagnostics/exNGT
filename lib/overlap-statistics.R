@@ -41,17 +41,22 @@ calculateOverlapStatistics <- function(data, site = "B18") {
   pairData <- data[, pairID]
   overlap <- na.omit(pairData)
   meanOverlap <- colMeans(overlap[, -1])
+  sdErrorOverlap <- apply(overlap[, -1], 2, sdError)
   
   output <- list(
 
     dat  = list(pairData = pairData, overlapData = overlap),
-    stat = list(
-      startOverlap = min(overlap$Year),
-      endOverlap = max(overlap$Year),
-      meanOverlap = meanOverlap,
-      diffMeanOverlap = diff(meanOverlap),
-      corrOverlap = cor(overlap[, 2], overlap[, 3]),
-      sdErrorOverlap = apply(overlap[, -1], 2, sdError))
+    stat = data.frame(
+      corePair          = site,
+      startOverlap      = min(overlap$Year),
+      endOverlap        = max(overlap$Year),
+      meanOverlapOld    = meanOverlap[1],
+      meanOverlapNew    = meanOverlap[2],
+      sdErrorOverlapOld = sdErrorOverlap[1],
+      sdErrorOverlapNew = sdErrorOverlap[2],
+      diffMeanOverlap   = diff(meanOverlap),
+      corrOverlap       = cor(overlap[, 2], overlap[, 3]),
+      row.names = NULL)
   )
   
   return(output)
