@@ -31,5 +31,5 @@ sourceDir <- function (path, trace = TRUE, local = FALSE, ...) {
 # ------------------------------------------------------------------------------
 # Source the "exNGT" library directory
 
-sourceDir(file.path(path, "lib"))
+sourceDir("lib")
 
