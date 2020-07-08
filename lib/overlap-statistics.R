@@ -1,7 +1,7 @@
 #' Calculate standard error
 #'
 #' Calculate the standard error of a data vector, i.e. its standard deviation
-#' divided by the squared root of the number of data points.
+#' divided by the square root of the number of data points.
 #'
 #' @param x numeric vector for which to calculate the standard error.
 #' @param na.rm a logical value indicating whether \code{NA} values should be

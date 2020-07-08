@@ -4,7 +4,7 @@
 #'
 #' @param data numeric vector (time series).
 #' @param age the age scale of \code{data}.
-#' @param reference.period numeric vector of ages of the reference period.
+#' @param reference.period numeric vector with the ages of the reference period.
 #' @return numeric vector with the anomaly time series.
 #' @author Thomas Münch
 #'

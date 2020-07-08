@@ -24,7 +24,7 @@ stackCores <- function(data, sites, na.rm = TRUE) {
 
 #' Stack old and new cores
 #'
-#' Average the oxygen isotope records (1) of the redrilled cores and (2) of all
+#' Average the oxygen isotope records of (1) the redrilled cores and (2) all
 #' available old cores.
 #'
 #' @param data data frame with the NGT and associated oxygen isotope records.
@@ -86,10 +86,8 @@ stackAllCores <- function(data, use_NEGIS_NEEM = TRUE, na.rm = TRUE) {
 #'
 #' @param data original data frame with the NGT and associated oxygen isotope
 #'   records.
-#' data frame which contains the oxygen isotope records from merging
-#'   the old and redrilled cores.
 #' @param dataMerged data frame with a year column and the data columns from
-#'   merging the pairs old and new (re-drilled) cores from the same sites.
+#'   merging the pairs of old and new (re-drilled) cores from the same sites.
 #' @param na.rm a logical value indicating whether \code{NA} values should be
 #'   stripped before the computation proceeds; defaults to \code{TRUE}.
 #' @return a data frame with two named columns 'Year' and 'stack' with the age
