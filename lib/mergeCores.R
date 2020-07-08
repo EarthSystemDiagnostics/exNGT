@@ -71,7 +71,7 @@ doMerge <- function(site = "B18", data, method = 1, adjustMean = FALSE) {
 #'   records specified in \code{sites}.
 #' @author Thomas Münch
 mergeCores <- function(data,
-                       sites = c("B18", "B21", "B23", "B26", "NGRIP", "stack"),
+                       sites = c("B18", "B21", "B23", "B26", "NGRIP"),
                        method = 1, adjustMean = FALSE) {
 
   if (!method %in% c(1, 2))
