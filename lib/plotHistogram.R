@@ -5,6 +5,9 @@
 #'
 #' @param x a data frame with two columns with the time scale as the first and
 #'   the isotope values as the second column.
+#' @param analysis.period optional vector of time points to subset the data over
+#'   which the full histogram shall be calculated. Set to \code{NULL} to use the
+#'   full range of \code{x}.
 #' @param p1 vector of time points for marking a first record period.
 #' @param p2 vector of time points for marking a second record period.
 #' @param p3 vector of time points for marking a third record period.
@@ -22,9 +25,10 @@
 #'   the 5, 50 and 95 % quantiles of the full histogram.
 #' @author Thomas Münch
 #'
-plotHistogram <- function(x, p1 = 2011 : 1997, p2 = 1938 : 1924,
+plotHistogram <- function(x, analysis.period = 1000 : 2011,
+                          p1 = 2011 : 1997, p2 = 1938 : 1924,
                           p3 = 1884 : 1870, p4 = 1424 : 1410,
-                          breaks = seq(-2, 2, 0.25),
+                          breaks = seq(-2.5, 2.5, 0.25),
                           xlim = range(breaks), ylim = c(0, 0.3),
                           col = c("#e41a1c", "#377eb8", "#4daf4a", "#984ea3"),
                           xlab = "anomaly", ylab = "Relative counts",
@@ -38,18 +42,22 @@ plotHistogram <- function(x, p1 = 2011 : 1997, p2 = 1938 : 1924,
     xlab = bquote(delta^{"18"} * "O slope (\u2030 " * "yr"^{-1} * ")")
   }
 
+  if (!is.null(analysis.period)) {
+    x <- x[match(analysis.period, x[, 1]), ]
+  }
+
   col <- adjustcolor(col, alpha = alpha)
 
   nobs <- length(na.omit(x[, 2]))
+
+  x0 <- x[, 2]
 
   x1 <- x[match(p1, x[, 1]), 2]
   x2 <- x[match(p2, x[, 1]), 2]
   x3 <- x[match(p3, x[, 1]), 2]
   x4 <- x[match(p4, x[, 1]), 2]
 
-  x <- x[, 2]
-
-  h0 <- hist(x, breaks = breaks, plot = FALSE)
+  h0 <- hist(x0, breaks = breaks, plot = FALSE)
   h1 <- hist(x1, breaks = breaks, plot = FALSE)
   h2 <- hist(x2, breaks = breaks, plot = FALSE)
   h3 <- hist(x3, breaks = breaks, plot = FALSE)
@@ -85,7 +93,7 @@ plotHistogram <- function(x, p1 = 2011 : 1997, p2 = 1938 : 1924,
        col = col[4], add = TRUE)
 
   if (plot.quantiles) {
-    abline(v = quantile(x, probs = c(0.05, 0.5, 0.95), na.rm = TRUE),
+    abline(v = quantile(x0, probs = c(0.05, 0.5, 0.95), na.rm = TRUE),
            col = "black", lty = 5, lwd = 1)
   }
 
