@@ -84,17 +84,17 @@ stackAllCores <- function(data, use_NEGIS_NEEM = TRUE, na.rm = TRUE) {
 #' old and new (re-drilled) cores from the same sites together with the other
 #' available NGT and associated records.
 #'
-#' @param data original data frame with the NGT and associated oxygen isotope
-#'   records.
 #' @param dataMerged data frame with a year column and the data columns from
 #'   merging the pairs of old and new (re-drilled) cores from the same sites.
+#' @param data original data frame with the NGT and associated oxygen isotope
+#'   records.
 #' @param na.rm a logical value indicating whether \code{NA} values should be
 #'   stripped before the computation proceeds; defaults to \code{TRUE}.
 #' @return a data frame with two named columns 'Year' and 'stack' with the age
 #'   scale and the data from averaging the cores.
 #' @author Thomas Münch
 #'
-stackExtendedCores <- function(data, dataMerged, na.rm = TRUE) {
+stackExtendedCores <- function(dataMerged, data, na.rm = TRUE) {
 
   sites <- c("B18", "B21", "B23", "B26", "NGRIP")
   sites <- c(sites, paste0(sites, "_12"))
