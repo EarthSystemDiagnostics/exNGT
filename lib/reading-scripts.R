@@ -6,7 +6,7 @@
 #' @return a data frame with the read NGT data set.
 #' @author Thomas Münch, Maria Hoerhold
 #'
-readNGT<-function(path = "data/NGT2012_AnnualMean_FINAL.csv") {
+readNGT <- function(path = "data/NGT2012_AnnualMean_FINAL.csv") {
 
   if (file.exists(path)) {
     read.csv(path, header = TRUE)
@@ -26,7 +26,7 @@ readNGT<-function(path = "data/NGT2012_AnnualMean_FINAL.csv") {
 #'   data set.
 #' @author Thomas Münch, Maria Hoerhold
 #'
-readArctic2k<-function(path = "data/Reconstruction_Arc2kv1.1.1.csv") {
+readArctic2k <- function(path = "data/Reconstruction_Arc2kv1.1.1.csv") {
   
   # skip unneeded data columns
   colClasses <- c(rep(NA, 4), rep("NULL", 6))
@@ -75,5 +75,29 @@ processNGT <- function(path = NULL, reference.period = 1990 : 1961) {
   }
 
   return(ngt)
+
+}
+
+#' Read DMI instrumental temperatures
+#'
+#' Read the Danish Meteorological Insitute (DMI) instrumental temperature
+#' records of the Greenlandic stations Pituffik, Upernavik and Danmarkshavn.
+#'
+#' @param path file path (relative to working directory) of the DMI data
+#'   set.
+#' @return a data frame of four columns and 146 rows with the read DMI
+#'   data set for the three stations.
+#' @author Thomas Münch
+#'
+readDMI <- function(path = "data/gr_annual_temperature_1873_2015.csv") {
+
+  colNames <- c("Year", "Pituffik", "Upernavik", "Danmarkshavn")
+
+  dat <- read.csv(path, header = TRUE, na.strings = "#NULL!")
+  dat <- dat[nrow(dat) : 1, c(1, 2, 4, 12)]
+
+  colnames(dat) <- colNames
+
+  return(dat)
 
 }
