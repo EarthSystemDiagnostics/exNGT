@@ -86,6 +86,7 @@ ApplyFilter <- function(data, filter, method = 0) {
 filterData <-function(data, window = 5, method = 2, hasAgeColumn = TRUE) {
   
   if (hasAgeColumn) {
+    colNames <- colnames(data)
     Year <- data[, 1]
     data <- data[, -1]
   }
@@ -102,7 +103,10 @@ filterData <-function(data, window = 5, method = 2, hasAgeColumn = TRUE) {
     
   }
   
-  if (hasAgeColumn) result <- as.data.frame(cbind(Year, result))
+  if (hasAgeColumn) {
+    result <- data.frame(Year, result)
+    colnames(result) <- colNames
+  }
     
   return(result)
   
