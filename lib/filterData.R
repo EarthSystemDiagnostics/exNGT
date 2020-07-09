@@ -86,6 +86,12 @@ ApplyFilter <- function(data, filter, method = 0) {
 filterData <-function(data, window = 5, method = 2, hasAgeColumn = TRUE) {
   
   if (hasAgeColumn) {
+    if (is.null(dim(data))) {
+      stop("'data' is not a matrix or data frame.", call. = FALSE)
+    }
+    if (ncol(data) < 2) {
+      stop("'data' only has 1 column; need at least 2.", call. = FALSE)
+    }
     colNames <- colnames(data)
     Year <- data[, 1]
     data <- data[, -1]
