@@ -32,7 +32,8 @@ plotHistogram <- function(x, analysis.period = 1000 : 2011,
                           xlim = range(breaks), ylim = c(0, 0.3),
                           col = c("#e41a1c", "#377eb8", "#4daf4a", "#984ea3"),
                           xlab = "anomaly", ylab = "Relative counts",
-                          alpha = 0.6, plot.quantiles = TRUE) {
+                          alpha = 0.6, plot.quantiles = TRUE,
+                          xmain = NA, ymain = NA) {
 
   if (length(col) != 4) stop("Supply four distinct colours.")
 
@@ -105,5 +106,14 @@ plotHistogram <- function(x, analysis.period = 1000 : 2011,
 
   legend("topright", c(lab0, lab1, lab2, lab3, lab4),
          col = c(adjustcolor(1, 0.2), col), lty = 1, lwd = 10, bty = "n")
+
+  if (!is.null(xmain)) {
+    mtext(xmain, side = 3, line = 2.5, adj = 0,
+          cex = par()$cex.lab * par()$cex, font = 2)
+  }
+  if (!is.null(ymain)) {
+    mtext(ymain, side = 2, line = 6, las = 0,
+          cex = par()$cex.lab * par()$cex, font = 2)
+  }
 
 }
