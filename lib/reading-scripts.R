@@ -69,7 +69,7 @@ processNGT <- function(path = NULL, reference.period = 1990 : 1961) {
   ngt$`B19`    <- NULL # has no data in reference period 1961-1990
 
   # Produce anomaly time series
-  ngt <- makeAnomalies(ngt)
+  ngt <- makeAnomalies(ngt, reference.period = reference.period)
 
   return(ngt)
 
