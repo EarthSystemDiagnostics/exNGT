@@ -73,8 +73,8 @@ plotHistogram <- function(x, analysis.period = 1000 : 2011,
        main = "", xlab = "", ylab = "",
        col = adjustcolor("black", alpha = 0.2), yaxs = "i")
 
-  mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab)
-  mtext(ylab, side = 2, line = 3.5, cex = par()$cex.lab, las = 0)
+  mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+  mtext(ylab, side = 2, line = 3.5, cex = par()$cex.lab * par()$cex, las = 0)
 
   plot(h1, xlim = xlim, ylim = ylim,
        main = "", xlab = "", ylab = "",
