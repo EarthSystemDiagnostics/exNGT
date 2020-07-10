@@ -48,6 +48,10 @@ ylab <- bquote(delta^{"18"} * "O anomaly (\u2030)")
 xlim <- c(1000, 2020)
 ylim <- c(-2.5, 2.5)
 
+startNew <- 1993
+i <- match(startNew, NGT.stack$Year)
+n <- nrow(NGT.stack)
+
 Quartz(file = "./fig/main-01-ngt.pdf", height = 4.5)
 
 plot(NGT.stack$Year, NGT.stack$stack,
@@ -61,7 +65,11 @@ mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
 
 lines(NGT.stack$Year, NGT.stack$stack, col = "darkgrey")
-lines(NGT.stack.f$Year, NGT.stack.f$stack, col = "black", lwd = 2.5)
+
+lines(NGT.stack.f$Year[i : n], NGT.stack.f$stack[i : n],
+      col = "black", lwd = 2.5)
+lines(NGT.stack.f$Year[1 : i], NGT.stack.f$stack[1 : i],
+      col = "firebrick3", lwd = 2.5)
 
 dev.off()
 
@@ -89,6 +97,7 @@ mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
 
 lines(NGT.stack$Year, NGT.stack$stack, col = "darkgrey")
+
 lines(NGT.stack.f$Year, NGT.stack.f$stack, col = col[1], lwd = 2.5)
 
 lines(Arctic2k$Year, Arctic2k$TempAnomaly,
