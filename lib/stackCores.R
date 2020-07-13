@@ -27,7 +27,13 @@ stackCores <- function(data, sites, na.rm = TRUE) {
 #' Average the oxygen isotope records of (1) the redrilled cores and (2) all
 #' available old cores.
 #'
+#' Note that the isotope records from the NEGIS and NEEM site are special in the
+#' sense that they are both neither "true" nor "old" records; therefore they can
+#' be excluded from the stack of all records.
+#'
 #' @param data data frame with the NGT and associated oxygen isotope records.
+#' @param use_NEGIS_NEEM logical; indicate whether to include the records from
+#'   the NEGIS and NEEM sites in the stack; defaults to \code{TRUE}.
 #' @param na.rm a logical value indicating whether \code{NA} values should be
 #'   stripped before the computation proceeds; defaults to \code{TRUE}.
 #' @return a data frame with three named columns 'Year', 'stack' and 'stack_12'
@@ -35,11 +41,17 @@ stackCores <- function(data, sites, na.rm = TRUE) {
 #'   respectively.
 #' @author Thomas Münch
 #'
-stackOldAndNew <- function(data, na.rm = TRUE) {
+stackOldAndNew <- function(data, use_NEGIS_NEEM = TRUE, na.rm = TRUE) {
 
   sitesNew <- c("B18_12", "B21_12", "B23_12", "B26_12", "NGRIP_12")
-  sitesOld <- names(data)[-match(c("Year", sitesNew, "NEGIS", "NEEM"),
-                                 names(data))]
+
+  if (use_NEGIS_NEEM) {
+    sitesOld <- names(data)[-match(c("Year", sitesNew),
+                                   names(data))]
+  } else {
+    sitesOld <- names(data)[-match(c("Year", sitesNew, "NEGIS", "NEEM"),
+                                   names(data))]
+  }
 
   data.frame(
     Year     = data$Year,
@@ -84,21 +96,29 @@ stackAllCores <- function(data, use_NEGIS_NEEM = TRUE, na.rm = TRUE) {
 #' old and new (re-drilled) cores from the same sites together with the other
 #' available NGT and associated records.
 #'
+#' Note that the isotope records from the NEGIS and NEEM site are special in the
+#' sense that they are both neither "true" nor "old" records; therefore they can
+#' be excluded from the stack of all records.
+#'
 #' @param dataMerged data frame with a year column and the data columns from
 #'   merging the pairs of old and new (re-drilled) cores from the same sites.
 #' @param data original data frame with the NGT and associated oxygen isotope
 #'   records.
+#' @param use_NEGIS_NEEM  logical; indicate whether to include the records from
+#'   the NEGIS and NEEM sites in the stack; defaults to \code{TRUE}.
 #' @param na.rm a logical value indicating whether \code{NA} values should be
 #'   stripped before the computation proceeds; defaults to \code{TRUE}.
 #' @return a data frame with two named columns 'Year' and 'stack' with the age
 #'   scale and the data from averaging the cores.
 #' @author Thomas Münch
 #'
-stackExtendedCores <- function(dataMerged, data, na.rm = TRUE) {
+stackExtendedCores <- function(dataMerged, data, use_NEGIS_NEEM = TRUE,
+                               na.rm = TRUE) {
 
   sites <- c("B18", "B21", "B23", "B26", "NGRIP")
   sites <- c(sites, paste0(sites, "_12"))
-  sites <- c(sites, "NEGIS", "NEEM")
+
+  if (!use_NEGIS_NEEM) {sites <- c(sites, "NEGIS", "NEEM")}
 
   data[, sites] <- NULL
   dataMerged$Year <- NULL
