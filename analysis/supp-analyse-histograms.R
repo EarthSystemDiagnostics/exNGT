@@ -27,7 +27,7 @@ filter.window <- 11
 
 # filtered stack of old and new records
 stack_old_new <- NGT %>%
-  stackOldAndNew() %>%
+  stackOldAndNew(use_NEGIS_NEEM = FALSE) %>%
   filterData(window = filter.window)
 
 # filtered NGT data set
@@ -38,19 +38,19 @@ stacks <- list(
 
   single_extension_naM_start = NGT.filtered %>%
     mergeCores(adjustMean = FALSE, method = 1) %>%
-    stackExtendedCores(NGT.filtered),
+    stackExtendedCores(NGT.filtered, use_NEGIS_NEEM = FALSE),
 
   single_extension_naM_end = NGT.filtered %>%
     mergeCores(adjustMean = FALSE, method = 2) %>%
-    stackExtendedCores(NGT.filtered),
+    stackExtendedCores(NGT.filtered, use_NEGIS_NEEM = FALSE),
 
   single_extension_aM_start = NGT.filtered %>%
     mergeCores(adjustMean = TRUE, method = 1) %>%
-    stackExtendedCores(NGT.filtered),
+    stackExtendedCores(NGT.filtered, use_NEGIS_NEEM = FALSE),
 
   single_extension_aM_end = NGT.filtered %>%
     mergeCores(adjustMean = TRUE, method = 2) %>%
-    stackExtendedCores(NGT.filtered),
+    stackExtendedCores(NGT.filtered, use_NEGIS_NEEM = FALSE),
 
   old_new_naM_start = stack_old_new %>%
     mergeCores(sites = "stack", adjustMean = FALSE, method = 1),
@@ -65,7 +65,7 @@ stacks <- list(
     mergeCores(sites = "stack", adjustMean = TRUE, method = 2),
 
   single_cores = NGT %>%
-    stackAllCores() %>%
+    stackAllCores(use_NEGIS_NEEM = FALSE) %>%
     filterData(window = filter.window)
 )
 
