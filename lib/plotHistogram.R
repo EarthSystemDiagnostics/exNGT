@@ -12,7 +12,12 @@
 #' @param p2 vector of time points for marking a second record period.
 #' @param p3 vector of time points for marking a third record period.
 #' @param p4 vector of time points for marking a fourth record period.
+#' @param p5 vector of time points for marking a fifth record period.
 #' @param breaks a vector of break points between the histogram cells.
+#' @param range character value to specify which data to mark for the time
+#'   periods; the default "all" means using all values of the respective time
+#'   period, the other options are "pos" ("neg") for using only the positive
+#'   (negative) values of the time period.
 #' @param xlim x axis range; defaults to the range of \code{breaks}.
 #' @param ylim y axis range.
 #' @param col vector of four distinct colours to mark the four time periods in
@@ -22,20 +27,31 @@
 #' @param ylab the y axis label.
 #' @param alpha opacity value within [0,1] for the histogram \code{colours}.
 #' @param plot.quantiles logical; set to \code{TRUE} to plot vertical lines for
-#'   the 5, 50 and 95 % quantiles of the full histogram.
+#'   the quantiles of the full histogram specified by \code{quantile.probs}.
+#' @param quantile.probs the quantile probabilities of the full histogram
+#'   plotted when \code{plot.quantiles} is set to \code{TRUE}.
+#' @param xmain optional main title above plot along x axis.
+#' @param ymain optional main title next to y axis label.
 #' @author Thomas Münch
 #'
 plotHistogram <- function(x, analysis.period = 1000 : 2011,
-                          p1 = 2011 : 1997, p2 = 1938 : 1924,
-                          p3 = 1884 : 1870, p4 = 1424 : 1410,
-                          breaks = seq(-2.5, 2.5, 0.25),
+                          p1 = 2011 : 1997, p2 = 1996 : 1982,
+                          p3 = 1938 : 1924, p4 = 1884 : 1870,
+                          p5 = 1424 : 1410,
+                          breaks = seq(-2.5, 2.5, 0.25), range = "all",
                           xlim = range(breaks), ylim = c(0, 0.3),
-                          col = c("#e41a1c", "#377eb8", "#4daf4a", "#984ea3"),
+                          col = c("#e41a1c", "#ff7f00", "#377eb8",
+                                  "#4daf4a", "#984ea3"),
                           xlab = "anomaly", ylab = "Relative counts",
                           alpha = 0.6, plot.quantiles = TRUE,
+                          quantile.probs = c(0.025, 0.5, 0.975),
                           xmain = NA, ymain = NA) {
 
-  if (length(col) != 4) stop("Supply four distinct colours.")
+  if (length(col) != 5) stop("Supply five distinct colours.")
+
+  if (!range %in% c("all", "pos", "neg")) {
+    stop("'range' must be either 'all', 'pos' or 'neg'.")
+  }
 
   if (xlab == "anomaly") {
     xlab = bquote(delta^{"18"} * "O anomaly (\u2030)")
@@ -57,18 +73,42 @@ plotHistogram <- function(x, analysis.period = 1000 : 2011,
   x2 <- x[match(p2, x[, 1]), 2]
   x3 <- x[match(p3, x[, 1]), 2]
   x4 <- x[match(p4, x[, 1]), 2]
+  x5 <- x[match(p5, x[, 1]), 2]
 
   h0 <- hist(x0, breaks = breaks, plot = FALSE)
   h1 <- hist(x1, breaks = breaks, plot = FALSE)
   h2 <- hist(x2, breaks = breaks, plot = FALSE)
   h3 <- hist(x3, breaks = breaks, plot = FALSE)
   h4 <- hist(x4, breaks = breaks, plot = FALSE)
+  h5 <- hist(x5, breaks = breaks, plot = FALSE)
 
   h0$counts <- h0$counts / nobs
   h1$counts <- h1$counts / nobs
   h2$counts <- h2$counts / nobs
   h3$counts <- h3$counts / nobs
   h4$counts <- h4$counts / nobs
+  h5$counts <- h5$counts / nobs
+
+  if (range != "all") {
+
+    if (range == "pos") {
+
+      h1$counts[h1$mids < 0] <- 0
+      h2$counts[h2$mids < 0] <- 0
+      h3$counts[h3$mids < 0] <- 0
+      h4$counts[h4$mids < 0] <- 0
+      h5$counts[h5$mids < 0] <- 0
+
+    } else {
+
+      h1$counts[h1$mids > 0] <- 0
+      h2$counts[h2$mids > 0] <- 0
+      h3$counts[h3$mids > 0] <- 0
+      h4$counts[h4$mids > 0] <- 0
+      h5$counts[h5$mids > 0] <- 0
+
+    }
+  }
 
   plot(h0, xlim = xlim, ylim = ylim,
        main = "", xlab = "", ylab = "",
@@ -93,8 +133,12 @@ plotHistogram <- function(x, analysis.period = 1000 : 2011,
        main = "", xlab = "", ylab = "",
        col = col[4], add = TRUE)
 
+  plot(h5, xlim = xlim, ylim = ylim,
+       main = "", xlab = "", ylab = "",
+       col = col[5], add = TRUE)
+
   if (plot.quantiles) {
-    abline(v = quantile(x0, probs = c(0.05, 0.5, 0.95), na.rm = TRUE),
+    abline(v = quantile(x0, quantile.probs, na.rm = TRUE),
            col = "black", lty = 5, lwd = 1)
   }
 
@@ -103,8 +147,9 @@ plotHistogram <- function(x, analysis.period = 1000 : 2011,
   lab2 <- sprintf("%s to %s", min(p2), max(p2))
   lab3 <- sprintf("%s to %s", min(p3), max(p3))
   lab4 <- sprintf("%s to %s", min(p4), max(p4))
+  lab5 <- sprintf("%s to %s", min(p5), max(p5))
 
-  legend("topright", c(lab0, lab1, lab2, lab3, lab4),
+  legend("topright", c(lab0, lab1, lab2, lab3, lab4, lab5),
          col = c(adjustcolor(1, 0.2), col), lty = 1, lwd = 10, bty = "n")
 
   if (!is.null(xmain)) {

@@ -103,7 +103,7 @@ Quartz(file = "./fig/histograms-slopes.pdf", height = 12, width = 16)
 par(mfrow = c(3, 4), mar = c(5, 9, 4, 0.5))
 
 for (i in 1 : n) plotHistogram(slopes[[i]], xmain = xmain[i], ymain = ymain[i],
-                               breaks = seq(-0.2, 0.2, 0.01),
+                               breaks = seq(-0.2, 0.2, 0.01), range = "pos",
                                xlim = c(-0.1, 0.1), ylim = c(0, 0.15),
                                xlab = "slope")
 
