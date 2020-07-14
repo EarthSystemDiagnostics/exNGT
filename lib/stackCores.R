@@ -128,3 +128,21 @@ stackExtendedCores <- function(dataMerged, data, use_NEGIS_NEEM = TRUE,
   stackCores(data, names(data)[-1], na.rm = na.rm)
 
 }
+
+#' Produce main NGT stack
+#'
+#' Wrapper function to produce the NGT stack used for the main part of the
+#' paper.
+#'
+#' @param ngt data frame with the original or filtered NGT data.
+#' @return data frame with the NGT age scale as the first and the stacked
+#'   isotope values as the second column.
+#' @author Thomas Münch
+#'
+stackNGT <- function(ngt) {
+
+  ngt %>%
+    mergeCores(adjustMean = TRUE, method = 1) %>%
+    stackExtendedCores(ngt)
+
+}
