@@ -182,3 +182,19 @@ loadClimPar <- function() {
                 surfacePressure = barometricFormula(meanTemperature, Elevation))
 
 }
+
+#' Count records
+#'
+#' Count the number of available NGT records per year.
+#'
+#' @param ngt data frame with the NGT isotope data.
+#' @return data frame with the NGT age scale as the first and the number of
+#'   available isotope records as the second column.
+#' @author Thomas Münch
+#'
+countRecords <- function(ngt) {
+
+  data.frame(Year = ngt$Year,
+             n = apply(ngt, MARGIN = 1, function(x) sum(!is.na(x))) - 1)
+
+}
