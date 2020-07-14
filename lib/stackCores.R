@@ -104,16 +104,19 @@ stackAllCores <- function(data, use_NEGIS_NEEM = TRUE, na.rm = TRUE) {
 #'   merging the pairs of old and new (re-drilled) cores from the same sites.
 #' @param data original data frame with the NGT and associated oxygen isotope
 #'   records.
-#' @param use_NEGIS_NEEM  logical; indicate whether to include the records from
+#' @param use_NEGIS_NEEM logical; indicate whether to include the records from
 #'   the NEGIS and NEEM sites in the stack; defaults to \code{TRUE}.
+#' @param stack logical; whether to actually stack (average) the records.
+#'   Defaults to \code{TRUE}. For \code{FALSE} the data frame with the records
+#'   contributing to the stack is returned.
 #' @param na.rm a logical value indicating whether \code{NA} values should be
 #'   stripped before the computation proceeds; defaults to \code{TRUE}.
 #' @return a data frame with two named columns 'Year' and 'stack' with the age
-#'   scale and the data from averaging the cores.
+#'   scale and the data from averaging the cores (for \code{stack = TRUE}).
 #' @author Thomas Münch
 #'
 stackExtendedCores <- function(dataMerged, data, use_NEGIS_NEEM = TRUE,
-                               na.rm = TRUE) {
+                               stack = TRUE, na.rm = TRUE) {
 
   sites <- c("B18", "B21", "B23", "B26", "NGRIP")
   sites <- c(sites, paste0(sites, "_12"))
@@ -125,7 +128,11 @@ stackExtendedCores <- function(dataMerged, data, use_NEGIS_NEEM = TRUE,
 
   data <- cbind(data, dataMerged)
 
-  stackCores(data, names(data)[-1], na.rm = na.rm)
+  if (stack) {
+    stackCores(data, names(data)[-1], na.rm = na.rm)
+  } else {
+    data
+  }
 
 }
 
@@ -135,14 +142,17 @@ stackExtendedCores <- function(dataMerged, data, use_NEGIS_NEEM = TRUE,
 #' paper.
 #'
 #' @param ngt data frame with the original or filtered NGT data.
+#' @param stack logical; whether to actually stack (average) the records.
+#'   Defaults to \code{TRUE}. For \code{FALSE} the data frame with the records
+#'   contributing to the stack is returned.
 #' @return data frame with the NGT age scale as the first and the stacked
-#'   isotope values as the second column.
+#'   isotope values as the second column (for \code{stack = TRUE}).
 #' @author Thomas Münch
 #'
-stackNGT <- function(ngt) {
+stackNGT <- function(ngt, stack = TRUE) {
 
   ngt %>%
     mergeCores(adjustMean = TRUE, method = 1) %>%
-    stackExtendedCores(ngt)
+    stackExtendedCores(ngt, stack = stack)
 
 }
