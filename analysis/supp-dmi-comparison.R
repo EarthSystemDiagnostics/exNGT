@@ -14,11 +14,9 @@ source("init.R")
 library(magrittr)
 
 # ------------------------------------------------------------------------------
-# Input
+# Load NGT and DMI data
 
-# load NGT
 NGT <- processNGT()
-# load DMI and calculate anomalies
 DMI <- readDMI() %>%
   makeAnomalies()
 
@@ -27,12 +25,13 @@ DMI <- readDMI() %>%
 
 filter.window <- 11
 
-# TODO ! temporary; replace by final stack version used in main part !
-NGT.stack <- NGT %>%
-  stackAllCores() %>%
-  filterData(window = filter.window)
+# filter and stack NGT
+filteredStackedNGT <- NGT %>%
+  filterData(window = filter.window) %>%
+  stackNGT()
 
-DMI.filter <- DMI %>%
+# filter DMI records
+filteredDMI <- DMI %>%
   filterData(window = filter.window)
 
 # ------------------------------------------------------------------------------
@@ -51,10 +50,10 @@ ylim2 <- c(-2, 3)
 x <- 2040
 y <- mean(ylim2)
 
-Quartz(file = "./fig/ngt-dmi-comparison.pdf")
+Quartz(file = "./fig/ngt-dmi-comparison.pdf", height = 4.5 , width = 8.9)
 par(mar = c(5, 5, 0.5, 5))
 
-plot(NGT.stack, type = "n", axes = FALSE, xlab = "", ylab = "",
+plot(filteredStackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
      xlim = xlim, ylim = ylim1)
 
 axis(1)
@@ -63,18 +62,18 @@ axis(2)
 mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 mtext(ylab1, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
 
-lines(NGT.stack, col = col[1], lwd = 2.5)
+lines(filteredStackedNGT, col = col[1], lwd = 2.5)
 
 par(new = TRUE)
 
-plot(NGT.stack, type = "n", axes = FALSE, xlab = "", ylab = "",
+plot(filteredStackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
      xlim = xlim, ylim = ylim2)
 
 axis(4)
 
 text(x, y, ylab2, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex)
 
-for (i in 2 : 4) lines(DMI.filter$Year, DMI.filter[, i], col = col[i], lwd = 2.5)
+for (i in 2 : 4) lines(filteredDMI$Year, filteredDMI[, i], col = col[i], lwd = 2.5)
 
 legend("topleft", c("NGT stack", colnames(DMI)[-1]),
        col = col, lwd = 2.5, bty = "n")
@@ -86,10 +85,10 @@ dev.off()
 
 period <- 1900 : 2011
 
-i <- match(period, NGT.stack$Year)
-j <- match(period, DMI.filter$Year)
+i <- match(period, filteredStackedNGT$Year)
+j <- match(period, filteredDMI$Year)
 
-cor(NGT.stack$stack[i], DMI.filter$Pituffik[j], use = "pair")
-cor(NGT.stack$stack[i], DMI.filter$Upernavik[j], use = "pair")
-cor(NGT.stack$stack[i], DMI.filter$Danmarkshavn[j], use = "pair")
+cor(filteredStackedNGT$stack[i], filteredDMI$Pituffik[j], use = "pair")
+cor(filteredStackedNGT$stack[i], filteredDMI$Upernavik[j], use = "pair")
+cor(filteredStackedNGT$stack[i], filteredDMI$Danmarkshavn[j], use = "pair")
 

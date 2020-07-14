@@ -20,27 +20,29 @@ NGT <- processNGT()
 Arctic2k <- readArctic2k()
 
 # ------------------------------------------------------------------------------
-# Process
+# Processing parameters
 
 filter.window <- 11
 permil2temperature <- 1 / 0.67
 
-# NGT: stack and convert to temperature
-# TODO ! temporary; replace by final stack version !
-NGT.stack <- NGT %>%
-  stackAllCores() %>%
-  dplyr::mutate(stack.temperature = permil2temperature * stack)
-
-# filter NGT
-NGT.stack.f <- NGT.stack %>%
-  filterData(window = filter.window)
-
-# filter Arctic2k
-Arctic2k.f <- Arctic2k %>%
-  filterData(window = filter.window)
-
 # ------------------------------------------------------------------------------
 # Fig. 1, main, full NGT
+
+plot_record_number <- FALSE
+
+# stack NGT
+stackedNGT <- NGT %>%
+  stackNGT()
+
+# filter and stack NGT
+filteredStackedNGT <- NGT %>%
+  filterData(window = filter.window) %>%
+  stackNGT()
+
+# number of records contributing to the stack
+nRecords <- NGT %>%
+  stackNGT(stack = FALSE) %>%
+  countRecords()
 
 xlab  <- "Year CE"
 ylab <- bquote(delta^{"18"} * "O anomaly (\u2030)")
@@ -49,13 +51,22 @@ xlim <- c(1000, 2020)
 ylim <- c(-2.5, 2.5)
 
 startNew <- 1993
-i <- match(startNew, NGT.stack$Year)
-n <- nrow(NGT.stack)
+i <- match(startNew, stackedNGT$Year)
+n <- nrow(stackedNGT)
 
-Quartz(file = "./fig/main-01-ngt.pdf", height = 4.5)
+if (plot_record_number) {
 
-plot(NGT.stack$Year, NGT.stack$stack,
-     type = "n", axes = FALSE, xlab = "", ylab = "",
+  # for plot with number of records
+  Quartz(file = "./fig/main-01-ngt-with-record-number.pdf",
+         height = 4.5 , width = 8.9)
+  par(mar = c(5, 5, 0.5, 5))
+
+} else {
+
+  Quartz(file = "./fig/main-01-ngt.pdf", height = 4.5)
+}
+
+plot(stackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
      xlim = xlim, ylim = ylim)
 
 axis(1)
@@ -64,45 +75,64 @@ axis(2)
 mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
 
-lines(NGT.stack$Year, NGT.stack$stack, col = "darkgrey")
+lines(stackedNGT, col = "darkgrey")
 
-lines(NGT.stack.f$Year[i : n], NGT.stack.f$stack[i : n],
-      col = "black", lwd = 2.5)
-lines(NGT.stack.f$Year[1 : i], NGT.stack.f$stack[1 : i],
-      col = "firebrick3", lwd = 2.5)
+lines(filteredStackedNGT[i : n, ], col = "black", lwd = 2.5)
+lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = 2.5)
+
+if (plot_record_number) {
+
+  par(new = TRUE)
+
+  plot(nRecords, type = "l", axes = FALSE, xlab = "", ylab = "",
+       xlim = xlim, ylim = c(0, 150), col = "darkgrey", lwd = 1.5)
+
+  axis(4, at = c(0, 10, 20))
+  text(2180, 10, "Number", srt = -90, xpd = NA, cex = par()$cex.lab)
+
+}
 
 dev.off()
 
 # ------------------------------------------------------------------------------
 # Fig. 1, minor, NGT and Arctic2k
 
+# convert NGT stack to temperature
+stackedTemperatureNGT <- stackedNGT %>%
+  dplyr::mutate(stack = permil2temperature * stack)
+filteredStackedTemperatureNGT <- filteredStackedNGT %>%
+  dplyr::mutate(stack = permil2temperature * stack)
+
+# filter Arctic2k
+filteredArctic2k <- Arctic2k %>%
+  filterData(window = filter.window)
+
 col <- c("black", "dodgerblue4")
 
-xlab  <- "Year CE"
+xlab <- "Year CE"
 ylab <- bquote("Temperature anomaly" * " (" * degree * "C)")
 
 xlim <- c(1840, 2020)
-ylim <- c(-3, 3)
+ylim <- c(-4, 4)
 
 Quartz(file = "./fig/main-02-ngt-arctic2k-comparison.pdf", height = 4.5)
 
-plot(NGT.stack$Year, NGT.stack$stack,
-     type = "n", axes = FALSE, xlab = "", ylab = "",
+plot(stackedTemperatureNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
      xlim = xlim, ylim = ylim)
 
 axis(1, at = seq(xlim[1], xlim[2], 20))
-axis(2)
+axis(2, at = seq(ylim[1], ylim[2], 1))
 
 mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
 
-lines(NGT.stack$Year, NGT.stack$stack, col = "darkgrey")
+lines(stackedTemperatureNGT, col = "darkgrey")
 
-lines(NGT.stack.f$Year, NGT.stack.f$stack, col = col[1], lwd = 2.5)
+lines(filteredStackedTemperatureNGT, col = col[1], lwd = 2.5)
 
 lines(Arctic2k$Year, Arctic2k$TempAnomaly,
       col = adjustcolor(col[2], alpha = 0.6))
-lines(Arctic2k.f$Year, Arctic2k.f$TempAnomaly, col = col[2], lwd = 2.5)
+lines(filteredArctic2k$Year, filteredArctic2k$TempAnomaly, col = col[2], lwd = 2.5)
 
 legend("topleft", c("NGT stack", "Arctic2k"), col = col, lwd = 2.5, bty = "n")
 
