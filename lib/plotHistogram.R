@@ -32,6 +32,8 @@
 #'   plotted when \code{plot.quantiles} is set to \code{TRUE}.
 #' @param xmain optional main title above plot along x axis.
 #' @param ymain optional main title next to y axis label.
+#' @param plot.legend logical; shall a legend be plotted which marks the
+#'   analysed time periods? Defaults to \code{TRUE}.
 #' @author Thomas Münch
 #'
 plotHistogram <- function(x, analysis.period = 1000 : 2011,
@@ -45,7 +47,7 @@ plotHistogram <- function(x, analysis.period = 1000 : 2011,
                           xlab = "anomaly", ylab = "Relative counts",
                           alpha = 0.6, plot.quantiles = TRUE,
                           quantile.probs = c(0.025, 0.5, 0.975),
-                          xmain = NA, ymain = NA) {
+                          xmain = NA, ymain = NA, plot.legend = TRUE) {
 
   if (length(col) != 5) stop("Supply five distinct colours.")
 
@@ -142,15 +144,19 @@ plotHistogram <- function(x, analysis.period = 1000 : 2011,
            col = "black", lty = 5, lwd = 1)
   }
 
-  lab0 <- "Full data"
-  lab1 <- sprintf("%s to %s", min(p1), max(p1))
-  lab2 <- sprintf("%s to %s", min(p2), max(p2))
-  lab3 <- sprintf("%s to %s", min(p3), max(p3))
-  lab4 <- sprintf("%s to %s", min(p4), max(p4))
-  lab5 <- sprintf("%s to %s", min(p5), max(p5))
+  if (plot.legend) {
 
-  legend("topright", c(lab0, lab1, lab2, lab3, lab4, lab5),
-         col = c(adjustcolor(1, 0.2), col), lty = 1, lwd = 10, bty = "n")
+    lab0 <- "Full data"
+    lab1 <- sprintf("%s to %s", min(p1), max(p1))
+    lab2 <- sprintf("%s to %s", min(p2), max(p2))
+    lab3 <- sprintf("%s to %s", min(p3), max(p3))
+    lab4 <- sprintf("%s to %s", min(p4), max(p4))
+    lab5 <- sprintf("%s to %s", min(p5), max(p5))
+
+    legend("topright", c(lab0, lab1, lab2, lab3, lab4, lab5),
+           col = c(adjustcolor(1, 0.2), col), lty = 1, lwd = 10, bty = "n")
+
+  }
 
   if (!is.null(xmain)) {
     mtext(xmain, side = 3, line = 2.5, adj = 0,

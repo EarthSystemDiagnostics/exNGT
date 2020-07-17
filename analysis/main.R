@@ -138,3 +138,41 @@ legend("topleft", c("NGT stack", "Arctic2k"), col = col, lwd = 2.5, bty = "n")
 
 dev.off()
 
+# ------------------------------------------------------------------------------
+# Fig. 3, anomaly and slope histogram for main stack
+
+lab0 <- "Full data"
+lab1 <- "1997 to 2011"
+lab2 <- "1982 to 1996"
+lab3 <- "1924 to 1938"
+lab4 <- "1870 to 1884"
+lab5 <- "1410 to 1424"
+
+col = c("#e41a1c", "#ff7f00", "#377eb8", "#4daf4a", "#984ea3")
+
+slopesFilteredStackedNGT <- estimateSlopes(filteredStackedNGT)
+
+Quartz(file = "./fig/main-05-histograms.pdf",
+       height = 5, width = 12)
+
+layout(matrix(1 : 3, 1, 3), widths = c(0.43, 0.43, 0.14))
+par(cex = 1)
+
+plotHistogram(filteredStackedNGT, plot.legend = FALSE)
+mtext("a", side = 3, line = -0.5, cex = par()$cex.lab * par()$cex,
+      las = 1, font = 2, adj = 0.02, padj = 0.5)
+
+plotHistogram(slopesFilteredStackedNGT,
+              breaks = seq(-0.2, 0.2, 0.01), range = "pos",
+              xlim = c(-0.1, 0.1), ylim = c(0, 0.2),
+              xlab = "slope", plot.legend = FALSE)
+mtext("b", side = 3, line = -0.5, cex = par()$cex.lab * par()$cex,
+      las = 1, font = 2, adj = 0.02, padj = 0.5)
+
+par(mar = c(0, 0, 0, 0))
+plot(1, type = "n", axes = FALSE, xlab = "", ylab = "")
+legend("topleft", c(lab0, lab1, lab2, lab3, lab4, lab5),
+       col = c(adjustcolor(1, 0.2), adjustcolor(col, 0.6)),
+       lty = 1, lwd = 10, bty = "n")
+
+dev.off()
