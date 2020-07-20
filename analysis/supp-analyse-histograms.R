@@ -1,6 +1,7 @@
 ##
 ## aim:
-## analyse the histograms of all stacking possibilities.
+## analyse the histograms of all stacking possibilities and their sensitivity
+## on different methods as well as on diffusional smoothing.
 ## relation:
 ## NGT paper supplementary; https://github.com/EarthSystemDiagnostics/exNGT
 ##
@@ -21,6 +22,11 @@ NGT <- processNGT()
 
 # set filter window
 filter.window <- 11
+
+
+# ==============================================================================
+# Test different stacking options
+# ==============================================================================
 
 # ------------------------------------------------------------------------------
 # Calculate stacks
@@ -106,6 +112,120 @@ for (i in 1 : n) plotHistogram(slopes[[i]], xmain = xmain[i], ymain = ymain[i],
                                breaks = seq(-0.2, 0.2, 0.01), range = "pos",
                                xlim = c(-0.1, 0.1), ylim = c(0, 0.15),
                                xlab = "slope")
+
+dev.off()
+
+
+# ==============================================================================
+# Test other method variants
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Analyse dependence of main stack histogram on filter method
+
+# main filtered NGT stack
+filteredStackedNGT <- NGT %>%
+  filterData(window = filter.window) %>%
+  stackNGT()
+
+# do main stack for different filter end point constraints
+filteredStackedNGT.method1 <- NGT %>%
+  filterData(window = filter.window, method = 1) %>%
+  stackNGT()
+filteredStackedNGT.method3 <- NGT %>%
+  filterData(window = filter.window, method = 3) %>%
+  stackNGT()
+
+# ------------------------------------------------------------------------------
+# 2. Main stack for constant number of records (n = 6)
+
+# get records that contribute to main stack
+mainStackRecords <- NGT %>%
+  filterData(window = filter.window) %>%
+  stackNGT(stack = FALSE)
+
+# select at least the number of records available for recent year
+nmin <- 6
+mainStackFixN <- mainStackRecords %>%
+  apply(1, function(row) {row[which(!is.na(row))[1 : (nmin + 1)]]}) %>%
+  t()
+# <- these are always six records but their composition varies through time!
+
+# stack this data set
+mainStackFixN <- data.frame(Year = mainStackFixN[, 1],
+                            stack = rowMeans(mainStackFixN[, -1]))
+
+# ------------------------------------------------------------------------------
+# 3. Main stack after full forward diffusion
+
+# get diffusion length estimates in units of years for each site
+
+library(FirnR)
+climatePar <- loadClimPar()
+
+sigma <- FirnR::TemporalDiffusionLength(nt = nrow(NGT),
+                                        T = climatePar$meanTemperature + 273.15,
+                                        P = climatePar$surfacePressure,
+                                        bdot = climatePar$accRate,
+                                        rho.surface = climatePar$surfaceDensity,
+                                        names = climatePar$Site)
+
+# get the maximum diffusion length in the ice
+sigma.ice <- lapply(sigma, max) %>%
+  as.data.frame()
+
+# get the differential diffusion length between local (firn) and ice value
+sigma.differential <- sigma
+for (i in 2 : ncol(sigma)) {
+  sigma.differential[, i] <- sqrt((sigma.ice[, i])^2 - (sigma[, i])^2)
+}
+
+applyDiffusion <- function(x, siteID, sigma) {
+
+  siteID    <- strsplit(siteID, "_")[[1]][1]
+  siteIndex <- match(siteID, colnames(sigma))
+  inm       <- which(!is.na(x))
+
+  print(siteID)
+  print(siteIndex)
+
+  x[inm] <- FirnR::DiffuseRecord(x[inm], sigma = sigma[seq(inm), siteIndex])
+
+  return(x)
+
+}
+
+diffusedNGT <- NGT
+for (i in 2 : ncol(NGT)) {
+
+  diffusedNGT[, i] <- applyDiffusion(NGT[, i], siteID = colnames(NGT)[i],
+                                     sigma = sigma.differential)
+}
+
+# build main stack from fully forward diffused records
+diffusedFilteredStackedNGT <- diffusedNGT %>%
+  filterData(window = filter.window) %>%
+  stackNGT()
+
+# ------------------------------------------------------------------------------
+# Plot the histograms
+
+xmain = c("a. NGT main stack",
+          "b. NGT main stack; minimum norm",
+          "c. NGT main stack; minimum roughness",
+          "d. NGT main stack; fixed record number",
+          "e. NGT main stack; full forward diffusion")
+
+Quartz(file = "./fig/histograms-different-methods.pdf", height = 8, width = 12)
+par(mfrow = c(2, 3), mar = c(5, 5, 4, 0.5))
+
+plotHistogram(filteredStackedNGT, xmain = xmain[1])
+plotHistogram(filteredStackedNGT.method1, xmain = xmain[2])
+plotHistogram(filteredStackedNGT.method3, xmain = xmain[3])
+
+plot.new()
+plotHistogram(mainStackFixN, xmain = xmain[4])
+plotHistogram(diffusedFilteredStackedNGT, xmain = xmain[5])
 
 dev.off()
 
