@@ -215,3 +215,26 @@ calculateOverlapStatistics <- function(data, site = "B18") {
   return(output)
   
 }
+
+doRunningCorrelation <- function(x, y, window = 101) {
+
+  n <- length(x)
+
+  if ((window %% 2) == 0) stop("Use an odd window size.", call. = FALSE)
+  if (window > n) stop("window is larger than length of data.", call. = FALSE)
+
+  if (n != length(y)) stop("x and y must have the same length.", call. = FALSE)
+
+  half <- (window - 1) / 2
+
+  correlation <- rep(NA, n)
+  for (i in (half + 1) : (n - half)) {
+
+    subset <- (i - half) : (i + half)
+    correlation[i] <- cor(x[subset], y[subset], use = "pair")
+
+  }
+
+  return(correlation)
+
+}
