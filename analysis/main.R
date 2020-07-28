@@ -29,6 +29,7 @@ permil2temperature <- 1 / 0.67
 # Fig. 1, main, full NGT
 
 plot_record_number <- FALSE
+plot_sub_periods <- FALSE
 
 # stack NGT
 stackedNGT <- NGT %>%
@@ -50,9 +51,21 @@ ylab <- bquote(delta^{"18"} * "O anomaly (\u2030)")
 xlim <- c(1000, 2020)
 ylim <- c(-2.5, 2.5)
 
+xanml <- c(800, 2020)
+yanml <- rep(0, 2)
+
 startNew <- 1993
 i <- match(startNew, stackedNGT$Year)
 n <- nrow(stackedNGT)
+
+periodColors = c("#e41a1c", "#ff7f00", "#377eb8", "#4daf4a", "#984ea3")
+
+periods <- list(
+  p1 = 2011 : 1997, p2 = 1996 : 1982,
+  p3 = 1938 : 1924, p4 = 1884 : 1870,
+  p5 = 1424 : 1410
+)
+
 
 if (plot_record_number) {
 
@@ -74,6 +87,21 @@ axis(2)
 
 mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
+
+if (plot_sub_periods) {
+
+  for (iT in 1 : length(periods)) {
+
+    nt <- length(periods[[iT]])
+    polygon(x = c(periods[[iT]], rev(periods[[iT]])),
+            y = c(rep(-3, nt), rep(2.5, nt)),
+            col = adjustcolor(periodColors[iT], alpha = 0.4),
+            border = NA)
+
+  }
+}
+
+lines(xanml, yanml, lty = 3, lwd = 1.5)
 
 lines(stackedNGT, col = "darkgrey")
 
@@ -125,6 +153,8 @@ axis(2, at = seq(ylim[1], ylim[2], 1))
 
 mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
+
+lines(xanml, yanml, lty = 3, lwd = 1.5)
 
 lines(stackedTemperatureNGT, col = "darkgrey")
 
