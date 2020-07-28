@@ -70,7 +70,7 @@ periods <- list(
 if (plot_record_number) {
 
   # for plot with number of records
-  Quartz(file = "./fig/main-01-ngt-with-record-number.pdf",
+  Quartz(file = "./fig/ngt-record-number-time-periods.pdf",
          height = 4.5 , width = 8.9)
   par(mar = c(5, 5, 0.5, 5))
 
