@@ -11,7 +11,7 @@ path <- "~/programming/R/exNGT" #Thomas
 setwd(path)
 source("init.R")
 
-library(magrittr)
+library(dplyr)
 
 # ------------------------------------------------------------------------------
 # Load NGT and Arctic2k data
@@ -165,6 +165,56 @@ lines(Arctic2k$Year, Arctic2k$TempAnomaly,
 lines(filteredArctic2k$Year, filteredArctic2k$TempAnomaly, col = col[2], lwd = 2.5)
 
 legend("topleft", c("NGT stack", "Arctic2k"), col = col, lwd = 2.5, bty = "n")
+
+dev.off()
+
+# ------------------------------------------------------------------------------
+# Fig. 1, map
+
+library(ggplot2)
+
+cores <- loadPositions() %>%
+  dplyr::filter(Identifier == "core")
+stations <- loadPositions() %>%
+  dplyr::filter(Identifier == "station")
+
+min.lat <- 57.5
+max.lat <- 85
+min.lon <- -75
+max.lon <- -10
+
+lat.pos <- c(60, 70, 80)
+lon.pos <- -c(20, 40, 60)
+
+lat.pos.offset <- c(3.5, 5, 10)
+
+Quartz(file = "./fig/main-03-map.pdf", height = 6, width = 6)
+
+p <- ecustools::ggpolar(pole = "N",
+                        max.lat = max.lat, min.lat = min.lat,
+                        max.lon = max.lon, min.lon = min.lon,
+                        lat.ax.vals = lat.pos, long.ax.vals = lon.pos,
+                        f.long.label.ticks = Inf, f.long.label.pos = 15,
+                        rotate = TRUE, land.fill.colour = "transparent",
+                        size.outer = 0.5,
+                        lat.ax.labs.pos = min.lon - lat.pos.offset,
+                        ax.labs.size = 4.75,
+                        country.outline.colour = "burlywood4", clip = "off") +
+
+  geom_text(data = cores, size = 2.5,
+            aes(x = Longitude, y = Latitude, label = Site)) +
+
+  geom_label(data = stations,
+             aes(x = Longitude, y = Latitude, label = Site),
+             size = 2.5, alpha = 0.75, label.size = 0) +
+
+  geom_point(data = cores, aes(x = Longitude, y = Latitude),
+             col = "black", bg = "grey", size = 1.5, pch = 21, stroke = 0.8) +
+
+  geom_point(data = stations, aes(x = Longitude, y = Latitude),
+             col = "black", size = 2.5, pch = 17)
+
+p
 
 dev.off()
 
