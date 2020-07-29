@@ -183,6 +183,48 @@ loadClimPar <- function() {
 
 }
 
+#' Site coordinates
+#'
+#' This function provides the coordinates of the used firn core and weather
+#' station sites.
+#'
+#' @return  A tibble with 19 rows and 4 columns. For each site, the columns list
+#'   in this order the
+#'   \itemize{
+#'     \item number,
+#'     \item site name,
+#'     \item latitude in degree North, and
+#'     \item longitude in degree East.
+#' @author Thomas Münch
+#'
+loadPositions <- function() {
+
+  tibble::tribble(
+    ~Line, ~Identifier, ~`Site`, ~`Latitude`, ~`Longitude`,
+    # -- / ---------- / ------ / ---------- / ----------- /
+    1,     "core",      "B16",   73.94,       -37.63,
+    2,     "core",      "B17",   75.25,       -37.63,
+    3,     "core",      "B18",   76.62,       -36.40,
+    4,     "core",      "B20",   78.83,       -36.50,
+    5,     "core",      "B21",   80.00,       -41.14,
+    6,     "core",      "B22",   79.34,       -45.91,
+    7,     "core",      "B23",   78.00,       -44.00,
+    8,     "core",      "B26",   77.25,       -49.22,
+    9,     "core",      "B27/28",76.66,       -46.82,
+    10,    "core",      "B29",   76.00,       -43.50,
+    11,    "core",       "B30",   75.00,       -42.00,
+    12,    "core",       "NGRIP", 75.10,       -42.30,
+    13,    "core",       "GISP2", 72.60,       -38.50,
+    14,    "core",       "GRIP",  72.60,       -37.60,
+    15,    "core",       "NEGIS", 75.62,       -35.96,
+    16,    "core",       "NEEM",  77.45,       -51.06,
+    17,    "station",    "Pituffik",     76.53,   -68.75,
+    18,    "station",    "Upernavik",    72.78,   -56.15,
+    19,    "station",    "Danmarkshavn", 76.77,   -18.67
+    )
+
+}
+
 #' Count records
 #'
 #' Count the number of available NGT records per year.
