@@ -3,7 +3,7 @@ title: "exNGT: an overview of various correlation and other analyses"
 author: "Thomas Münch"
 date: "`r Sys.Date()`"
 output:
-  rmarkdown::html_document
+  rmarkdown::pdf_document
 ---
 
 ```{r setup, include = FALSE}
@@ -36,7 +36,7 @@ library("dplyr")
 ```
 
 Set the running mean filter window size (yr) and the isotope--temperature slope
-(K/permil):
+(K/$\text{\textperthousand}$):
 ```{r}
 filter.window <- 11
 permil2temperature <- 1 / 0.67
