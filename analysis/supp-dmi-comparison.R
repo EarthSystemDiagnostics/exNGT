@@ -62,6 +62,11 @@ axis(2)
 mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 mtext(ylab1, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
 
+mtext("a", side = 3, adj = 0.01, padj = -0.35,
+      line = -1, font = 2, cex = par()$cex.lab)
+mtext("b", side = 3, adj = 0.99, padj = -0.35,
+      line = -1, font = 2, cex = par()$cex.lab)
+
 lines(filteredStackedNGT, col = col[1], lwd = 2.5)
 
 par(new = TRUE)
@@ -76,7 +81,7 @@ text(x, y, ylab2, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex)
 for (i in 2 : 4) lines(filteredDMI$Year, filteredDMI[, i], col = col[i], lwd = 2.5)
 
 legend("topleft", c("NGT stack", colnames(DMI)[-1]),
-       col = col, lwd = 2.5, bty = "n")
+       col = col, lwd = 2.5, bty = "n", inset = c(0, 0.02))
 
 dev.off()
 

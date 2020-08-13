@@ -110,6 +110,11 @@ lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = 2.5)
 
 if (plot_record_number) {
 
+  mtext("a", side = 3, adj = 0.01, padj = 2.4,
+        line = -1, font = 2, cex = par()$cex.lab)
+  mtext("b", side = 3, adj = 0.99, padj = 14.5,
+        line = -1, font = 2, cex = par()$cex.lab)
+
   par(new = TRUE)
 
   plot(nRecords, type = "l", axes = FALSE, xlab = "", ylab = "",
