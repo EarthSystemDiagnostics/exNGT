@@ -6,7 +6,7 @@
 #' @return a data frame with the read NGT data set.
 #' @author Thomas Münch, Maria Hoerhold
 #'
-readNGT <- function(path = "data/NGT2012_AnnualMean_FINAL.csv") {
+readNGT <- function(path = "data/NGT2012_AnnualMean_20210325.csv") {
 
   if (file.exists(path)) {
     read.csv(path, header = TRUE)
@@ -63,10 +63,6 @@ processNGT <- function(path = NULL, reference.period = 1990 : 1961) {
   } else {
     ngt <- readNGT(path = path)
   }
-
-  # Skip two records not used
-  ngt$`B22_12` <- NULL # only has data from 1997-2011
-  ngt$`B19`    <- NULL # has no data in reference period 1961-1990
 
   # Produce anomaly time series
   ngt <- makeAnomalies(ngt, reference.period = reference.period)
