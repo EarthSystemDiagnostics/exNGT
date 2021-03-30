@@ -321,3 +321,27 @@ subsetData <- function(x, t, var, timeColumn = "Year") {
     dplyr::filter(!!as.name(timeColumn) %in% t) %>%
     dplyr::pull(!!as.name(var))
 }
+
+#' Isotope data for spectral analyses
+#'
+#' This is a wrapper function to quickly select those North Greenland isotope
+#' records which have continuous data in a given time window; the default time
+#' window is used to select those records suitable for the applied spectral
+#' analyses.
+#'
+#' @param timeWindow vector of time points; default range is the one suited for
+#'   the spectral analyses applied in the paper.
+#' @return a data frame with all the North Greenland isotope data from the data
+#'   compilation that have continuous data in the specified time window.
+#' @author Thomas Münch
+selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
+
+  noMissingVal <- function(x) {!any(is.na(x))}
+
+  processNGT() %>%
+    stackNGT(stack = FALSE) %>%
+    dplyr::mutate(B23 = approx(timeWindow, B23, timeWindow)$y) %>%
+    dplyr::slice(match(timeWindow, Year)) %>%
+    dplyr::select(where(noMissingVal)) %>%
+    dplyr::select(-Year)
+}

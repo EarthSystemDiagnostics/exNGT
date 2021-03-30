@@ -38,7 +38,7 @@ recordOccurrence <- data.frame(
 recordOccurrence[which(is.na(mainStackRecords), arr.ind = TRUE)] <- NA
 
 # set upper and lower years for selecting 14 records
-# -> 1505-1978; all except NEGIS and NEEM
+# -> 1505-1979; all except NEGIS and NEEM
 year.upper <- max(recordOccurrence$Year[which(!is.na(recordOccurrence$GRIP))])
 year.lower <- min(recordOccurrence$Year[which(!is.na(recordOccurrence$B26))])
 
@@ -65,23 +65,19 @@ for (i in 2 : 17) {
 
 abline(v = c(year.upper, year.lower), col = "darkgrey", lty = 2)
 
-# select time and record range
-i <- match(year.upper : year.lower, mainStackRecords$Year)
-j <- colnames(mainStackRecords)[-match(c("Year", "NEEM", "NEGIS"),
-                                       colnames(mainStackRecords))]
-
-analysisRecords <- mainStackRecords[i, j]
-
 # ------------------------------------------------------------------------------
 # Do the SNR analysis
 
-spectraNGT <- analysisRecords %>%
+# select time and record range according to above and apply spectral analysis
+spectraNGT <- selectNGTForSpectra() %>%
   proxysnr::ArraySpectra(df.log = 0.1) %>%
   proxysnr::SeparateSpectra()
 
+# obtain signal-to-noise ratio spectrum
 snrNGT <- spectraNGT %>%
   proxysnr::StackCorrelation(N = 10,
-                             freq.cut.lower = 1 / 200, freq.cut.upper = 1 / 5)
+                             freq.cut.lower = 1 / 200,
+                             freq.cut.upper = 1 / 5)
 
 yat.snr <- c(0.1, 0.2, 0.5, 1, 2)
 yat.r   <- seq(0.3, 0.8, 0.1)
