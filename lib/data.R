@@ -297,3 +297,27 @@ makeAnomalies <- function(data, age = NULL, reference.period = 1990 : 1961,
 
   return(result)
 }
+
+#' Subset data set
+#'
+#' Subset a data set by specifying a time window and variable name.
+#'
+#' @param x a data frame or tibble including a time column and one or more named
+#'   data columns.
+#' @param t vector of time points to subset from \code{x}.
+#' @param var the name of the data column to extract from \code{x}.
+#' @param timeColumn the name of the time column in \code{x}; defaults to
+#'   "Year".
+#' @return a numeric vector with the data values for the requested data variable
+#'   and the specified time window, ordered in time as in the original data
+#'   set \code{x}.
+#' @author Thomas Münch
+#' @examples
+#' NGT <- processNGT()
+#' subsetData(NGT, t = 2011 : 2000, var = "B18_12")
+subsetData <- function(x, t, var, timeColumn = "Year") {
+
+  x %>%
+    dplyr::filter(!!as.name(timeColumn) %in% t) %>%
+    dplyr::pull(!!as.name(var))
+}

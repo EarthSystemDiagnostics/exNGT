@@ -65,16 +65,6 @@ filteredStackedTemperatureNGT <- stackedNGT %>%
   dplyr::mutate(stack = permil2temperature * stack)
 ```
 
-Define wrapper function to select certain time periods from data:
-```{r}
-subsetData <- function(x, t, var) {
-  x %>%
-    dplyr::filter(Year %in% t) %>%
-    dplyr::select(!!as.name(var)) %>%
-    unlist()
-}
-```
-
 ## Comparison of NGT temperature stack with Arctic2k
 
 * Overall correlation between NGT temperature stack and Arctic2k compilation
