@@ -340,7 +340,7 @@ selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
 
   processNGT() %>%
     stackNGT(stack = FALSE) %>%
-    dplyr::mutate(B23 = approx(timeWindow, B23, timeWindow)$y) %>%
+    dplyr::mutate(B23 = approx(Year, B23, Year)$y) %>%
     dplyr::slice(match(timeWindow, Year)) %>%
     dplyr::select(where(noMissingVal)) %>%
     dplyr::select(-Year)
