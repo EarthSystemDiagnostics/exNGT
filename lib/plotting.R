@@ -1,170 +1,618 @@
-#' Plot histogram
+#' Plot histogram (paper figure 02)
 #'
-#' Plot a histogram of isotope values marking certain time periods in the
-#' isotope record.
+#' Plot a histogram of the pre-industrial isotope values or trends and compare
+#' it to the recent observations.
 #'
-#' @param x a data frame with two columns with the time scale as the first and
-#'   the isotope values as the second column.
-#' @param analysis.period optional vector of time points to subset the data over
-#'   which the full histogram shall be calculated. Set to \code{NULL} to use the
-#'   full range of \code{x}.
-#' @param p1 vector of time points for marking a first record period.
-#' @param p2 vector of time points for marking a second record period.
-#' @param p3 vector of time points for marking a third record period.
-#' @param p4 vector of time points for marking a fourth record period.
-#' @param p5 vector of time points for marking a fifth record period.
+#' @param piPeriod a vector of time points to specify the pre-industrial time
+#'   period; defaults to the years 1000-1800 CE.
+#' @param filter.window single integer giving the size of the running mean
+#'   window to use for filtering the isotope data, and, if requested, the window
+#'   over which linear isotopic trends are estimated; defaults to 11 (years).
+#' @param type single character; must be either "anomaly" to plot the anomaly
+#'   histograms, or "trend" to plot the linear trend histograms.
 #' @param breaks a vector of break points between the histogram cells.
-#' @param range character value to specify which data to mark for the time
-#'   periods; the default "all" means using all values of the respective time
-#'   period, the other options are "pos" ("neg") for using only the positive
-#'   (negative) values of the time period.
 #' @param xlim x axis range; defaults to the range of \code{breaks}.
 #' @param ylim y axis range.
-#' @param col vector of four distinct colours to mark the four time periods in
-#'   the histogram.
-#' @param xlab the x axis label; setting it to "anomaly" or "slope" produces
-#'   isotope-specific labels for isotope anomaly or isotope slope histograms.
-#' @param ylab the y axis label.
-#' @param alpha opacity value within [0,1] for the histogram \code{colours}.
+#' @param col vector of length 2 specifying the colours to use to mark the
+#'   pre-industrial and the recent data on the plot.
 #' @param plot.quantiles logical; set to \code{TRUE} to plot vertical lines for
-#'   the quantiles of the full histogram specified by \code{quantile.probs}.
-#' @param quantile.probs the quantile probabilities of the full histogram
+#'   the quantiles of the PI histogram specified by \code{quantile.probs}.
+#' @param quantile.probs the quantile probabilities of the PI histogram
 #'   plotted when \code{plot.quantiles} is set to \code{TRUE}.
 #' @param xmain optional main title above plot along x axis.
 #' @param ymain optional main title next to y axis label.
 #' @param plot.legend logical; shall a legend be plotted which marks the
 #'   analysed time periods? Defaults to \code{TRUE}.
+#' @param analysis.period optional vector of time points to subset the data over
+#'   which the full histogram shall be calculated. Set to \code{NULL} to use the
+#'   full range of \code{x}.
 #' @author Thomas Münch
 #'
-plotHistogram <- function(x, analysis.period = 1000 : 2011,
-                          p1 = 2011 : 1997, p2 = 1996 : 1982,
-                          p3 = 1938 : 1924, p4 = 1884 : 1870,
-                          p5 = 1424 : 1410,
-                          breaks = seq(-2.5, 2.5, 0.25), range = "all",
-                          xlim = range(breaks), ylim = c(0, 0.3),
-                          col = c("#e41a1c", "#ff7f00", "#377eb8",
-                                  "#4daf4a", "#984ea3"),
-                          xlab = "anomaly", ylab = "Relative counts",
-                          alpha = 0.6, plot.quantiles = TRUE,
+plotHistogram <- function(piPeriod = 1000 : 1800, filter.window = 11,
+                          type = "anomaly", breaks = seq(-2, 2, 0.2),
+                          xlim = range(breaks), ylim = c(0, 1.25),
+                          col = c("black", "firebrick4"),
+                          plot.quantiles = TRUE,
                           quantile.probs = c(0.025, 0.5, 0.975),
                           xmain = NA, ymain = NA, plot.legend = TRUE) {
 
-  if (length(col) != 5) stop("Supply five distinct colours.")
-
-  if (!range %in% c("all", "pos", "neg")) {
-    stop("'range' must be either 'all', 'pos' or 'neg'.")
+  if (!type %in% c("anomaly", "trend")) {
+    stop("'type' must be either 'anomaly' or 'trend'.", call. = FALSE)
   }
 
-  if (xlab == "anomaly") {
-    xlab = bquote(delta^{"18"} * "O anomaly (\u2030)")
-  } else if (xlab == "slope") {
-    xlab = bquote(delta^{"18"} * "O slope (\u2030 " * "yr"^{-1} * ")")
+  if (filter.window < 1) {
+    stop("Running mean filter window needs to be >= 1.", call. = FALSE)
   }
 
-  if (!is.null(analysis.period)) {
-    x <- x[match(analysis.period, x[, 1]), ]
+  if ((filter.window %% 2) == 0) {
+    stop("Running mean filter window needs to be odd.", call. = FALSE)
   }
 
-  col <- adjustcolor(col, alpha = alpha)
+  if (filter.window == 1 & type == "trend") {
+    stop("Window size of 1 not suitable for trend estimation.", call. = FALSE)
+  }
 
-  nobs <- length(na.omit(x[, 2]))
+  require(magrittr)
 
-  x0 <- x[, 2]
+  # ----------------------------------------------------------------------------
+  # Load data
 
-  x1 <- x[match(p1, x[, 1]), 2]
-  x2 <- x[match(p2, x[, 1]), 2]
-  x3 <- x[match(p3, x[, 1]), 2]
-  x4 <- x[match(p4, x[, 1]), 2]
-  x5 <- x[match(p5, x[, 1]), 2]
+  if (type == "anomaly") {
 
-  h0 <- hist(x0, breaks = breaks, plot = FALSE)
-  h1 <- hist(x1, breaks = breaks, plot = FALSE)
-  h2 <- hist(x2, breaks = breaks, plot = FALSE)
-  h3 <- hist(x3, breaks = breaks, plot = FALSE)
-  h4 <- hist(x4, breaks = breaks, plot = FALSE)
-  h5 <- hist(x5, breaks = breaks, plot = FALSE)
+    x <- processNGT() %>%
+      filterData(window = filter.window) %>%
+      stackNGT()
 
-  h0$counts <- h0$counts / nobs
-  h1$counts <- h1$counts / nobs
-  h2$counts <- h2$counts / nobs
-  h3$counts <- h3$counts / nobs
-  h4$counts <- h4$counts / nobs
-  h5$counts <- h5$counts / nobs
+    var <- "stack"
+    xlab <- bquote(delta^{"18"} * "O anomaly (\u2030)")
 
-  if (range != "all") {
+  } else if (type == "trend") {
 
-    if (range == "pos") {
+    x <- processNGT() %>%
+      filterData(window = filter.window) %>%
+      stackNGT() %>%
+      estimateSlopes(window = filter.window)
 
-      h1$counts[h1$mids < 0] <- 0
-      h2$counts[h2$mids < 0] <- 0
-      h3$counts[h3$mids < 0] <- 0
-      h4$counts[h4$mids < 0] <- 0
-      h5$counts[h5$mids < 0] <- 0
+    var <- "slope"
+    xlab <- bquote(delta^{"18"} * "O trend (\u2030 " * "yr"^{-1} * ")")
+  }
+
+  ylab <- "Probability density"
+
+  # ----------------------------------------------------------------------------
+  # Obtain distribution and recent data
+
+  midpoint <- floor(filter.window / 2)
+
+  t <- piPeriod[(midpoint + 1) : (length(piPeriod) - midpoint)]
+
+  piData <- subsetData(x, t, var)
+
+  if (type == "anomaly") {
+
+    recentAnnualData <- processNGT() %>%
+      stackNGT()
+
+    if (filter.window == 1) {
+
+      recentPeriod <- seq(2011, by = -1, length.out = 11)
+      recentData <- recentAnnualData %>%
+        subsetData(recentPeriod, var)
 
     } else {
 
-      h1$counts[h1$mids > 0] <- 0
-      h2$counts[h2$mids > 0] <- 0
-      h3$counts[h3$mids > 0] <- 0
-      h4$counts[h4$mids > 0] <- 0
-      h5$counts[h5$mids > 0] <- 0
+      recentPeriod <- seq(2011, by = -1, length.out = filter.window)
+      recentData <- recentAnnualData %>%
+        subsetData(recentPeriod, var) %>%
+        mean()
 
     }
+
+  } else if (type == "trend") {
+
+    recentPeriod <- seq(2011, by = -1, length.out = filter.window)
+    recentData <- subsetData(x, recentPeriod, var) %>%
+      na.omit() %>%
+      .[1]
+
   }
 
-  plot(h0, xlim = xlim, ylim = ylim,
-       main = "", xlab = "", ylab = "",
-       col = adjustcolor("black", alpha = 0.2), yaxs = "i")
+  # ----------------------------------------------------------------------------
+  # Make plot
+
+  q <- seq(xlim[1], xlim[2], diff(breaks)[1] / 100)
+
+  hst <- hist(piData, freq = FALSE, breaks = breaks, xlim = xlim, ylim = ylim,
+              main = "", xlab = "", ylab = "",
+              col = adjustcolor(col[1], alpha = 0.2), yaxs = "i")
 
   mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
   mtext(ylab, side = 2, line = 3.5, cex = par()$cex.lab * par()$cex, las = 0)
 
-  plot(h1, xlim = xlim, ylim = ylim,
-       main = "", xlab = "", ylab = "",
-       col = col[1], add = TRUE)
+  lines(q, gq <- dnorm(q, mean = mean(piData), sd = sd(piData)),
+        col = col[1], lwd = 2)
 
-  plot(h2, xlim = xlim, ylim = ylim,
-       main = "", xlab = "", ylab = "",
-       col = col[2], add = TRUE)
-
-  plot(h3, xlim = xlim, ylim = ylim,
-       main = "", xlab = "", ylab = "",
-       col = col[3], add = TRUE)
-
-  plot(h4, xlim = xlim, ylim = ylim,
-       main = "", xlab = "", ylab = "",
-       col = col[4], add = TRUE)
-
-  plot(h5, xlim = xlim, ylim = ylim,
-       main = "", xlab = "", ylab = "",
-       col = col[5], add = TRUE)
+  ymax <- ifelse(max(hst$density) > max(gq), max(hst$density), max(gq))
 
   if (plot.quantiles) {
-    abline(v = quantile(x0, quantile.probs, na.rm = TRUE),
-           col = "black", lty = 5, lwd = 1)
+    sapply(quantile(piData, quantile.probs, na.rm = TRUE), function(x) {
+      lines(rep(x, 2), c(0, ymax), col = col[1], lty = 5, lwd = 1)
+    })
   }
+
+  if (filter.window == 1) {
+
+    par(new = TRUE)
+    hist(recentData, freq = FALSE, breaks = breaks, xlim = xlim,
+         axes = FALSE, main = "", xlab = "", ylab = "",
+         col = adjustcolor(col[2], alpha = 0.2), yaxs = "i")
+
+    ax <- axis(4, col = col[2], col.axis = col[2])
+    text(1.375 * xlim[2], y = mean(ax), "Probability density", srt = -90,
+         xpd = NA, cex = par()$cex.lab * par()$cex, col = col[2])
+
+  } else {
+
+    lines(rep(recentData, 2), c(0, ymax), col = col[2], lwd = 2.5)
+
+  }
+
+  cat("\nProbability of recent value under pI distribution:\n")
+  cat(sprintf("%s",
+    pnorm(q = mean(recentData), mean = mean(piData), sd = sd(piData),
+          lower.tail = FALSE)))
+  cat("\n\n")
 
   if (plot.legend) {
 
-    lab0 <- "Full data"
-    lab1 <- sprintf("%s to %s", min(p1), max(p1))
-    lab2 <- sprintf("%s to %s", min(p2), max(p2))
-    lab3 <- sprintf("%s to %s", min(p3), max(p3))
-    lab4 <- sprintf("%s to %s", min(p4), max(p4))
-    lab5 <- sprintf("%s to %s", min(p5), max(p5))
+    recentString <- ifelse(filter.window == 1, "Recent values", "Recent value")
 
-    legend("topright", c(lab0, lab1, lab2, lab3, lab4, lab5),
-           col = c(adjustcolor(1, 0.2), col), lty = 1, lwd = 10, bty = "n")
+    lg <- c(sprintf("pI distribution\n(%s-%s CE)",
+                    min(piPeriod), max(piPeriod)),
+            "2.5, 50, 97.5 %\nquantiles",
+            sprintf("%s\n(%s-%s CE)", recentString,
+                    min(recentPeriod), max(recentPeriod)))
+    lg.lty <- c(1, 5, 1)
+    lg.lwd <- c(10, 1, 2.5)
+    lg.col <- c(adjustcolor(col[1], 0.2), col[1], col[2])
+
+    if (type == "anomaly" & filter.window == 1) {
+      lg.lwd[3] <- lg.lwd[1]
+      lg.col[3] = adjustcolor(col[2], 0.2)
+    }
+
+    if (!plot.quantiles) {
+      lg <- lg[-2]
+      lg.lty <- lg.lty[-2]
+      lg.lwd <- lg.lwd[-2]
+      lg.col <- lg.col[-2]
+    }
+
+    legend("topleft", legend = lg, lty = lg.lty, lwd = lg.lwd, col = lg.col,
+       bty = "n", adj = c(0, 0.75), y.intersp = 1.5, seg.len = 2.5)
 
   }
 
-  if (!is.null(xmain)) {
+  if (!is.na(xmain)) {
     mtext(xmain, side = 3, line = 2.5, adj = 0,
           cex = par()$cex.lab * par()$cex, font = 2)
   }
-  if (!is.null(ymain)) {
+  if (!is.na(ymain)) {
     mtext(ymain, side = 2, line = 6, las = 0,
           cex = par()$cex.lab * par()$cex, font = 2)
   }
+
+}
+
+#' Produce paper figure 01
+#'
+#' @param panel character string to signal which subplot to produce; must be one
+#'   of "ts" for the time series plots or "map" for the Greenland map plot.
+#' @param filter.window single integer giving the size of the running mean
+#'   window to use for filtering the isotope and Arctic2k data; defaults to 11
+#'   (years).
+#' @param plot_record_number logical; if \code{TRUE}, and \code{panel} is set to
+#'   "ts", this produces the plot for the stacked isotope time series together
+#'   with the number of records contributing to the stack, thus overriding the
+#'   default plotting for "ts". This setting has no effect when \code{panel} is
+#'   set to "map".
+#' @author Thomas Münch
+#'
+makeFigure01 <- function(panel = "ts", filter.window = 11,
+                         plot_record_number = FALSE) {
+
+  if (!panel %in% c("ts", "map")) {
+    stop("Unknown plot panel request; options are 'ts' or 'map'.",
+         call. = FALSE)
+  }
+
+  if (filter.window < 1) {
+    stop("Running mean filter window needs to be >= 1.", call. = FALSE)
+  }
+
+  if ((filter.window %% 2) == 0) {
+    warning("Running mean filter window should be odd.", call. = FALSE)
+  }
+
+  require(dplyr)
+
+  # ----------------------------------------------------------------------------
+  # Load data
+
+  if (panel == "ts") {
+
+    NGT <- processNGT()
+
+    # stack NGT
+    stackedNGT <- NGT %>%
+      stackNGT()
+
+    # filter and stack NGT
+    filteredStackedNGT <- NGT %>%
+      filterData(window = filter.window) %>%
+      stackNGT()
+
+    # number of records contributing to the stack
+    if (plot_record_number) {
+
+      nRecords <- NGT %>%
+        stackNGT(stack = FALSE) %>%
+        countRecords()
+    }
+
+    Arctic2k <- readArctic2k()
+
+    # filter Arctic2k
+    filteredArctic2k <- Arctic2k %>%
+      filterData(window = filter.window)
+
+  } else {
+
+    cores <- loadPositions() %>%
+      dplyr::filter(Identifier == "core")
+    stations <- loadPositions() %>%
+      dplyr::filter(Identifier == "station")
+
+  }
+
+  # ----------------------------------------------------------------------------
+  # Make plots
+
+  if (panel == "ts") {
+
+    xlab  <- "Year CE"
+    ylab.ngt <- bquote(delta^{"18"} * "O anomaly (\u2030)")
+    ylab.a2k <- bquote("Temperature anomaly" * " (" * degree * "C)")
+
+    xlim <- c(1000, 2020)
+    ylim.ngt <- ifelse(rep(plot_record_number, 2), c(-2.5, 2.5), c(-6.5, 2.5))
+    ylim.a2k <- c(-2.5, 6.5)
+
+    xanml <- c(800, 2011)
+    yanml <- rep(0, 2)
+
+    startNew <- 1993
+    i <- match(startNew, stackedNGT$Year)
+    n <- nrow(stackedNGT)
+
+    col <- c("black", "dodgerblue4")
+
+    if (plot_record_number) {
+      op <- par(mar = c(5, 5, 0.5, 5))
+      adj.ngt.lab <- NA
+    } else {
+      op <- par(mar = c(0, 0, 0, 0), oma = c(5, 5, 0.5, 5))
+      adj.ngt.lab <- 0.9
+    }
+
+    plot(stackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
+         xlim = xlim, ylim = ylim.ngt)
+
+    if (plot_record_number) {
+      axis(1)
+      mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+    }
+
+    axis(2, at = seq(-2, 2, 1))
+    mtext(ylab.ngt, side = 2, line = 3, adj = adj.ngt.lab,
+          cex = par()$cex.lab * par()$cex, las = 0)
+
+    lines(xanml, yanml, lty = 3, lwd = 1.5, col = col[1])
+
+    lines(stackedNGT, col = "darkgrey")
+
+    lines(filteredStackedNGT[i : n, ], col = col[1], lwd = 2.5)
+    lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = 2.5)
+
+    mtext("a", side = 3, adj = 0.01, line = -3, font = 2, cex = par()$cex.lab)
+
+    if (plot_record_number) {
+
+      mtext("b", side = 3, adj = 0.99, line = -14,
+            font = 2, cex = par()$cex.lab)
+
+      par(new = TRUE)
+
+      plot(nRecords, type = "l", axes = FALSE, xlab = "", ylab = "",
+           xlim = xlim, ylim = c(0, 150), col = "darkgrey", lwd = 1.5)
+
+      axis(4, at = c(0, 10, 20))
+      text(2180, 10, "Number", srt = -90, xpd = NA, cex = par()$cex.lab)
+
+    } else {
+
+      x <- 2200
+      y <- -0.1
+
+      par(new = TRUE)
+
+      plot(Arctic2k$Year, Arctic2k$TempAnomaly, type = "n", axes = FALSE,
+           xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
+
+      axis(1)
+      axis(4, at = seq(-2, 2, 1), col = col[2], col.axis = col[2])
+
+      mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+      text(x, y, ylab.a2k, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex,
+           col = col[2])
+
+      lines(xanml, yanml, lty = 3, lwd = 1.5, col = col[2])
+
+      lines(Arctic2k$Year, Arctic2k$TempAnomaly,
+            col = adjustcolor(col[2], alpha = 0.6))
+      lines(filteredArctic2k$Year, filteredArctic2k$TempAnomaly,
+            col = col[2], lwd = 2.5)
+
+      mtext("c", side = 3, adj = 0.99, line = -13,
+            font = 2, cex = par()$cex.lab, col = col[2])
+
+    }
+
+    par(op)
+
+  } else {
+
+    require(ggplot2)
+
+    min.lat <- 57.5
+    max.lat <- 85
+    min.lon <- -75
+    max.lon <- -10
+
+    lat.pos <- c(60, 70, 80)
+    lon.pos <- -c(20, 40, 60)
+
+    lat.pos.offset <- c(3.5, 5, 10)
+
+    p <- grfxtools::ggpolar(pole = "N",
+                            max.lat = max.lat, min.lat = min.lat,
+                            max.lon = max.lon, min.lon = min.lon,
+                            lat.ax.vals = lat.pos, long.ax.vals = lon.pos,
+                            f.long.label.ticks = Inf, f.long.label.pos = 15,
+                            rotate = TRUE, land.fill.colour = "transparent",
+                            size.outer = 0.5,
+                            lat.ax.labs.pos = min.lon - lat.pos.offset,
+                            ax.labs.size = 4.75,
+                            country.outline.colour = "burlywood4", clip = "off") +
+
+  geom_text(data = cores, size = 2.5,
+            aes(x = Longitude, y = Latitude, label = Site)) +
+
+  geom_label(data = stations,
+             aes(x = Longitude, y = Latitude, label = Site),
+             size = 2.5, alpha = 0.75, label.size = 0) +
+
+  geom_point(data = cores, aes(x = Longitude, y = Latitude),
+             col = "black", bg = "grey", size = 1.5, pch = 21, stroke = 0.8) +
+
+  geom_point(data = stations, aes(x = Longitude, y = Latitude),
+             col = "black", size = 2.5, pch = 17)
+
+    p
+
+  }
+
+}
+
+#' Produce paper figure 03
+#'
+#' @param filter.window single integer giving the size of the running mean
+#'   window to use for filtering the isotope and Arctic2k data; defaults to 11
+#'   (years).
+#' @author Thomas Münch
+#'
+makeFigure03 <- function(filter.window = 11) {
+
+  if (filter.window < 1) {
+    stop("Running mean filter window needs to be >= 1.", call. = FALSE)
+  }
+
+  if ((filter.window %% 2) == 0) {
+    warning("Running mean filter window should be odd.", call. = FALSE)
+  }
+
+  require(dplyr)
+
+  # ----------------------------------------------------------------------------
+  # Load data
+
+  # Parameter - convert NGT to temperature with three different calibrations
+
+  permil2temperature.mid <- 1 / 0.67 # Greenland spatial slope
+  permil2temperature.low <- 1 / 1.1  # Masson-Delmotte et al. (2015)
+  permil2temperature.hig <- 2.1      # Vinther et al. (2009)
+
+  # Time series
+
+  NGT <- processNGT() %>%
+    filterData(window = filter.window) %>%
+    stackNGT() %>%
+    dplyr::mutate(stack = permil2temperature.mid * stack)
+
+  A2k <- readArctic2k() %>%
+    filterData(window = filter.window)
+
+  # Spectra
+
+  spectrumA2k <- readArctic2k() %>%
+    subsetData(t = 1979 : 1505, var = "TempAnomaly") %>%
+    ts(deltat = 1) %>%
+    proxysnr:::SpecMTM() %>%
+    proxysnr:::LogSmooth()
+
+  spectraNGT <- list()
+
+  spectraNGT$mid <- selectNGTForSpectra() %>%
+    proxysnr::ArraySpectra(df.log = 0.1) %>%
+    proxysnr::SeparateSpectra() %>%
+    .$signal
+
+  spectraNGT$low <- spectraNGT$hig <- spectraNGT$mid
+
+  # apply calibrations
+  spectraNGT$mid$spec <- spectraNGT$mid$spec * (permil2temperature.mid^2)
+  spectraNGT$low$spec <- spectraNGT$low$spec * (permil2temperature.low^2)
+  spectraNGT$hig$spec <- spectraNGT$hig$spec * (permil2temperature.hig^2)
+
+  # Linear regression data
+
+  t1 <- 1800 : 1000
+  t2 <- 2000 : 1800
+
+  regressionData <- list(
+    data.frame(x = t1, y = subsetData(NGT, t1, "stack")),
+    data.frame(x = t2, y = subsetData(NGT, t2, "stack")),
+    data.frame(x = rev(t1), y = subsetData(A2k, t1, "TempAnomaly")),
+    data.frame(x = rev(t2), y = subsetData(A2k, t2, "TempAnomaly"))
+  )
+
+  regressionModels <- regressionData %>%
+    lapply(function(lst) {coef(lm(y ~ x, lst))})
+
+  # ----------------------------------------------------------------------------
+  # Plot left panel
+
+  col <- c("black", "dodgerblue4", "black")
+
+  xlab <- "Year CE"
+  ylab.ngt <- bquote("NGT-2012 anomaly" * " (" * degree * "C)")
+  ylab.a2k <- bquote("Arctic2k anomaly" * " (" * degree * "C)")
+
+  xlim <- c(1000, 2011)
+  ylim.ngt <- c(-4, 2)
+  ylim.a2k <- c(-2, 4)
+
+  x <- 2170
+  y <- -0.5
+
+  op <- par(oma = c(5, 5, 1, 0), mar = c(0, 0, 0, 5.5), mfrow = c(1, 2))
+
+  plot(NGT, type = "n", axes = FALSE, xlab = "", ylab = "",
+       xlim = xlim, ylim = ylim.ngt)
+
+  axis(1)
+  axis(2, at = seq(-2, 2, 1))
+
+  mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+  mtext(ylab.ngt, side = 2, line = 3, cex = par()$cex.lab * par()$cex,
+        las = 0, adj = 1)
+
+  mtext("a", side = 3, adj = 0.01, line = -1.4,
+        font = 2, cex = par()$cex.lab, col = col[1])
+  mtext("b", side = 3, adj = 0.99, line = -10.5,
+        font = 2, cex = par()$cex.lab, col = col[2])
+
+  lines(NGT, col = col[1], lwd = 2.5)
+
+  lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
+        col = col[3], lwd = 1.5, lty = 2)
+  lines(t2, regressionModels[[2]][1] + regressionModels[[2]][2] * t2,
+        col = col[3], lwd = 1.5, lty = 2)
+
+  par(new = TRUE)
+
+  plot(A2k$Year, A2k$TempAnomaly, type = "n", axes = FALSE,
+       xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
+
+  axis(4, at = seq(-2, 1, 1), col = col[2], col.axis = col[2])
+  text(x, y, ylab.a2k, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex,
+       col = col[2])
+
+  lines(A2k$Year, A2k$TempAnomaly, col = col[2], lwd = 2.5)
+
+  lines(t1, regressionModels[[3]][1] + regressionModels[[3]][2] * t1,
+        col = col[3], lwd = 1.5, lty = 2)
+  lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
+        col = col[3], lwd = 1.5, lty = 2)
+
+  # ----------------------------------------------------------------------------
+  # Plot right panel
+
+  xlab  <- "Time period (yr)"
+  ylab <- expression("Power spectral density " * "(" * degree * "C"^{2}%.%"yr)")
+
+  n.crit.lower <- 1
+
+  par(mar = c(0, 5.5, 0, 0))
+
+  proxysnr:::LPlot(spectraNGT$mid, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
+                   xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.05, 10))
+
+  axis(1)
+  axis(2)
+
+  mtext(xlab, 1, 3.5, cex = par()$cex.lab)
+  mtext(ylab, 2, 3.75, cex = par()$cex.lab, las = 0)
+
+  mtext("c", side = 3, adj = 0.01, line = -1.4,
+        font = 2, cex = par()$cex.lab, col = col[1])
+
+  n.crit.upper <- length(which(spectraNGT$mid$freq > 1 / 5))
+  proxysnr:::LLines(spectraNGT$mid, bPeriod = TRUE, lwd = 3, col = col[1],
+                    removeFirst = n.crit.lower, removeLast = n.crit.upper)
+
+  i.keep <- (n.crit.lower + 1) : (length(spectraNGT$mid$freq) - n.crit.upper)
+  proxysnr:::Polyplot(1 / spectraNGT$mid$freq[i.keep],
+                      spectraNGT$hig$spec[i.keep], spectraNGT$low$spec[i.keep],
+                      col = col[1], alpha = 0.2)
+  proxysnr:::LLines(spectraNGT$low, bPeriod = TRUE, lwd = 1, lty = 1,
+                    removeFirst = n.crit.lower, removeLast = n.crit.upper,
+                    col = col[1])
+  proxysnr:::LLines(spectraNGT$hig, bPeriod = TRUE, lwd = 1, lty = 1,
+                    removeFirst = n.crit.lower, removeLast = n.crit.upper,
+                    col = col[1])
+
+  n.crit.upper <- length(which(spectrumA2k$freq > 1 / 5))
+  proxysnr:::LLines(spectrumA2k, bPeriod = TRUE, conf = FALSE, lwd = 3,
+                    removeFirst = n.crit.lower, removeLast = n.crit.upper,
+                    col = col[2])
+
+  legend("bottomleft", c("NGT-2012", "Arctic2k"),
+         lty = 1, lwd = 3, col = col, bty = "n")
+
+  par(op)
+
+  # ----------------------------------------------------------------------------
+  # How much higher is NGT variability?
+
+  combinedSpectra <- data.frame(
+    freq = spectrumA2k$freq,
+    a2k = spectrumA2k$spec,
+    ngtMid = spectraNGT$mid$spec,
+    ngtHig = spectraNGT$hig$spec,
+    ngtLow = spectraNGT$low$spec)
+
+  timescale <- c(1 / 51, 1 / 11)
+
+  variabilityRatio <- combinedSpectra %>%
+    dplyr::filter(freq >= timescale[1] & freq <= timescale[2]) %>%
+    dplyr::summarise(dplyr::across(.fns = mean)) %>%
+    dplyr::transmute(ngtLow = ngtLow / a2k,
+                     ngtMid = ngtMid / a2k,
+                     ngtHig = ngtHig / a2k)
+
+  cat("\nVariability ratio NGT vs. A2k (11 - 51 yr time scale):\n")
+  print(variabilityRatio)
+  cat("\n")
 
 }

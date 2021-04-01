@@ -11,253 +11,51 @@ path <- "~/programming/R/exNGT" #Thomas
 setwd(path)
 source("init.R")
 
-library(dplyr)
-
 # ------------------------------------------------------------------------------
-# Load NGT and Arctic2k data
+# Figure 01 - time series and map
 
-NGT <- processNGT()
-Arctic2k <- readArctic2k()
+Quartz(file = "./fig/main-figure01-ac.pdf")
 
-# ------------------------------------------------------------------------------
-# Processing parameters
+makeFigure01(panel = "ts")
+dev.off()
 
-filter.window <- 11
-permil2temperature <- 1 / 0.67
+Quartz(file = "./fig/main-figure01-b-raw.pdf", height = 6, width = 6)
 
-# ------------------------------------------------------------------------------
-# Fig. 1, main, full NGT
-
-plot_record_number <- FALSE
-plot_sub_periods <- FALSE
-
-# stack NGT
-stackedNGT <- NGT %>%
-  stackNGT()
-
-# filter and stack NGT
-filteredStackedNGT <- NGT %>%
-  filterData(window = filter.window) %>%
-  stackNGT()
-
-# number of records contributing to the stack
-nRecords <- NGT %>%
-  stackNGT(stack = FALSE) %>%
-  countRecords()
-
-xlab  <- "Year CE"
-ylab <- bquote(delta^{"18"} * "O anomaly (\u2030)")
-
-xlim <- c(1000, 2020)
-ylim <- c(-2.5, 2.5)
-
-xanml <- c(800, 2020)
-yanml <- rep(0, 2)
-
-startNew <- 1993
-i <- match(startNew, stackedNGT$Year)
-n <- nrow(stackedNGT)
-
-periodColors = c("#e41a1c", "#ff7f00", "#377eb8", "#4daf4a", "#984ea3")
-
-periods <- list(
-  p1 = 2011 : 1997, p2 = 1996 : 1982,
-  p3 = 1938 : 1924, p4 = 1884 : 1870,
-  p5 = 1424 : 1410
-)
-
-
-if (plot_record_number) {
-
-  # for plot with number of records
-  Quartz(file = "./fig/ngt-record-number-time-periods.pdf",
-         height = 4.5 , width = 8.9)
-  par(mar = c(5, 5, 0.5, 5))
-
-} else {
-
-  Quartz(file = "./fig/main-01-ngt.pdf", height = 4.5)
-}
-
-plot(stackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
-     xlim = xlim, ylim = ylim)
-
-axis(1)
-axis(2)
-
-mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
-
-if (plot_sub_periods) {
-
-  for (iT in 1 : length(periods)) {
-
-    nt <- length(periods[[iT]])
-    polygon(x = c(periods[[iT]], rev(periods[[iT]])),
-            y = c(rep(-3, nt), rep(2.5, nt)),
-            col = adjustcolor(periodColors[iT], alpha = 0.4),
-            border = NA)
-
-  }
-}
-
-lines(xanml, yanml, lty = 3, lwd = 1.5)
-
-lines(stackedNGT, col = "darkgrey")
-
-lines(filteredStackedNGT[i : n, ], col = "black", lwd = 2.5)
-lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = 2.5)
-
-if (plot_record_number) {
-
-  mtext("a", side = 3, adj = 0.01, padj = 2.4,
-        line = -1, font = 2, cex = par()$cex.lab)
-  mtext("b", side = 3, adj = 0.99, padj = 14.5,
-        line = -1, font = 2, cex = par()$cex.lab)
-
-  par(new = TRUE)
-
-  plot(nRecords, type = "l", axes = FALSE, xlab = "", ylab = "",
-       xlim = xlim, ylim = c(0, 150), col = "darkgrey", lwd = 1.5)
-
-  axis(4, at = c(0, 10, 20))
-  text(2180, 10, "Number", srt = -90, xpd = NA, cex = par()$cex.lab)
-
-}
-
+makeFigure01(panel = "map")
 dev.off()
 
 # ------------------------------------------------------------------------------
-# Fig. 1, minor, NGT and Arctic2k
+# Figure 02 - histograms
 
-# convert NGT stack to temperature
-stackedTemperatureNGT <- stackedNGT %>%
-  dplyr::mutate(stack = permil2temperature * stack)
-filteredStackedTemperatureNGT <- filteredStackedNGT %>%
-  dplyr::mutate(stack = permil2temperature * stack)
-
-# filter Arctic2k
-filteredArctic2k <- Arctic2k %>%
-  filterData(window = filter.window)
-
-col <- c("black", "dodgerblue4")
-
-xlab <- "Year CE"
-ylab <- bquote("Temperature anomaly" * " (" * degree * "C)")
-
-xlim <- c(1840, 2020)
-ylim <- c(-4, 4)
-
-Quartz(file = "./fig/main-02-ngt-arctic2k-comparison.pdf", height = 4.5)
-
-plot(stackedTemperatureNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
-     xlim = xlim, ylim = ylim)
-
-axis(1, at = seq(xlim[1], xlim[2], 20))
-axis(2, at = seq(ylim[1], ylim[2], 1))
-
-mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
-
-lines(xanml, yanml, lty = 3, lwd = 1.5)
-
-lines(stackedTemperatureNGT, col = "darkgrey")
-
-lines(filteredStackedTemperatureNGT, col = col[1], lwd = 2.5)
-
-lines(Arctic2k$Year, Arctic2k$TempAnomaly,
-      col = adjustcolor(col[2], alpha = 0.6))
-lines(filteredArctic2k$Year, filteredArctic2k$TempAnomaly, col = col[2], lwd = 2.5)
-
-legend("topleft", c("NGT stack", "Arctic2k"), col = col, lwd = 2.5, bty = "n")
-
-dev.off()
-
-# ------------------------------------------------------------------------------
-# Fig. 1, map
-
-library(ggplot2)
-
-cores <- loadPositions() %>%
-  dplyr::filter(Identifier == "core")
-stations <- loadPositions() %>%
-  dplyr::filter(Identifier == "station")
-
-min.lat <- 57.5
-max.lat <- 85
-min.lon <- -75
-max.lon <- -10
-
-lat.pos <- c(60, 70, 80)
-lon.pos <- -c(20, 40, 60)
-
-lat.pos.offset <- c(3.5, 5, 10)
-
-Quartz(file = "./fig/main-03-map.pdf", height = 6, width = 6)
-
-p <- ecustools::ggpolar(pole = "N",
-                        max.lat = max.lat, min.lat = min.lat,
-                        max.lon = max.lon, min.lon = min.lon,
-                        lat.ax.vals = lat.pos, long.ax.vals = lon.pos,
-                        f.long.label.ticks = Inf, f.long.label.pos = 15,
-                        rotate = TRUE, land.fill.colour = "transparent",
-                        size.outer = 0.5,
-                        lat.ax.labs.pos = min.lon - lat.pos.offset,
-                        ax.labs.size = 4.75,
-                        country.outline.colour = "burlywood4", clip = "off") +
-
-  geom_text(data = cores, size = 2.5,
-            aes(x = Longitude, y = Latitude, label = Site)) +
-
-  geom_label(data = stations,
-             aes(x = Longitude, y = Latitude, label = Site),
-             size = 2.5, alpha = 0.75, label.size = 0) +
-
-  geom_point(data = cores, aes(x = Longitude, y = Latitude),
-             col = "black", bg = "grey", size = 1.5, pch = 21, stroke = 0.8) +
-
-  geom_point(data = stations, aes(x = Longitude, y = Latitude),
-             col = "black", size = 2.5, pch = 17)
-
-p
-
-dev.off()
-
-# ------------------------------------------------------------------------------
-# Fig. 3, anomaly and slope histogram for main stack
-
-lab0 <- "Full data"
-lab1 <- "1997 to 2011"
-lab2 <- "1982 to 1996"
-lab3 <- "1924 to 1938"
-lab4 <- "1870 to 1884"
-lab5 <- "1410 to 1424"
-
-col = c("#e41a1c", "#ff7f00", "#377eb8", "#4daf4a", "#984ea3")
-
-slopesFilteredStackedNGT <- estimateSlopes(filteredStackedNGT)
-
-Quartz(file = "./fig/main-05-histograms.pdf",
-       height = 5, width = 12)
-
-layout(matrix(1 : 3, 1, 3), widths = c(0.43, 0.43, 0.14))
+Quartz(file = "./fig/main-figure02.pdf", height = 5, width = 12)
+layout(matrix(1 : 3, 1, 3), widths = c(0.42, 0.42, 0.16))
 par(cex = 1)
 
-plotHistogram(filteredStackedNGT, plot.legend = FALSE)
+plotHistogram(type = "anomaly", plot.legend = FALSE)
 mtext("a", side = 3, line = -0.5, cex = par()$cex.lab * par()$cex,
       las = 1, font = 2, adj = 0.02, padj = 0.5)
 
-plotHistogram(slopesFilteredStackedNGT,
-              breaks = seq(-0.2, 0.2, 0.01), range = "pos",
-              xlim = c(-0.1, 0.1), ylim = c(0, 0.2),
-              xlab = "slope", plot.legend = FALSE)
+plotHistogram(type = "trend", breaks = seq(-0.2, 0.2, 0.02), ylim = c(0, 10),
+              plot.legend = FALSE)
 mtext("b", side = 3, line = -0.5, cex = par()$cex.lab * par()$cex,
       las = 1, font = 2, adj = 0.02, padj = 0.5)
 
 par(mar = c(0, 0, 0, 0))
 plot(1, type = "n", axes = FALSE, xlab = "", ylab = "")
-legend("topleft", c(lab0, lab1, lab2, lab3, lab4, lab5),
-       col = c(adjustcolor(1, 0.2), adjustcolor(col, 0.6)),
-       lty = 1, lwd = 10, bty = "n")
 
+lg <- c("pI distribution\n(1000-1800 CE)", "2.5, 50, 97.5 %\nquantiles",
+        "Recent value\n(2001-2011 CE)")
+
+legend("topleft", legend = lg, lty = c(1, 5, 1), lwd = c(10, 1, 2.5),
+       col = c(adjustcolor("black", 0.2), "black", "firebrick4"),
+       bty = "n", adj = c(0, 0.75), y.intersp = 1.5, seg.len = 2.5)
+
+dev.off()
+
+# ------------------------------------------------------------------------------
+# Figure 03 - temperature time series and spectra
+
+Quartz(file = "./fig/main-figure03.pdf", height = 5, width = 16)
+
+makeFigure03()
 dev.off()
