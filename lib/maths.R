@@ -84,7 +84,9 @@ ApplyFilter <- function(data, filter, method = 0) {
 #' @author Maria Hoerhold
 #'
 filterData <-function(data, window = 5, method = 2, hasAgeColumn = TRUE) {
-  
+
+  if (window == 1) return(data)
+
   if (hasAgeColumn) {
     if (is.null(dim(data))) {
       stop("'data' is not a matrix or data frame.", call. = FALSE)
