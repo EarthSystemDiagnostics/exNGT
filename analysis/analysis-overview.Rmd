@@ -65,10 +65,10 @@ filteredStackedTemperatureNGT <- stackedNGT %>%
   dplyr::mutate(stack = permil2temperature * stack)
 ```
 
-## Comparison of NGT temperature stack with Arctic2k
+## Comparison of NGT-2012 temperature stack with Arctic2k
 
-* Overall correlation between NGT temperature stack and Arctic2k compilation
-  1000--2000 CE:
+* Overall correlation between NGT-2012 temperature stack and Arctic2k
+  compilation 1000--2000 CE:
   ```{r}
   t <- 1000 : 2000
 
@@ -85,6 +85,37 @@ filteredStackedTemperatureNGT <- stackedNGT %>%
   cor(subsetData(filteredStackedTemperatureNGT, t, "stack"),
       subsetData(filteredArctic2k, t, "TempAnomaly")) %>%
     round(digits = 2)
+  ```
+
+* Linear trends (in permil / 100 years) of Arctic2k and NGT-2012 stack over
+  pre-industrial and industrial era:
+  ```{r}
+  t1 <- 1800 : 1000
+  t2 <- 2000 : 1800
+
+  regressionData <- list(
+    data.frame(x = t1, y = subsetData(filteredStackedTemperatureNGT, t1, "stack")),
+    data.frame(x = t2, y = subsetData(filteredStackedTemperatureNGT, t2, "stack")),
+    data.frame(x = rev(t1), y = subsetData(filteredArctic2k, t1, "TempAnomaly")),
+    data.frame(x = rev(t2), y = subsetData(filteredArctic2k, t2, "TempAnomaly"))
+  )
+
+  regressionSlopes <- regressionData %>%
+    sapply(function(df) {unname(coef(lm(y ~ x, df))[2])})
+  ```
+
+  ```{r}
+  # NGT 1000-1800 CE:
+  (regressionSlopes[1] * 100) %>% round(digits = 2)
+
+  # Arctic2k 1000-1800 CE:
+  (regressionSlopes[3] * 100) %>% round(digits = 2)
+
+  # NGT 1800-2000 CE:
+  (regressionSlopes[2] * 100) %>% round(digits = 2)
+
+  # Arctic2k 1800-2000 CE:
+  (regressionSlopes[4] * 100) %>% round(digits = 2)
   ```
 
 ## Comparison of individual NGT firn core records with Arctic2k
