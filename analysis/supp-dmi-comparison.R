@@ -11,8 +11,6 @@ path <- "~/programming/R/exNGT" #Thomas
 setwd(path)
 source("init.R")
 
-library(magrittr)
-
 # ------------------------------------------------------------------------------
 # Load NGT and DMI data
 

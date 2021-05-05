@@ -32,7 +32,6 @@ This document summarises various analyses of the NGT firn core stack:
 Load relevant source files and packages:  
 ```{r, echo = TRUE, results = "hide", message = FALSE}
 source("init.R")
-library("dplyr")
 ```
 
 Set the running mean filter window size (yr) and the isotope--temperature slope

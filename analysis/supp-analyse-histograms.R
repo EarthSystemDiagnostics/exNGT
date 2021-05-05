@@ -12,8 +12,6 @@ path <- "~/programming/R/exNGT" #Thomas
 setwd(path)
 source("init.R")
 
-library(magrittr)
-
 # ------------------------------------------------------------------------------
 # Input
 
