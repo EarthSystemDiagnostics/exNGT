@@ -12,8 +12,6 @@ path <- "~/programming/R/exNGT" #Thomas
 setwd(path)
 source("init.R")
 
-library(magrittr)
-
 # ------------------------------------------------------------------------------
 # Input
 
@@ -98,15 +96,17 @@ ymain = c("Extend single cores", rep(NA, 3),
           "Extend stacks", rep(NA, 3),
           "Average all cores")
 
-Quartz(file = "./fig/histograms-anomalies.pdf", height = 12, width = 16)
-par(mfrow = c(3, 4), mar = c(5, 9, 4, 0.5))
+grfxtools::Quartz(file = "./fig/histograms-anomalies.pdf",
+                  height = 12, width = 16,
+                  mfrow = c(3, 4), mar = c(5, 9, 4, 0.5))
 
 for (i in 1 : n) plotHistogram(stacks[[i]], xmain = xmain[i], ymain = ymain[i])
 
 dev.off()
 
-Quartz(file = "./fig/histograms-slopes.pdf", height = 12, width = 16)
-par(mfrow = c(3, 4), mar = c(5, 9, 4, 0.5))
+grfxtools::Quartz(file = "./fig/histograms-slopes.pdf",
+                  height = 12, width = 16,
+                  mfrow = c(3, 4), mar = c(5, 9, 4, 0.5))
 
 for (i in 1 : n) plotHistogram(slopes[[i]], xmain = xmain[i], ymain = ymain[i],
                                breaks = seq(-0.2, 0.2, 0.01), range = "pos",
@@ -160,15 +160,14 @@ mainStackFixN <- data.frame(Year = mainStackFixN[, 1],
 
 # get diffusion length estimates in units of years for each site
 
-library(FirnR)
 climatePar <- loadClimPar()
 
-sigma <- FirnR::TemporalDiffusionLength(nt = nrow(NGT),
-                                        T = climatePar$meanTemperature + 273.15,
-                                        P = climatePar$surfacePressure,
-                                        bdot = climatePar$accRate,
-                                        rho.surface = climatePar$surfaceDensity,
-                                        names = climatePar$Site)
+sigma <- TemporalDiffusionLength(nt = nrow(NGT),
+                                 T = climatePar$meanTemperature + 273.15,
+                                 P = climatePar$surfacePressure,
+                                 bdot = climatePar$accRate,
+                                 rho.surface = climatePar$surfaceDensity,
+                                 names = climatePar$Site)
 
 # get the maximum diffusion length in the ice
 sigma.ice <- lapply(sigma, max) %>%
@@ -189,7 +188,7 @@ applyDiffusion <- function(x, siteID, sigma) {
   print(siteID)
   print(siteIndex)
 
-  x[inm] <- FirnR::DiffuseRecord(x[inm], sigma = sigma[seq(inm), siteIndex])
+  x[inm] <- DiffuseRecord(x[inm], sigma = sigma[seq(inm), siteIndex])
 
   return(x)
 
@@ -216,8 +215,9 @@ xmain = c("a. NGT main stack",
           "d. NGT main stack; fixed record number",
           "e. NGT main stack; full forward diffusion")
 
-Quartz(file = "./fig/histograms-different-methods.pdf", height = 8, width = 12)
-par(mfrow = c(2, 3), mar = c(5, 5, 4, 0.5))
+grfxtools::Quartz(file = "./fig/histograms-different-methods.pdf",
+                  height = 8, width = 12,
+                  mfrow = c(2, 3), mar = c(5, 5, 4, 0.5))
 
 plotHistogram(filteredStackedNGT, xmain = xmain[1])
 plotHistogram(filteredStackedNGT.method1, xmain = xmain[2])

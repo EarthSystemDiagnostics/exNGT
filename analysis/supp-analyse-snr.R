@@ -11,10 +11,6 @@ path <- "~/programming/R/exNGT" #Thomas
 setwd(path)
 source("init.R")
 
-library(magrittr)
-library(proxysnr)
-library(PaleoSpec)
-
 # ------------------------------------------------------------------------------
 # Input
 
@@ -43,8 +39,7 @@ year.upper <- max(recordOccurrence$Year[which(!is.na(recordOccurrence$GRIP))])
 year.lower <- min(recordOccurrence$Year[which(!is.na(recordOccurrence$B26))])
 
 # visualize
-Quartz()
-par(mar = c(5, 5, 0.5, 1))
+grfxtools::Quartz(mar = c(5, 5, 0.5, 1))
 plot.new()
 plot.window(xlim = c(1000, 2011), ylim = c(1, 16), xaxs = 'i')
 box()
@@ -93,11 +88,11 @@ label2 <- expression(bold("b"))
 n.crit.lower <- 1
 n.crit.upper <- length(which(spectraNGT$signal$freq > 1 / 5))
 
-Quartz(file = "./fig/ngt-snr.pdf", height = 4.5, width = 12)
-op <- par(LoadGraphicsPar(mfcol = c(1, 2), oma = c(5, 0, 0.5, 5.5),
-                          mar = c(0, 5.5, 0, 0)))
+grfxtools::Quartz(file = "./fig/ngt-snr.pdf",
+                  height = 4.5, width = 12, mfcol = c(1, 2),
+                  oma = c(5, 0, 0.5, 5.5), mar = c(0, 5.5, 0, 0))
 
-PaleoSpec::LPlot(spectraNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
+proxysnr:::LPlot(spectraNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
                  xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.05, 5))
 
 axis(1)
@@ -108,10 +103,10 @@ mtext(ylab1, 2, 3.75, cex = par()$cex.lab, las = 0)
 mtext(label1, side = 3, line = -1.5, cex = par()$cex.lab,
       adj = 0.02, padj = 0.2)
 
-PaleoSpec::LLines(spectraNGT$signal, bPeriod = TRUE, lwd = 2,
+proxysnr:::LLines(spectraNGT$signal, bPeriod = TRUE, lwd = 2,
                   removeFirst = n.crit.lower, removeLast = n.crit.upper)
 
-PaleoSpec::LPlot(snrNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
+proxysnr:::LPlot(snrNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
                  xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.1, 2))
 axis(1)
 axis(2, at = yat.snr)
@@ -125,6 +120,5 @@ mtext(label2, side = 3, line = -1.5, cex = par()$cex.lab,
 
 lines(1 / snrNGT$signal$freq, snrNGT$signal$spec / snrNGT$noise$spec, lwd = 2)
 
-par(op)
 dev.off()
 

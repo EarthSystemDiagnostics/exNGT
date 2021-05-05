@@ -11,8 +11,6 @@ path <- "~/programming/R/exNGT" #Thomas
 setwd(path)
 source("init.R")
 
-library(dplyr)
-
 # ------------------------------------------------------------------------------
 # Processing parameters
 
@@ -65,9 +63,9 @@ y <- -0.5
 
 col <- c("black", "dodgerblue4")
 
-Quartz(file = "./fig/ngt-arctic2k-running-correlation.pdf",
-       height = 7, width = 8.9)
-par(mfrow = c(2, 1), mar = c(0, 0, 0, 0), oma = c(5, 5, 0.5, 5))
+grfxtools::Quartz(file = "./fig/ngt-arctic2k-running-correlation.pdf",
+                  height = 7, width = 8.9, mfrow = c(2, 1),
+                  mar = c(0, 0, 0, 0), oma = c(5, 5, 0.5, 5))
 
 plot(NGT, type = "n", axes = FALSE, xlab = "", ylab = "",
      xlim = xlim, ylim = ylim.ngt)

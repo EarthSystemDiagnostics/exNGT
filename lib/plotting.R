@@ -52,8 +52,6 @@ plotHistogram <- function(piPeriod = 1000 : 1800, filter.window = 11,
     stop("Window size of 1 not suitable for trend estimation.", call. = FALSE)
   }
 
-  require(magrittr)
-
   # ----------------------------------------------------------------------------
   # Load data
 
@@ -234,8 +232,6 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
     warning("Running mean filter window should be odd.", call. = FALSE)
   }
 
-  require(dplyr)
-
   # ----------------------------------------------------------------------------
   # Load data
 
@@ -372,8 +368,6 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
 
   } else {
 
-    require(ggplot2)
-
     min.lat <- 57.5
     max.lat <- 85
     min.lon <- -75
@@ -395,18 +389,23 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
                             ax.labs.size = 4.75,
                             country.outline.colour = "burlywood4", clip = "off") +
 
-  geom_text(data = cores, size = 2.5,
-            aes(x = Longitude, y = Latitude, label = Site)) +
+      ggplot2::geom_text(data = cores, size = 2.5,
+                         ggplot2::aes(x = Longitude, y = Latitude,
+                                      label = Site)) +
 
-  geom_label(data = stations,
-             aes(x = Longitude, y = Latitude, label = Site),
-             size = 2.5, alpha = 0.75, label.size = 0) +
+      ggplot2::geom_label(data = stations,
+                          ggplot2::aes(x = Longitude, y = Latitude,
+                                       label = Site),
+                          size = 2.5, alpha = 0.75, label.size = 0) +
 
-  geom_point(data = cores, aes(x = Longitude, y = Latitude),
-             col = "black", bg = "grey", size = 1.5, pch = 21, stroke = 0.8) +
+      ggplot2::geom_point(data = cores,
+                          ggplot2::aes(x = Longitude, y = Latitude),
+                          col = "black", bg = "grey", size = 1.5,
+                          pch = 21, stroke = 0.8) +
 
-  geom_point(data = stations, aes(x = Longitude, y = Latitude),
-             col = "black", size = 2.5, pch = 17)
+      ggplot2::geom_point(data = stations,
+                          ggplot2::aes(x = Longitude, y = Latitude),
+                          col = "black", size = 2.5, pch = 17)
 
     p
 
@@ -430,8 +429,6 @@ makeFigure03 <- function(filter.window = 11) {
   if ((filter.window %% 2) == 0) {
     warning("Running mean filter window should be odd.", call. = FALSE)
   }
-
-  require(dplyr)
 
   # ----------------------------------------------------------------------------
   # Load data
