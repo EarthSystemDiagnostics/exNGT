@@ -13,7 +13,6 @@ source("init.R")
 
 library(magrittr)
 library(proxysnr)
-library(PaleoSpec)
 
 # ------------------------------------------------------------------------------
 # Input
@@ -96,7 +95,7 @@ grfxtools::Quartz(file = "./fig/ngt-snr.pdf",
                   height = 4.5, width = 12, mfcol = c(1, 2),
                   oma = c(5, 0, 0.5, 5.5), mar = c(0, 5.5, 0, 0))
 
-PaleoSpec::LPlot(spectraNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
+proxysnr:::LPlot(spectraNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
                  xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.05, 5))
 
 axis(1)
@@ -107,10 +106,10 @@ mtext(ylab1, 2, 3.75, cex = par()$cex.lab, las = 0)
 mtext(label1, side = 3, line = -1.5, cex = par()$cex.lab,
       adj = 0.02, padj = 0.2)
 
-PaleoSpec::LLines(spectraNGT$signal, bPeriod = TRUE, lwd = 2,
+proxysnr:::LLines(spectraNGT$signal, bPeriod = TRUE, lwd = 2,
                   removeFirst = n.crit.lower, removeLast = n.crit.upper)
 
-PaleoSpec::LPlot(snrNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
+proxysnr:::LPlot(snrNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
                  xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.1, 2))
 axis(1)
 axis(2, at = yat.snr)

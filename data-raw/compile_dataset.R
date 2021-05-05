@@ -30,7 +30,6 @@ compileDataset <- function(path, filename) {
   require(purrr)
   require(plyr)
   require(dplyr)
-  require(PaleoSpec)
 
   source(file.path(path, "data-raw/calculate_year_means_exNGT_2012.R"))
   source(file.path(path, "data-raw/read_pub_data.R"))
