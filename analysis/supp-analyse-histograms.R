@@ -162,15 +162,14 @@ mainStackFixN <- data.frame(Year = mainStackFixN[, 1],
 
 # get diffusion length estimates in units of years for each site
 
-library(FirnR)
 climatePar <- loadClimPar()
 
-sigma <- FirnR::TemporalDiffusionLength(nt = nrow(NGT),
-                                        T = climatePar$meanTemperature + 273.15,
-                                        P = climatePar$surfacePressure,
-                                        bdot = climatePar$accRate,
-                                        rho.surface = climatePar$surfaceDensity,
-                                        names = climatePar$Site)
+sigma <- TemporalDiffusionLength(nt = nrow(NGT),
+                                 T = climatePar$meanTemperature + 273.15,
+                                 P = climatePar$surfacePressure,
+                                 bdot = climatePar$accRate,
+                                 rho.surface = climatePar$surfaceDensity,
+                                 names = climatePar$Site)
 
 # get the maximum diffusion length in the ice
 sigma.ice <- lapply(sigma, max) %>%
@@ -191,7 +190,7 @@ applyDiffusion <- function(x, siteID, sigma) {
   print(siteID)
   print(siteIndex)
 
-  x[inm] <- FirnR::DiffuseRecord(x[inm], sigma = sigma[seq(inm), siteIndex])
+  x[inm] <- DiffuseRecord(x[inm], sigma = sigma[seq(inm), siteIndex])
 
   return(x)
 
