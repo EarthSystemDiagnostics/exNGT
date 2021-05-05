@@ -50,8 +50,8 @@ ylim2 <- c(-2, 3)
 x <- 2040
 y <- mean(ylim2)
 
-Quartz(file = "./fig/ngt-dmi-comparison.pdf", height = 4.5 , width = 8.9)
-par(mar = c(5, 5, 0.5, 5))
+grfxtools::Quartz(file = "./fig/ngt-dmi-comparison.pdf",
+                  height = 4.5 , width = 8.9, mar = c(5, 5, 0.5, 5))
 
 plot(filteredStackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
      xlim = xlim, ylim = ylim1)

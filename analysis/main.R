@@ -14,12 +14,12 @@ source("init.R")
 # ------------------------------------------------------------------------------
 # Figure 01 - time series and map
 
-Quartz(file = "./fig/main-figure01-ac.pdf")
+grfxtools::Quartz(file = "./fig/main-figure01-ac.pdf")
 
 makeFigure01(panel = "ts")
 dev.off()
 
-Quartz(file = "./fig/main-figure01-b-raw.pdf", height = 6, width = 6)
+grfxtools::Quartz(file = "./fig/main-figure01-b-raw.pdf", height = 6, width = 6)
 
 makeFigure01(panel = "map")
 dev.off()
@@ -27,7 +27,7 @@ dev.off()
 # ------------------------------------------------------------------------------
 # Figure 02 - histograms
 
-Quartz(file = "./fig/main-figure02.pdf", height = 5, width = 12.5)
+grfxtools::Quartz(file = "./fig/main-figure02.pdf", height = 5, width = 12.5)
 layout(matrix(1 : 3, 1, 3), widths = c(0.41, 0.41, 0.18))
 par(cex = 1)
 
@@ -55,7 +55,7 @@ dev.off()
 # ------------------------------------------------------------------------------
 # Figure 03 - temperature time series and spectra
 
-Quartz(file = "./fig/main-figure03.pdf", height = 5, width = 16)
+grfxtools::Quartz(file = "./fig/main-figure03.pdf", height = 5, width = 16)
 
 makeFigure03()
 dev.off()
