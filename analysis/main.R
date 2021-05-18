@@ -40,3 +40,9 @@ grfxtools::Quartz(file = "./fig/main-figure03.pdf",
 
 makeFigure03()
 dev.off()
+
+# ------------------------------------------------------------------------------
+# Run additional analyses
+
+rmarkdown::render(input = "./analysis/analysis-overview.Rmd",
+                  output_dir = "./out")

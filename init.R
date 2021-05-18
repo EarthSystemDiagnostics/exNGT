@@ -12,7 +12,8 @@
 # ------------------------------------------------------------------------------
 # Load all required packages
 
-required.packages <- c("grfxtools", "proxysnr", "tibble", "ggplot2", "dplyr")
+required.packages <- c("grfxtools", "proxysnr", "tibble", "ggplot2", "dplyr",
+                       "rmarkdown")
 
 for (pkg in required.packages) {
 
