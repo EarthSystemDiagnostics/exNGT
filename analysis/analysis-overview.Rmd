@@ -108,21 +108,29 @@ filteredStackedTemperatureNGT <- filteredStackedNGT %>%
   )
 
   regressionSlopes <- regressionData %>%
-    sapply(function(df) {unname(coef(lm(y ~ x, df))[2])})
+    sapply(function(df) {unname(coef(summary(lm(y ~ x, df)))[2, 1 : 2])})
   ```
 
   ```{r}
   # NGT 1000-1800 CE:
-  (regressionSlopes[1] * 100) %>% round(digits = 2)
+  (regressionSlopes[1, 1] * 100) %>% round(digits = 2)
+  # +/-
+  (regressionSlopes[2, 1] * 100) %>% round(digits = 2)
 
   # Arctic2k 1000-1800 CE:
-  (regressionSlopes[3] * 100) %>% round(digits = 2)
-
+  (regressionSlopes[1, 3] * 100) %>% round(digits = 2)
+  # +/-
+  (regressionSlopes[2, 3] * 100) %>% round(digits = 2)
+  
   # NGT 1800-2000 CE:
-  (regressionSlopes[2] * 100) %>% round(digits = 2)
+  (regressionSlopes[1, 2] * 100) %>% round(digits = 2)
+  # +/-
+  (regressionSlopes[2, 2] * 100) %>% round(digits = 2)
 
   # Arctic2k 1800-2000 CE:
-  (regressionSlopes[4] * 100) %>% round(digits = 2)
+  (regressionSlopes[1, 4] * 100) %>% round(digits = 2)
+  # +/-
+  (regressionSlopes[2, 4] * 100) %>% round(digits = 2)
   ```
 
 ## Comparison of individual NGT firn core records with Arctic2k
