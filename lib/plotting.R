@@ -1,10 +1,15 @@
-#' Plot histogram (paper figure 02)
+#' Plot histogram
 #'
 #' Plot a histogram of the pre-industrial isotope values or trends and compare
 #' it to the recent observations.
 #'
 #' @param piPeriod a vector of time points to specify the pre-industrial time
 #'   period; defaults to the years 1000-1800 CE.
+#' @param endRecentPeriod integer value for the last year to define the recent
+#'   period for comparison with the pre-industrial period. The recent period is
+#'   defined as the time period which ends in the year specified here and covers
+#'   a total number of years corresponding to the size of the
+#'   \code{filter.window}.
 #' @param filter.window single integer giving the size of the running mean
 #'   window to use for filtering the isotope data, and, if requested, the window
 #'   over which linear isotopic trends are estimated; defaults to 11 (years).
@@ -28,7 +33,8 @@
 #'   full range of \code{x}.
 #' @author Thomas Münch
 #'
-plotHistogram <- function(piPeriod = 1000 : 1800, filter.window = 11,
+plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
+                          filter.window = 11,
                           type = "anomaly", breaks = seq(-2, 2, 0.2),
                           xlim = range(breaks), ylim = c(0, 1.25),
                           col = c("black", "firebrick4"),
@@ -62,7 +68,7 @@ plotHistogram <- function(piPeriod = 1000 : 1800, filter.window = 11,
       stackNGT()
 
     var <- "stack"
-    xlab <- bquote(delta^{"18"} * "O anomaly (\u2030)")
+    xlab <- grfxtools::LabelAxis(suffix = "anomaly")
 
   } else if (type == "trend") {
 
@@ -72,7 +78,8 @@ plotHistogram <- function(piPeriod = 1000 : 1800, filter.window = 11,
       estimateSlopes(window = filter.window)
 
     var <- "slope"
-    xlab <- bquote(delta^{"18"} * "O trend (\u2030 " * "yr"^{-1} * ")")
+    xlab <- grfxtools::LabelAxis(suffix = "trend", unit.type = "trend",
+                                 time.unit = "yr")
   }
 
   ylab <- "Probability density"
@@ -93,13 +100,13 @@ plotHistogram <- function(piPeriod = 1000 : 1800, filter.window = 11,
 
     if (filter.window == 1) {
 
-      recentPeriod <- seq(2011, by = -1, length.out = 11)
+      recentPeriod <- seq(endRecentPeriod, by = -1, length.out = 11)
       recentData <- recentAnnualData %>%
         subsetData(recentPeriod, var)
 
     } else {
 
-      recentPeriod <- seq(2011, by = -1, length.out = filter.window)
+      recentPeriod <- seq(endRecentPeriod, by = -1, length.out = filter.window)
       recentData <- recentAnnualData %>%
         subsetData(recentPeriod, var) %>%
         mean()
@@ -108,7 +115,7 @@ plotHistogram <- function(piPeriod = 1000 : 1800, filter.window = 11,
 
   } else if (type == "trend") {
 
-    recentPeriod <- seq(2011, by = -1, length.out = filter.window)
+    recentPeriod <- seq(endRecentPeriod, by = -1, length.out = filter.window)
     recentData <- subsetData(x, recentPeriod, var) %>%
       na.omit() %>%
       .[1]
@@ -202,6 +209,9 @@ plotHistogram <- function(piPeriod = 1000 : 1800, filter.window = 11,
 
 }
 
+# ------------------------------------------------------------------------------
+# main figures
+
 #' Produce paper figure 01
 #'
 #' @param panel character string to signal which subplot to produce; must be one
@@ -209,6 +219,9 @@ plotHistogram <- function(piPeriod = 1000 : 1800, filter.window = 11,
 #' @param filter.window single integer giving the size of the running mean
 #'   window to use for filtering the isotope and Arctic2k data; defaults to 11
 #'   (years).
+#' @param permil2temperature numeric; isotope-to-temperature conversion slope
+#'   (permil / K) to use for a second NGT-2012 plot axis; defaults to the
+#'   Greenland spatial slope.
 #' @param plot_record_number logical; if \code{TRUE}, and \code{panel} is set to
 #'   "ts", this produces the plot for the stacked isotope time series together
 #'   with the number of records contributing to the stack, thus overriding the
@@ -217,6 +230,7 @@ plotHistogram <- function(piPeriod = 1000 : 1800, filter.window = 11,
 #' @author Thomas Münch
 #'
 makeFigure01 <- function(panel = "ts", filter.window = 11,
+                         permil2temperature = 1 / 0.67,
                          plot_record_number = FALSE) {
 
   if (!panel %in% c("ts", "map")) {
@@ -237,30 +251,48 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
 
   if (panel == "ts") {
 
+    # Time series data
+
     NGT <- processNGT()
 
-    # stack NGT
     stackedNGT <- NGT %>%
       stackNGT()
 
-    # filter and stack NGT
     filteredStackedNGT <- NGT %>%
       filterData(window = filter.window) %>%
       stackNGT()
 
-    # number of records contributing to the stack
     if (plot_record_number) {
+
+      # Number of records contributing to the stack
 
       nRecords <- NGT %>%
         stackNGT(stack = FALSE) %>%
         countRecords()
+
+    } else {
+
+      Arctic2k <- readArctic2k()
+
+      filteredArctic2k <- Arctic2k %>%
+        filterData(window = filter.window)
+
+      # Linear regression data (annual means)
+
+      t1 <- 1800 : 1000
+      t2 <- 2000 : 1800
+
+      regressionData <- list(
+        data.frame(x = t1, y = subsetData(stackedNGT, t1, "stack")),
+        data.frame(x = t2, y = subsetData(stackedNGT, t2, "stack")),
+        data.frame(x = rev(t1), y = subsetData(Arctic2k, t1, "TempAnomaly")),
+        data.frame(x = rev(t2), y = subsetData(Arctic2k, t2, "TempAnomaly"))
+      )
+
+      regressionModels <- regressionData %>%
+        lapply(function(lst) {coef(lm(y ~ x, lst))})
+
     }
-
-    Arctic2k <- readArctic2k()
-
-    # filter Arctic2k
-    filteredArctic2k <- Arctic2k %>%
-      filterData(window = filter.window)
 
   } else {
 
@@ -277,89 +309,109 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
   if (panel == "ts") {
 
     xlab  <- "Year CE"
-    ylab.ngt <- bquote(delta^{"18"} * "O anomaly (\u2030)")
-    ylab.a2k <- bquote("Temperature anomaly" * " (" * degree * "C)")
+    ylab.ngt.pm <- grfxtools::LabelAxis("NGT-2012")
+    ylab.ngt.dc <- grfxtools::LabelAxis("NGT-2012", unit = "celsius")
+    ylab.a2k <- grfxtools::LabelAxis("Arctic2k", unit = "celsius")
 
     xlim <- c(1000, 2020)
-    ylim.ngt <- ifelse(rep(plot_record_number, 2), c(-2.5, 2.5), c(-6.5, 2.5))
-    ylim.a2k <- c(-2.5, 6.5)
+    ylim.ngt <- ifelse(rep(plot_record_number, 2), c(-2.5, 2.5), c(-5, 2))
+    ylim.a2k <- c(-2, 5)
 
-    xanml <- c(800, 2011)
+    xanml <- c(800, 2020)
     yanml <- rep(0, 2)
 
     startNew <- 1993
     i <- match(startNew, stackedNGT$Year)
     n <- nrow(stackedNGT)
 
+    x1 <- 845
+    x2 <- 2175
+    y <- 0.
+
     col <- c("black", "dodgerblue4")
 
     if (plot_record_number) {
       op <- par(mar = c(5, 5, 0.5, 5))
-      adj.ngt.lab <- NA
     } else {
       op <- par(mar = c(0, 0, 0, 0), oma = c(5, 5, 0.5, 5))
-      adj.ngt.lab <- 0.9
     }
 
     plot(stackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
          xlim = xlim, ylim = ylim.ngt)
 
-    if (plot_record_number) {
-      axis(1)
-      mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-    }
-
-    axis(2, at = seq(-2, 2, 1))
-    mtext(ylab.ngt, side = 2, line = 3, adj = adj.ngt.lab,
-          cex = par()$cex.lab * par()$cex, las = 0)
-
-    lines(xanml, yanml, lty = 3, lwd = 1.5, col = col[1])
+    lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
 
     lines(stackedNGT, col = "darkgrey")
 
     lines(filteredStackedNGT[i : n, ], col = col[1], lwd = 2.5)
     lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = 2.5)
 
-    mtext("a", side = 3, adj = 0.01, line = -3, font = 2, cex = par()$cex.lab)
-
     if (plot_record_number) {
 
-      mtext("b", side = 3, adj = 0.99, line = -14,
-            font = 2, cex = par()$cex.lab)
+      ylab.ngt.pm <- grfxtools::LabelAxis(suffix = "anomaly")
+
+      axis(1)
+      mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+
+      axis(2, at = seq(-2, 2, 1))
+      mtext(ylab.ngt.pm, side = 2, line = 3,
+            cex = par()$cex.lab * par()$cex, las = 0)
+
+      mtext("a", side = 3, adj = 0.01, line = -4, font = 2, cex = par()$cex.lab)
+      mtext("b", side = 3, adj = 0.99, line = -21, font = 2, cex = par()$cex.lab)
 
       par(new = TRUE)
 
       plot(nRecords, type = "l", axes = FALSE, xlab = "", ylab = "",
-           xlim = xlim, ylim = c(0, 150), col = "darkgrey", lwd = 1.5)
+           xlim = xlim, ylim = c(0, 150), col = "darkgrey", lwd = 2)
 
       axis(4, at = c(0, 10, 20))
-      text(2180, 10, "Number", srt = -90, xpd = NA, cex = par()$cex.lab)
+      text(x2 + 25, 10, "Number", srt = -90, xpd = NA, cex = par()$cex.lab)
 
     } else {
 
-      x <- 2200
-      y <- -0.1
+      axis(2, at = seq(-2, 2, 1))
+      axis(4, labels = seq(-2, 2, 1), at = seq(-2, 2, 1) / permil2temperature)
+
+      text(x1, y, ylab.ngt.pm, srt = +90, xpd = NA,
+           cex = par()$cex.lab * par()$cex, col = col[1])
+      text(x2, y, ylab.ngt.dc, srt = -90, xpd = NA,
+           cex = par()$cex.lab * par()$cex, col = col[1])
+
+      mtext("a", side = 3, adj = 0.01, line = -2, font = 2, cex = par()$cex.lab)
+
+      lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
+            col = col[1], lwd = 2, lty = 2)
+      lines(t2, regressionModels[[2]][1] + regressionModels[[2]][2] * t2,
+            col = col[1], lwd = 2, lty = 2)
 
       par(new = TRUE)
+
+      y <- -0.5
 
       plot(Arctic2k$Year, Arctic2k$TempAnomaly, type = "n", axes = FALSE,
            xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
 
       axis(1)
-      axis(4, at = seq(-2, 2, 1), col = col[2], col.axis = col[2])
+      axis(4, at = seq(-2, 1, 1), col = col[2], col.axis = col[2])
 
       mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-      text(x, y, ylab.a2k, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex,
-           col = col[2])
+      text(x2, y, ylab.a2k, srt = -90, xpd = NA,
+           cex = par()$cex.lab * par()$cex, col = col[2])
 
-      lines(xanml, yanml, lty = 3, lwd = 1.5, col = col[2])
+      lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
 
       lines(Arctic2k$Year, Arctic2k$TempAnomaly,
             col = adjustcolor(col[2], alpha = 0.6))
       lines(filteredArctic2k$Year, filteredArctic2k$TempAnomaly,
             col = col[2], lwd = 2.5)
 
-      mtext("c", side = 3, adj = 0.99, line = -13,
+      lines(t1, regressionModels[[3]][1] + regressionModels[[3]][2] * t1,
+            col = col[2], lwd = 2, lty = 2)
+      lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
+            col = col[2], lwd = 2, lty = 2)
+
+      mtext("c", side = 3, adj = 0.99, line = -17.5,
             font = 2, cex = par()$cex.lab, col = col[2])
 
     }
@@ -413,6 +465,29 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
 
 }
 
+#' Produce paper figure 02
+#'
+#' @author Thomas Münch
+#'
+makeFigure02 <- function() {
+
+  layout(matrix(1 : 2, 1, 2), widths = c(0.7, 0.3))
+  par(cex = 1)
+
+  plotHistogram(type = "anomaly", plot.legend = FALSE)
+
+  par(mar = c(0, 0, 0, 0))
+  plot(1, type = "n", axes = FALSE, xlab = "", ylab = "")
+
+  lg <- c("Pre-ind. distribution\n(1000-1800 CE)", "Gaussian fit",
+          "2.5, 50, 97.5 %\nquantiles", "Recent value\n(2001-2011 CE)")
+
+  legend("topleft", legend = lg, lty = c(1, 1, 5, 1), lwd = c(10, 2, 1, 2.5),
+         col = c(adjustcolor("black", 0.2), "black", "black", "firebrick4"),
+         bty = "n", adj = c(0, 0.75), y.intersp = 1.5, seg.len = 2.5)
+
+}
+
 #' Produce paper figure 03
 #'
 #' @param filter.window single integer giving the size of the running mean
@@ -439,16 +514,6 @@ makeFigure03 <- function(filter.window = 11) {
   permil2temperature.low <- 1 / 1.1  # Masson-Delmotte et al. (2015)
   permil2temperature.hig <- 2.1      # Vinther et al. (2009)
 
-  # Time series
-
-  NGT <- processNGT() %>%
-    filterData(window = filter.window) %>%
-    stackNGT() %>%
-    dplyr::mutate(stack = permil2temperature.mid * stack)
-
-  A2k <- readArctic2k() %>%
-    filterData(window = filter.window)
-
   # Spectra
 
   spectrumA2k <- readArctic2k() %>%
@@ -471,86 +536,16 @@ makeFigure03 <- function(filter.window = 11) {
   spectraNGT$low$spec <- spectraNGT$low$spec * (permil2temperature.low^2)
   spectraNGT$hig$spec <- spectraNGT$hig$spec * (permil2temperature.hig^2)
 
-  # Linear regression data
-
-  t1 <- 1800 : 1000
-  t2 <- 2000 : 1800
-
-  regressionData <- list(
-    data.frame(x = t1, y = subsetData(NGT, t1, "stack")),
-    data.frame(x = t2, y = subsetData(NGT, t2, "stack")),
-    data.frame(x = rev(t1), y = subsetData(A2k, t1, "TempAnomaly")),
-    data.frame(x = rev(t2), y = subsetData(A2k, t2, "TempAnomaly"))
-  )
-
-  regressionModels <- regressionData %>%
-    lapply(function(lst) {coef(lm(y ~ x, lst))})
-
   # ----------------------------------------------------------------------------
-  # Plot left panel
+  # Plot
 
-  col <- c("black", "dodgerblue4", "black")
-
-  xlab <- "Year CE"
-  ylab.ngt <- bquote("NGT-2012 anomaly" * " (" * degree * "C)")
-  ylab.a2k <- bquote("Arctic2k anomaly" * " (" * degree * "C)")
-
-  xlim <- c(1000, 2011)
-  ylim.ngt <- c(-4, 2)
-  ylim.a2k <- c(-2, 4)
-
-  x <- 2170
-  y <- -0.5
-
-  op <- par(oma = c(5, 5, 1, 0), mar = c(0, 0, 0, 5.5), mfrow = c(1, 2))
-
-  plot(NGT, type = "n", axes = FALSE, xlab = "", ylab = "",
-       xlim = xlim, ylim = ylim.ngt)
-
-  axis(1)
-  axis(2, at = seq(-2, 2, 1))
-
-  mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-  mtext(ylab.ngt, side = 2, line = 3, cex = par()$cex.lab * par()$cex,
-        las = 0, adj = 1)
-
-  mtext("a", side = 3, adj = 0.01, line = -1.4,
-        font = 2, cex = par()$cex.lab, col = col[1])
-  mtext("b", side = 3, adj = 0.99, line = -10.5,
-        font = 2, cex = par()$cex.lab, col = col[2])
-
-  lines(NGT, col = col[1], lwd = 2.5)
-
-  lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
-        col = col[3], lwd = 1.5, lty = 2)
-  lines(t2, regressionModels[[2]][1] + regressionModels[[2]][2] * t2,
-        col = col[3], lwd = 1.5, lty = 2)
-
-  par(new = TRUE)
-
-  plot(A2k$Year, A2k$TempAnomaly, type = "n", axes = FALSE,
-       xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
-
-  axis(4, at = seq(-2, 1, 1), col = col[2], col.axis = col[2])
-  text(x, y, ylab.a2k, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex,
-       col = col[2])
-
-  lines(A2k$Year, A2k$TempAnomaly, col = col[2], lwd = 2.5)
-
-  lines(t1, regressionModels[[3]][1] + regressionModels[[3]][2] * t1,
-        col = col[3], lwd = 1.5, lty = 2)
-  lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
-        col = col[3], lwd = 1.5, lty = 2)
-
-  # ----------------------------------------------------------------------------
-  # Plot right panel
+  col <- c("black", "dodgerblue4")
 
   xlab  <- "Time period (yr)"
-  ylab <- expression("Power spectral density " * "(" * degree * "C"^{2}%.%"yr)")
+  ylab <- grfxtools::LabelAxis("Power spectral density", unit = "celsius",
+                               time.unit = "yr", unit.type = "psd")
 
   n.crit.lower <- 1
-
-  par(mar = c(0, 5.5, 0, 0))
 
   proxysnr:::LPlot(spectraNGT$mid, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
                    xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.05, 10))
@@ -560,9 +555,6 @@ makeFigure03 <- function(filter.window = 11) {
 
   mtext(xlab, 1, 3.5, cex = par()$cex.lab)
   mtext(ylab, 2, 3.75, cex = par()$cex.lab, las = 0)
-
-  mtext("c", side = 3, adj = 0.01, line = -1.4,
-        font = 2, cex = par()$cex.lab, col = col[1])
 
   n.crit.upper <- length(which(spectraNGT$mid$freq > 1 / 5))
   proxysnr:::LLines(spectraNGT$mid, bPeriod = TRUE, lwd = 3, col = col[1],
@@ -586,8 +578,6 @@ makeFigure03 <- function(filter.window = 11) {
 
   legend("bottomleft", c("NGT-2012", "Arctic2k"),
          lty = 1, lwd = 3, col = col, bty = "n")
-
-  par(op)
 
   # ----------------------------------------------------------------------------
   # How much higher is NGT variability?
