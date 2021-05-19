@@ -13,6 +13,8 @@
 install.packages("dplyr")
 install.packages("ggplot2")
 install.packages("tibble")
+install.packages("rmarkdown")
+install.packages("zoo")
 
 # install.packages("remotes")
 remotes::install_github("EarthSystemDiagnostics/proxysnr")
