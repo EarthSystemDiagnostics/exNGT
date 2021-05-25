@@ -77,21 +77,23 @@ filteredStackedTemperatureNGT <- filteredStackedNGT %>%
 * Overall correlation between NGT-2012 temperature stack and Arctic2k
   compilation 1000--2000 CE:
   ```{r}
-  t <- 2000 : 1000
-
-  cor(subsetData(filteredStackedTemperatureNGT, t, "stack"),
-      subsetData(filteredArctic2k, t, "TempAnomaly")) %>%
-    round(digits = 2)
+  res <- estimateCorrelation(stackedTemperatureNGT,
+                             filteredStackedTemperatureNGT, filteredArctic2k,
+                             filter.window = filter.window,
+                             analysis.period = 2000 : 1000,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
   ```
 
 * Correlation between NGT temperature stack and Arctic2k compilation for the
   20th century:
   ```{r}
-  t <- 2000 : 1901
-
-  cor(subsetData(filteredStackedTemperatureNGT, t, "stack"),
-      subsetData(filteredArctic2k, t, "TempAnomaly")) %>%
-    round(digits = 2)
+  res <- estimateCorrelation(stackedTemperatureNGT,
+                             filteredStackedTemperatureNGT, filteredArctic2k,
+                             filter.window = filter.window,
+                             analysis.period = 2000 : 1901,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
   ```
 
 * Linear trends (in degree Celsius / 100 years) of Arctic2k and NGT-2012 stack
@@ -181,29 +183,36 @@ cor(b21, a2k, use = "pairwise") %>%
 We calculate the correlations of the NGT isotope stack with the temperature data
 from three coastal Greenland weather stations for the time period 1901--2011.
 ```{r}
-t <- 2011 : 1901
-ngt <- subsetData(filteredStackedNGT, t, "stack")
-pituffik <- subsetData(filteredDMI, t, "Pituffik")
-upernavik <- subsetData(filteredDMI, t, "Upernavik")
-danmarkshavn <- subsetData(filteredDMI, t, "Danmarkshavn")
+pituffik <- dplyr::select(filteredDMI, "Year", "Pituffik")
+upernavik <- dplyr::select(filteredDMI, "Year", "Upernavik")
+danmarkshavn <- dplyr::select(filteredDMI, "Year", "Danmarkshavn")
 ```
 
 * Correlation of NGT isotope stack and Pituffik weather station temperature:
   ```{r}
-  cor(ngt, pituffik, use = "pairwise") %>%
-    round(digits = 2)
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT, pituffik,
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1901,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
   ```
 
 * Correlation of NGT isotope stack and Upernavik weather station temperature:
   ```{r}
-  cor(ngt, upernavik, use = "pairwise") %>%
-    round(digits = 2)
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT, upernavik,
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1901,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
 ```
 
 * Correlation of NGT isotope stack and Danmarkshavn weather station temperature:
   ```{r}
-  cor(ngt, danmarkshavn, use = "pairwise") %>%
-    round(digits = 2)
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT, danmarkshavn,
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1901,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
 ```
 
 ## Temperature increase of recent 15 years relative to past

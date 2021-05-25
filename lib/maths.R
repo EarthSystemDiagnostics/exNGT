@@ -212,6 +212,7 @@ sdError <- function(x, na.rm = FALSE) {
 #'     values, the correlation for the overlap period, and the standard error of
 #'     the mean values in the overlap period.
 #' @author Thomas Münch, Maria Hoerhold
+#'
 calculateOverlapStatistics <- function(data, site = "B18") {
 
   if (!site %in% c("B18", "B21", "B23", "B26", "NGRIP", "stack"))
@@ -264,5 +265,76 @@ doRunningCorrelation <- function(x, y, window = 101) {
   }
 
   return(correlation)
+
+}
+
+#' Estimate correlation and its significance
+#'
+#' Calculate the Pearson correlation coefficient between two running-mean
+#' filtered time series and estimate its significance based on a Monte Carlo
+#' sampling of surrogate data.
+#'
+#' The significance of the correlation between the data and the reference signal
+#' is estimated as follows: The AR1 autocorrelation coefficient is estimated
+#' from the original (i.e. unfiltered) data and used to create random surrogate
+#' time series with the same autocorrelation structure. The surrogate time
+#' series are filtered with the same filter as the data, and for each of the
+#' filtered surrogate time series the correlation with the filtered signal is
+#' computed. The p value of the correlation between the data and the signal is
+#' then obtained from the fraction of surrogate correlation values which lie
+#' above the actual observed correlation between signal and data.
+#'
+#' @param data a data frame with the unfiltered data time series (with the time
+#'   points in the first column and the data in the second column). This is only
+#'   used to estimate the autocorrelation in the data, so in order to get a
+#'   reliable autocorrelation estimate it may cover a larger time interval than
+#'   the actual \code{filteredData} (assuming stationarity).
+#' @param filteredData a data frame with the filtered version of \code{data},
+#'   which is correlated with the filtered \code{signal}.
+#' @param signal a data frame with the filtered signal time series (with the
+#'   time points in the first column and the data in the second column).
+#' @param filter.window single integer giving the size of the running mean
+#'   filter window for filtering the surrogate data; needs to be identical to
+#'   the one applied for filtering the input data.
+#' @param analysis.period optional vector of time points to define the time
+#'   period over which the correlation is estimated; if \code{NULL} (the
+#'   default) all time points which have non-missing observations in both the
+#'   \code{filteredData} and the \code{signal} are used.
+#' @param timeColumn character vector of length 1 with the name of the time
+#'   column for \code{filteredData} and \code{signal}.
+#' @param nmc integer; number of surrogate time series to use for estimating the
+#'   correlation significance.
+#' @return a list of two elements: the correlation between the
+#'   \code{filteredData} and the \code{signal} and the estimated p value.
+#' @author Thomas Münch
+#'
+estimateCorrelation <- function(data, filteredData, signal,
+                                filter.window, analysis.period = NULL,
+                                timeColumn = "Year", nmc = 1000) {
+
+  a1 <- acf(data[, 2], lag.max = 1, plot = FALSE)$acf[2, 1, 1]
+
+  if (length(analysis.period)) {
+    filteredData <- filteredData %>%
+      dplyr::filter(!!as.name(timeColumn) %in% analysis.period)
+  }
+
+  corData <- filteredData %>%
+    dplyr::inner_join(signal, by = timeColumn) %>%
+    na.omit()
+
+  referenceCor <- cor(corData[, 2], corData[, 3])
+
+  n <- nrow(corData)
+  surrogates <- replicate(nmc, arima.sim(model = list(ar = a1), n = n))
+
+  filteredSurrogates <- filterData(surrogates, window = filter.window,
+                                   hasAgeColumn = FALSE)
+
+  surrogateCor <- cor(corData[, 2], filteredSurrogates)[1, ]
+
+  p <- sum(surrogateCor >= referenceCor) / nmc
+
+  return(list(r = referenceCor, p = p))
 
 }
