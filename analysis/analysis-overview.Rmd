@@ -77,7 +77,7 @@ filteredStackedTemperatureNGT <- filteredStackedNGT %>%
 * Overall correlation between NGT-2012 temperature stack and Arctic2k
   compilation 1000--2000 CE:
   ```{r}
-  t <- 1000 : 2000
+  t <- 2000 : 1000
 
   cor(subsetData(filteredStackedTemperatureNGT, t, "stack"),
       subsetData(filteredArctic2k, t, "TempAnomaly")) %>%
@@ -87,7 +87,7 @@ filteredStackedTemperatureNGT <- filteredStackedNGT %>%
 * Correlation between NGT temperature stack and Arctic2k compilation for the
   20th century:
   ```{r}
-  t <- 1901 : 2000
+  t <- 2000 : 1901
 
   cor(subsetData(filteredStackedTemperatureNGT, t, "stack"),
       subsetData(filteredArctic2k, t, "TempAnomaly")) %>%
@@ -103,8 +103,8 @@ filteredStackedTemperatureNGT <- filteredStackedNGT %>%
   regressionData <- list(
     data.frame(x = t1, y = subsetData(stackedTemperatureNGT, t1, "stack")),
     data.frame(x = t2, y = subsetData(stackedTemperatureNGT, t2, "stack")),
-    data.frame(x = rev(t1), y = subsetData(Arctic2k, t1, "TempAnomaly")),
-    data.frame(x = rev(t2), y = subsetData(Arctic2k, t2, "TempAnomaly"))
+    data.frame(x = t1, y = subsetData(Arctic2k, t1, "TempAnomaly")),
+    data.frame(x = t2, y = subsetData(Arctic2k, t2, "TempAnomaly"))
   )
 
   regressionSlopes <- regressionData %>%
@@ -145,7 +145,7 @@ mergedFilteredNGT <- processNGT() %>%
   filterData(window = filter.window) %>%
   stackNGT(stack = FALSE)
 
-t <- 1000 : 2000
+t <- 2000 : 1000
 a2k <- subsetData(filteredArctic2k, t, "TempAnomaly")
 grip <- subsetData(mergedFilteredNGT, t, "GRIP")
 gisp2 <- subsetData(mergedFilteredNGT, t, "GISP2")
@@ -181,7 +181,7 @@ cor(b21, a2k, use = "pairwise") %>%
 We calculate the correlations of the NGT isotope stack with the temperature data
 from three coastal Greenland weather stations for the time period 1901--2011.
 ```{r}
-t <- 1901 : 2011
+t <- 2011 : 1901
 ngt <- subsetData(filteredStackedNGT, t, "stack")
 pituffik <- subsetData(filteredDMI, t, "Pituffik")
 upernavik <- subsetData(filteredDMI, t, "Upernavik")
@@ -229,8 +229,8 @@ minFilteredStackedTemperatureNGT <- filteredStackedNGT %>%
 
 * Recent 15 years versus 1961-1990 reference period:
   ```{r}
-  t1 <- 1997 : 2011
-  t2 <- 1961 : 1990
+  t1 <- 2011 : 1997
+  t2 <- 1990 : 1961
 
   # spatial slope
   (mean(subsetData(filteredStackedTemperatureNGT, t1, var = "stack")) -
@@ -251,8 +251,8 @@ minFilteredStackedTemperatureNGT <- filteredStackedNGT %>%
 
 * Recent 15 years versus 20th century (1901-2000):
   ```{r}
-  t1 <- 1997 : 2011
-  t2 <- 1901 : 2000
+  t1 <- 2011 : 1997
+  t2 <- 2000 : 1901
   
   # spatial slope
   (mean(subsetData(filteredStackedTemperatureNGT, t1, var = "stack")) -

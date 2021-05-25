@@ -285,8 +285,8 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
       regressionData <- list(
         data.frame(x = t1, y = subsetData(stackedNGT, t1, "stack")),
         data.frame(x = t2, y = subsetData(stackedNGT, t2, "stack")),
-        data.frame(x = rev(t1), y = subsetData(Arctic2k, t1, "TempAnomaly")),
-        data.frame(x = rev(t2), y = subsetData(Arctic2k, t2, "TempAnomaly"))
+        data.frame(x = t1, y = subsetData(Arctic2k, t1, "TempAnomaly")),
+        data.frame(x = t2, y = subsetData(Arctic2k, t2, "TempAnomaly"))
       )
 
       regressionModels <- regressionData %>%
