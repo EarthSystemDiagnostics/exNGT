@@ -245,6 +245,23 @@ calculateOverlapStatistics <- function(data, site = "B18") {
   
 }
 
+#' Calculate running correlation
+#'
+#' Calculate the running correlation between two time series over consecutive
+#' windows of a given length.
+#'
+#' @param x numeric vector (time series) to be correlated with \code{y}.
+#' @param y numeric vector (time series) to be correlated with \code{x}.
+#' @param window integer; width of the windows in number of time steps or
+#'   indices over which correlations between \code{x} and \code{y} are computed;
+#'   needs to be an odd number.
+#' @return numeric vector of the same length as \code{x} and \code{y} with the
+#'   running correlations between the data computed over every consecutive
+#'   window which fits into the observational range of the data. Note that the
+#'   correlation estimates are centred on the window, so that the first and last
+#'   \code{(window - 1) / 2} return values are \code{NA}.
+#' @author Thomas Münch
+#'
 doRunningCorrelation <- function(x, y, window = 101) {
 
   n <- length(x)
@@ -336,5 +353,89 @@ estimateCorrelation <- function(data, filteredData, signal,
   p <- sum(surrogateCor >= referenceCor) / nmc
 
   return(list(r = referenceCor, p = p))
+
+}
+
+#' Estimate running correlation and its significance
+#'
+#' Calculate the running correlation between two time series over consecutive
+#' windows of a given length and estimate the significance of the correlations
+#' based on a Monte Carlo sampling of surrogate data, accounting for running
+#' mean filtering of the data.
+#'
+#' The significance of the running correlation between the data and the
+#' reference signal is estimated following the method described in van
+#' Oldenborgh and Burgers (2005): The overall correlation between the data and
+#' the signal is computed and used to create random surrogate time series which
+#' on average exhibit the same correlation with the signal. The data, signal and
+#' surrogate data are then filtered with a running mean filter, and the running
+#' correlation between the data and the signal and between the surrogate data
+#' and the signal are computed. Expressing the correlations in terms of z values
+#' (van Oldenborgh and Burgers, 2005), the p value of the running correlation is
+#' obtained from the fraction of maximum z value differences for the surrogate
+#' data which exceed the maximum z value difference of the observation.
+#'
+#' @param data numeric vector with the investigated time series that is to be
+#'   correlated with the reference \code{signal}; at the original temporal
+#'   resolution prior to any running mean filtering.
+#' @param signal numeric vector of the reference signal time series to which the
+#'   \code{data} is correlated; at the same temporal resolution as \code{data}.
+#' @param nmc integer; number of surrogate time series to use for estimating the
+#'   correlation significance.
+#' @param correlation.window integer; width of the windows in number of time
+#'   steps or indices over which correlations between \code{data} and
+#'   \code{signal} are computed; needs to be an odd number (see also
+#'   \code{doRunningCorrelation()}).
+#' @param filter.window single integer giving the size of the running mean
+#'   filter window for filtering the data.
+#' @return a list of six elements: estimated p value, time series of running
+#'   correlation between signal and data, array of running correlation time
+#'   series between signal and surrogate data, arrays with the time series of
+#'   the 2.5 and 97.5 % quantiles of the running correlations between signal and
+#'   surrogate data, and execution date of the analysis.
+#' @references
+#' van Oldenborgh and Burgers, Searching for decadal variations in ENSO
+#'   precipitation teleconnections, Geophys. Res. Lett., 32(15), L15701,
+#'   https://doi.org/10.1029/2005GL023110, 2005.
+#' @author Thomas Münch
+#'
+estimateRunningCorrelation <- function(data, signal, nmc = 1000,
+                                       correlation.window = 101,
+                                       filter.window = 11) {
+
+  deltaZ <- function(r) {
+
+    z <- function(r) {log((1 + r) / (1 - r)) / 2}
+
+    z(max(r, na.rm = TRUE)) - z(min(r, na.rm = TRUE))
+  }
+
+  r    <- cor(data, signal)
+  rfac <- sqrt((1 - r^2) / r^2)
+
+  surrogates <- replicate(nmc, c(scale(signal)) + rfac * rnorm(length(signal)))
+
+  signal <- filterData(signal, window = filter.window, hasAgeColumn = FALSE)
+  data <- filterData(data, window = filter.window, hasAgeColumn = FALSE)
+  surrogates <- apply(surrogates, 2, filterData, window = filter.window,
+                      hasAgeColumn = FALSE)
+
+  runningDat <- doRunningCorrelation(data, signal, correlation.window)
+  runningSim <- apply(surrogates, 2, doRunningCorrelation, y = signal,
+                      window = correlation.window)
+
+  deltaZDat <- deltaZ(runningDat)
+  deltaZSim <- apply(runningSim, 2, deltaZ)
+
+  res <- list(
+    p = sum(deltaZSim >= deltaZDat) / nmc,
+    dat = runningDat,
+    sim = runningSim,
+    r.upper = apply(runningSim, 1, quantile, probs = 0.975, na.rm = TRUE),
+    r.lower = apply(runningSim, 1, quantile, probs = 0.025, na.rm = TRUE),
+    date = Sys.time()
+  )
+
+  return(res)
 
 }
