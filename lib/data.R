@@ -128,11 +128,13 @@ readDMI <- function(path = "data/gr_annual_temperature_1873_2015.csv") {
 #' NEEM community members, Nature, https://doi.org/10.1038/nature11789, 2013.
 #'
 #' * NEGIS elevation and accumulation rate data from
-#' Vallelonga et al., The Cryosphere, https://10.5194/tc-8-1275-2014, 2014.
+#' Vallelonga et al., The Cryosphere, https://doi.org/10.5194/tc-8-1275-2014, 2014.
 #'
 #' * NEGIS temperature from
-#' Zuhr et al., Depositional processes of surface snow on the Greenland ice
-#'   sheet, manuscript in preparation.
+#' Zuhr et al., The Cryosphere Discuss., https://doi.org/10.5194/tc-2021-36, 2021.
+#'
+#' * Average surface snow density (0-1 m) from
+#' Schaller et al., PANGAEA, https://doi.org/10.1594/PANGAEA.867874, 2016.
 #' @author Thomas Münch
 #'
 loadClimPar <- function() {
