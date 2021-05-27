@@ -222,16 +222,10 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
 #' @param permil2temperature numeric; isotope-to-temperature conversion slope
 #'   (permil / K) to use for a second NGT-2012 plot axis; defaults to the
 #'   Greenland spatial slope.
-#' @param plot_record_number logical; if \code{TRUE}, and \code{panel} is set to
-#'   "ts", this produces the plot for the stacked isotope time series together
-#'   with the number of records contributing to the stack, thus overriding the
-#'   default plotting for "ts". This setting has no effect when \code{panel} is
-#'   set to "map".
 #' @author Thomas Münch
 #'
 makeFigure01 <- function(panel = "ts", filter.window = 11,
-                         permil2temperature = 1 / 0.67,
-                         plot_record_number = FALSE) {
+                         permil2temperature = 1 / 0.67) {
 
   if (!panel %in% c("ts", "map")) {
     stop("Unknown plot panel request; options are 'ts' or 'map'.",
@@ -262,37 +256,25 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
       filterData(window = filter.window) %>%
       stackNGT()
 
-    if (plot_record_number) {
+    Arctic2k <- readArctic2k()
 
-      # Number of records contributing to the stack
+    filteredArctic2k <- Arctic2k %>%
+      filterData(window = filter.window)
 
-      nRecords <- NGT %>%
-        stackNGT(stack = FALSE) %>%
-        countRecords()
+    # Linear regression data (annual means)
 
-    } else {
+    t1 <- 1800 : 1000
+    t2 <- 2000 : 1800
 
-      Arctic2k <- readArctic2k()
+    regressionData <- list(
+      data.frame(x = t1, y = subsetData(stackedNGT, t1, "stack")),
+      data.frame(x = t2, y = subsetData(stackedNGT, t2, "stack")),
+      data.frame(x = t1, y = subsetData(Arctic2k, t1, "TempAnomaly")),
+      data.frame(x = t2, y = subsetData(Arctic2k, t2, "TempAnomaly"))
+    )
 
-      filteredArctic2k <- Arctic2k %>%
-        filterData(window = filter.window)
-
-      # Linear regression data (annual means)
-
-      t1 <- 1800 : 1000
-      t2 <- 2000 : 1800
-
-      regressionData <- list(
-        data.frame(x = t1, y = subsetData(stackedNGT, t1, "stack")),
-        data.frame(x = t2, y = subsetData(stackedNGT, t2, "stack")),
-        data.frame(x = t1, y = subsetData(Arctic2k, t1, "TempAnomaly")),
-        data.frame(x = t2, y = subsetData(Arctic2k, t2, "TempAnomaly"))
-      )
-
-      regressionModels <- regressionData %>%
-        lapply(function(lst) {coef(lm(y ~ x, lst))})
-
-    }
+    regressionModels <- regressionData %>%
+      lapply(function(lst) {coef(lm(y ~ x, lst))})
 
   } else {
 
@@ -314,7 +296,7 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
     ylab.a2k <- grfxtools::LabelAxis("Arctic2k", unit = "celsius")
 
     xlim <- c(1000, 2020)
-    ylim.ngt <- ifelse(rep(plot_record_number, 2), c(-2.5, 2.5), c(-5, 2))
+    ylim.ngt <- c(-5, 2)
     ylim.a2k <- c(-2, 5)
 
     xanml <- c(800, 2020)
@@ -330,11 +312,7 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
 
     col <- c("black", "dodgerblue4")
 
-    if (plot_record_number) {
-      op <- par(mar = c(5, 5, 0.5, 5))
-    } else {
-      op <- par(mar = c(0, 0, 0, 0), oma = c(5, 5, 0.5, 5))
-    }
+    op <- par(mar = c(0, 0, 0, 0), oma = c(5, 5, 0.5, 5))
 
     plot(stackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
          xlim = xlim, ylim = ylim.ngt)
@@ -346,75 +324,49 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
     lines(filteredStackedNGT[i : n, ], col = col[1], lwd = 2.5)
     lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = 2.5)
 
-    if (plot_record_number) {
+    axis(2, at = seq(-2, 2, 1))
+    axis(4, labels = seq(-2, 2, 1), at = seq(-2, 2, 1) / permil2temperature)
 
-      ylab.ngt.pm <- grfxtools::LabelAxis(suffix = "anomaly")
+    text(x1, y, ylab.ngt.pm, srt = +90, xpd = NA,
+         cex = par()$cex.lab * par()$cex, col = col[1])
+    text(x2, y, ylab.ngt.dc, srt = -90, xpd = NA,
+         cex = par()$cex.lab * par()$cex, col = col[1])
 
-      axis(1)
-      mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+    mtext("a", side = 3, adj = 0.01, line = -2, font = 2, cex = par()$cex.lab)
 
-      axis(2, at = seq(-2, 2, 1))
-      mtext(ylab.ngt.pm, side = 2, line = 3,
-            cex = par()$cex.lab * par()$cex, las = 0)
+    lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
+          col = col[1], lwd = 2, lty = 2)
+    lines(t2, regressionModels[[2]][1] + regressionModels[[2]][2] * t2,
+          col = col[1], lwd = 2, lty = 2)
 
-      mtext("a", side = 3, adj = 0.01, line = -4, font = 2, cex = par()$cex.lab)
-      mtext("b", side = 3, adj = 0.99, line = -21, font = 2, cex = par()$cex.lab)
+    par(new = TRUE)
 
-      par(new = TRUE)
+    y <- -0.5
 
-      plot(nRecords, type = "l", axes = FALSE, xlab = "", ylab = "",
-           xlim = xlim, ylim = c(0, 150), col = "darkgrey", lwd = 2)
+    plot(Arctic2k$Year, Arctic2k$TempAnomaly, type = "n", axes = FALSE,
+         xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
 
-      axis(4, at = c(0, 10, 20))
-      text(x2 + 25, 10, "Number", srt = -90, xpd = NA, cex = par()$cex.lab)
+    axis(1)
+    axis(4, at = seq(-2, 1, 1), col = col[2], col.axis = col[2])
 
-    } else {
+    mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+    text(x2, y, ylab.a2k, srt = -90, xpd = NA,
+         cex = par()$cex.lab * par()$cex, col = col[2])
 
-      axis(2, at = seq(-2, 2, 1))
-      axis(4, labels = seq(-2, 2, 1), at = seq(-2, 2, 1) / permil2temperature)
+    lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
 
-      text(x1, y, ylab.ngt.pm, srt = +90, xpd = NA,
-           cex = par()$cex.lab * par()$cex, col = col[1])
-      text(x2, y, ylab.ngt.dc, srt = -90, xpd = NA,
-           cex = par()$cex.lab * par()$cex, col = col[1])
+    lines(Arctic2k$Year, Arctic2k$TempAnomaly,
+          col = adjustcolor(col[2], alpha = 0.6))
+    lines(filteredArctic2k$Year, filteredArctic2k$TempAnomaly,
+          col = col[2], lwd = 2.5)
 
-      mtext("a", side = 3, adj = 0.01, line = -2, font = 2, cex = par()$cex.lab)
+    lines(t1, regressionModels[[3]][1] + regressionModels[[3]][2] * t1,
+          col = col[2], lwd = 2, lty = 2)
+    lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
+          col = col[2], lwd = 2, lty = 2)
 
-      lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
-            col = col[1], lwd = 2, lty = 2)
-      lines(t2, regressionModels[[2]][1] + regressionModels[[2]][2] * t2,
-            col = col[1], lwd = 2, lty = 2)
-
-      par(new = TRUE)
-
-      y <- -0.5
-
-      plot(Arctic2k$Year, Arctic2k$TempAnomaly, type = "n", axes = FALSE,
-           xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
-
-      axis(1)
-      axis(4, at = seq(-2, 1, 1), col = col[2], col.axis = col[2])
-
-      mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-      text(x2, y, ylab.a2k, srt = -90, xpd = NA,
-           cex = par()$cex.lab * par()$cex, col = col[2])
-
-      lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
-
-      lines(Arctic2k$Year, Arctic2k$TempAnomaly,
-            col = adjustcolor(col[2], alpha = 0.6))
-      lines(filteredArctic2k$Year, filteredArctic2k$TempAnomaly,
-            col = col[2], lwd = 2.5)
-
-      lines(t1, regressionModels[[3]][1] + regressionModels[[3]][2] * t1,
-            col = col[2], lwd = 2, lty = 2)
-      lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
-            col = col[2], lwd = 2, lty = 2)
-
-      mtext("c", side = 3, adj = 0.99, line = -17.5,
-            font = 2, cex = par()$cex.lab, col = col[2])
-
-    }
+    mtext("c", side = 3, adj = 0.99, line = -17.5,
+          font = 2, cex = par()$cex.lab, col = col[2])
 
     par(op)
 
