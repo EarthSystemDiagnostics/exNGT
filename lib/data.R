@@ -343,3 +343,50 @@ selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
     dplyr::select(where(noMissingVal)) %>%
     dplyr::select(-Year)
 }
+
+#' Compile data for histogram
+#'
+#' This wrapper function compiles the NGT isotope stack data for the histogram
+#' analysis depending on a chosen stacking and merging method.
+#'
+#' @param type character string to signal the stacking method: one of "main"
+#'   (main paper analyses), "stack_old_new" or "stack_all".
+#' @param filter.window single integer giving the size of the running mean
+#'   window to use for filtering the stack data.
+#' @param adjustMean logical; whether to adjust the mean upon merging; see the
+#'   description in \code[{mergeCores()}.
+#' @param method integer (1 or 2) to choose the merging method; see the
+#'   description in \code{mergeCores()}.
+#' @param use_NEGIS_NEEM logical; whether to include the NEGIS and NEEM records
+#'   in the stack.
+#' @return a data frame the running mean filtered stack data.
+#' @author Thomas Münch
+#'
+selectHistogramData <- function(type = "main", filter.window = 11,
+                                adjustMean = TRUE, method = 1,
+                                use_NEGIS_NEEM = TRUE) {
+
+  if (!type %in% c("main", "stack_old_new", "stack_all")) {
+    stop("'type' must be one of 'main', 'stack_old_new' or 'stack_all'",
+         call. = FALSE)
+  }
+
+  NGT <- processNGT()
+
+  switch(type,
+
+         main = filterData(NGT, window = filter.window) %>%
+           mergeCores(adjustMean = adjustMean, method = method) %>%
+           stackExtendedCores(filterData(NGT, window = filter.window)),
+
+         stack_old_new = NGT %>%
+           stackOldAndNew(use_NEGIS_NEEM = use_NEGIS_NEEM) %>%
+           filterData(window = filter.window) %>%
+           mergeCores(sites = "stack", adjustMean = adjustMean,
+                      method = method),
+
+         stack_all = NGT %>%
+           filterData(window = filter.window) %>%
+           stackAllCores(use_NEGIS_NEEM = use_NEGIS_NEEM)
+         )
+}

@@ -10,6 +10,10 @@
 #'   defined as the time period which ends in the year specified here and covers
 #'   a total number of years corresponding to the size of the
 #'   \code{filter.window}.
+#' @param stack.method character; name of the NGT stacking method to use, see
+#'   \code{selectHistogramData()} for details.
+#' @param ... further parameters passed on to \code{selectHistogramData()} to
+#'   control the stacking and merging methods.
 #' @param filter.window single integer giving the size of the running mean
 #'   window to use for filtering the isotope data, and, if requested, the window
 #'   over which linear isotopic trends are estimated; defaults to 11 (years).
@@ -34,7 +38,7 @@
 #' @author Thomas Münch
 #'
 plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
-                          filter.window = 11,
+                          stack.method = "main", ..., filter.window = 11,
                           type = "anomaly", breaks = seq(-2, 2, 0.2),
                           xlim = range(breaks), ylim = c(0, 1.25),
                           col = c("black", "firebrick4"),
@@ -61,21 +65,16 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
   # ----------------------------------------------------------------------------
   # Load data
 
-  if (type == "anomaly") {
+  x <- selectHistogramData(stack.method, filter.window, ...)
 
-    x <- processNGT() %>%
-      filterData(window = filter.window) %>%
-      stackNGT()
+  if (type == "anomaly") {
 
     var <- "stack"
     xlab <- grfxtools::LabelAxis(suffix = "anomaly")
 
   } else if (type == "trend") {
 
-    x <- processNGT() %>%
-      filterData(window = filter.window) %>%
-      stackNGT() %>%
-      estimateSlopes(window = filter.window)
+    x <- estimateSlopes(x, window = filter.window)
 
     var <- "slope"
     xlab <- grfxtools::LabelAxis(suffix = "trend", unit.type = "trend",
@@ -88,39 +87,18 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
   # Obtain distribution and recent data
 
   midpoint <- floor(filter.window / 2)
-
   t <- piPeriod[(midpoint + 1) : (length(piPeriod) - midpoint)]
+
+  if (filter.window == 1) {
+    recentTime <- seq(endRecentPeriod, by = -1, length.out = 11)
+  } else {
+    recentTime <- endRecentPeriod - floor(filter.window / 2)
+  }
 
   piData <- subsetData(x, t, var)
 
-  if (type == "anomaly") {
-
-    recentAnnualData <- processNGT() %>%
-      stackNGT()
-
-    if (filter.window == 1) {
-
-      recentPeriod <- seq(endRecentPeriod, by = -1, length.out = 11)
-      recentData <- recentAnnualData %>%
-        subsetData(recentPeriod, var)
-
-    } else {
-
-      recentPeriod <- seq(endRecentPeriod, by = -1, length.out = filter.window)
-      recentData <- recentAnnualData %>%
-        subsetData(recentPeriod, var) %>%
-        mean()
-
-    }
-
-  } else if (type == "trend") {
-
-    recentPeriod <- seq(endRecentPeriod, by = -1, length.out = filter.window)
-    recentData <- subsetData(x, recentPeriod, var) %>%
-      na.omit() %>%
-      .[1]
-
-  }
+  recentData <- x %>%
+    subsetData(recentTime, var)
 
   # ----------------------------------------------------------------------------
   # Make plot
