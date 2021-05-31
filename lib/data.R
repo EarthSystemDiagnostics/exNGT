@@ -362,16 +362,51 @@ selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
 #' @param diffuse logical; whether to forward diffuse the NGT data prior to
 #'   the merging and stacking in order to mimic maximum smoothing at the firn
 #'   ice transition.
+#' @param nfix non-negative integer to set a constant number of records which
+#'   are selected from the merged NGT data for stacking ("frozen" stack).
 #' @return a data frame the running mean filtered stack data.
 #' @author Thomas Münch
 #'
 selectHistogramData <- function(type = "main", filter.window = 11,
                                 adjustMean = TRUE, method = 1,
-                                use_NEGIS_NEEM = TRUE, diffuse = FALSE) {
+                                use_NEGIS_NEEM = TRUE, diffuse = FALSE,
+                                nfix = NULL) {
 
-  if (!type %in% c("main", "stack_old_new", "stack_all")) {
-    stop("'type' must be one of 'main', 'stack_old_new' or 'stack_all'",
+  if (!type %in% c("main", "stack_old_new", "stack_all", "fix_N")) {
+    stop("'type' must be one of 'main', 'stack_old_new', 'stack_all'",
+         " or 'fix_N'.", call. = FALSE)
+  }
+
+  if (length(nfix) & type != "fix_N") {
+    stop("Fixed number of records incompatible with",
+         " this stacking method, use 'fix_N'.", call. = FALSE)
+  }
+
+  if (!length(nfix) & type == "fix_N") {
+    stop("Method 'fix_N' requires setting a fixed number of records.",
          call. = FALSE)
+  }
+
+  selectFixedNumber <- function(NGT, nfix) {
+
+    NGT <- NGT %>%
+      dplyr::mutate(B18 = approx(Year, B18, Year)$y)
+
+    rslt <- NULL
+    nrow <- nrow(NGT)
+
+    for (i in 1 : nrow) {
+
+      row <- c(na.omit(unlist(unname(NGT[i, ]))))
+
+      if (length(row) >= (nfix + 1)) {
+        rslt <- rbind(rslt, row[1 : (nfix + 1)])
+      } else {
+        break
+      }
+    }
+
+    return(rslt)
   }
 
   NGT <- processNGT()
@@ -381,7 +416,14 @@ selectHistogramData <- function(type = "main", filter.window = 11,
     cat("Forward diffusing data...\n")
     NGT <- diffuseNGT(NGT)
     cat("done.\n")
+  }
 
+  if (length(nfix)) {
+
+    NGT <- NGT %>%
+      filterData(window = filter.window) %>%
+      stackNGT(stack = FALSE) %>%
+      selectFixedNumber(nfix = nfix)
   }
 
   switch(type,
@@ -398,6 +440,8 @@ selectHistogramData <- function(type = "main", filter.window = 11,
 
          stack_all = NGT %>%
            filterData(window = filter.window) %>%
-           stackAllCores(use_NEGIS_NEEM = use_NEGIS_NEEM)
+           stackAllCores(use_NEGIS_NEEM = use_NEGIS_NEEM),
+
+         fix_N = data.frame(Year = NGT[, 1], stack = rowMeans(NGT[, -1]))
          )
 }
