@@ -24,17 +24,18 @@
 #' @param ylim y axis range.
 #' @param col vector of length 2 specifying the colours to use to mark the
 #'   pre-industrial and the recent data on the plot.
+#' @param plot logical; set to \code{FALSE} to omit plotting of the histogram,
+#'   so the function will only return the probability for the recent
+#'   observations to occur under the pre-industrial distribution.
 #' @param plot.quantiles logical; set to \code{TRUE} to plot vertical lines for
-#'   the quantiles of the PI histogram specified by \code{quantile.probs}.
-#' @param quantile.probs the quantile probabilities of the PI histogram
-#'   plotted when \code{plot.quantiles} is set to \code{TRUE}.
+#'   the quantiles of the pre-industrial histogram specified by
+#'   \code{quantile.probs}.
+#' @param quantile.probs the quantile probabilities of the pre-industrial
+#'   histogram plotted when \code{plot.quantiles} is set to \code{TRUE}.
 #' @param xmain optional main title above plot along x axis.
 #' @param ymain optional main title next to y axis label.
 #' @param plot.legend logical; shall a legend be plotted which marks the
 #'   analysed time periods? Defaults to \code{TRUE}.
-#' @param analysis.period optional vector of time points to subset the data over
-#'   which the full histogram shall be calculated. Set to \code{NULL} to use the
-#'   full range of \code{x}.
 #' @author Thomas Münch
 #'
 plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
@@ -42,7 +43,7 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
                           type = "anomaly", breaks = seq(-2, 2, 0.2),
                           xlim = range(breaks), ylim = c(0, 1.25),
                           col = c("black", "firebrick4"),
-                          plot.quantiles = TRUE,
+                          plot = TRUE, plot.quantiles = TRUE,
                           quantile.probs = c(0.025, 0.5, 0.975),
                           xmain = NA, ymain = NA, plot.legend = TRUE) {
 
@@ -101,89 +102,97 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
     subsetData(recentTime, var)
 
   # ----------------------------------------------------------------------------
+  # Calculate probability for recent value to occur under pI distribution
+
+  probability <- c(probability = pnorm(q = mean(recentData),
+                                       mean = mean(piData), sd = sd(piData),
+                                       lower.tail = FALSE))
+
+  # ----------------------------------------------------------------------------
   # Make plot
 
-  q <- seq(xlim[1], xlim[2], diff(breaks)[1] / 100)
+  if (plot) {
 
-  hst <- hist(piData, freq = FALSE, breaks = breaks, xlim = xlim, ylim = ylim,
-              main = "", xlab = "", ylab = "",
-              col = adjustcolor(col[1], alpha = 0.2), yaxs = "i")
+    q <- seq(xlim[1], xlim[2], diff(breaks)[1] / 100)
 
-  mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-  mtext(ylab, side = 2, line = 3.5, cex = par()$cex.lab * par()$cex, las = 0)
+    hst <- hist(piData, freq = FALSE, breaks = breaks, xlim = xlim, ylim = ylim,
+                main = "", xlab = "", ylab = "",
+                col = adjustcolor(col[1], alpha = 0.2), yaxs = "i")
 
-  lines(q, gq <- dnorm(q, mean = mean(piData), sd = sd(piData)),
-        col = col[1], lwd = 2)
+    mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+    mtext(ylab, side = 2, line = 3.5, cex = par()$cex.lab * par()$cex, las = 0)
 
-  ymax <- ifelse(max(hst$density) > max(gq), max(hst$density), max(gq))
+    lines(q, gq <- dnorm(q, mean = mean(piData), sd = sd(piData)),
+          col = col[1], lwd = 2)
 
-  if (plot.quantiles) {
-    sapply(quantile(piData, quantile.probs, na.rm = TRUE), function(x) {
-      lines(rep(x, 2), c(0, ymax), col = col[1], lty = 5, lwd = 1)
-    })
-  }
+    ymax <- ifelse(max(hst$density) > max(gq), max(hst$density), max(gq))
 
-  if (filter.window == 1) {
-
-    par(new = TRUE)
-    hist(recentData, freq = FALSE, breaks = breaks, xlim = xlim,
-         axes = FALSE, main = "", xlab = "", ylab = "",
-         col = adjustcolor(col[2], alpha = 0.2), yaxs = "i")
-
-    ax <- axis(4, col = col[2], col.axis = col[2])
-    text(1.375 * xlim[2], y = mean(ax), "Probability density", srt = -90,
-         xpd = NA, cex = par()$cex.lab * par()$cex, col = col[2])
-
-  } else {
-
-    lines(rep(recentData, 2), c(0, ymax), col = col[2], lwd = 2.5)
-
-  }
-
-  cat("\nProbability of recent value under pI distribution:\n")
-  cat(sprintf("%s",
-    pnorm(q = mean(recentData), mean = mean(piData), sd = sd(piData),
-          lower.tail = FALSE)))
-  cat("\n\n")
-
-  if (plot.legend) {
-
-    recentString <- ifelse(filter.window == 1, "Recent values", "Recent value")
-
-    lg <- c(sprintf("pI distribution\n(%s-%s CE)",
-                    min(piPeriod), max(piPeriod)),
-            "2.5, 50, 97.5 %\nquantiles",
-            sprintf("%s\n(%s-%s CE)", recentString,
-                    min(recentPeriod), max(recentPeriod)))
-    lg.lty <- c(1, 5, 1)
-    lg.lwd <- c(10, 1, 2.5)
-    lg.col <- c(adjustcolor(col[1], 0.2), col[1], col[2])
-
-    if (type == "anomaly" & filter.window == 1) {
-      lg.lwd[3] <- lg.lwd[1]
-      lg.col[3] = adjustcolor(col[2], 0.2)
+    if (plot.quantiles) {
+      sapply(quantile(piData, quantile.probs, na.rm = TRUE), function(x) {
+        lines(rep(x, 2), c(0, ymax), col = col[1], lty = 5, lwd = 1)
+      })
     }
 
-    if (!plot.quantiles) {
-      lg <- lg[-2]
-      lg.lty <- lg.lty[-2]
-      lg.lwd <- lg.lwd[-2]
-      lg.col <- lg.col[-2]
+    if (filter.window == 1) {
+
+      par(new = TRUE)
+      hist(recentData, freq = FALSE, breaks = breaks, xlim = xlim,
+           axes = FALSE, main = "", xlab = "", ylab = "",
+           col = adjustcolor(col[2], alpha = 0.2), yaxs = "i")
+
+      ax <- axis(4, col = col[2], col.axis = col[2])
+      text(1.375 * xlim[2], y = mean(ax), "Probability density", srt = -90,
+           xpd = NA, cex = par()$cex.lab * par()$cex, col = col[2])
+
+    } else {
+
+      lines(rep(recentData, 2), c(0, ymax), col = col[2], lwd = 2.5)
+
     }
 
-    legend("topleft", legend = lg, lty = lg.lty, lwd = lg.lwd, col = lg.col,
-       bty = "n", adj = c(0, 0.75), y.intersp = 1.5, seg.len = 2.5)
+    if (plot.legend) {
 
+      recentString <- ifelse(filter.window == 1,
+                             "Recent values", "Recent value")
+      recentPeriod <- recentTime + (-midpoint : midpoint)
+
+      lg <- c(sprintf("pI distribution\n(%s-%s CE)",
+                      min(piPeriod), max(piPeriod)),
+              "2.5, 50, 97.5 %\nquantiles",
+              sprintf("%s\n(%s-%s CE)", recentString,
+                      min(recentPeriod), max(recentPeriod)))
+      lg.lty <- c(1, 5, 1)
+      lg.lwd <- c(10, 1, 2.5)
+      lg.col <- c(adjustcolor(col[1], 0.2), col[1], col[2])
+
+      if (type == "anomaly" & filter.window == 1) {
+        lg.lwd[3] <- lg.lwd[1]
+        lg.col[3] = adjustcolor(col[2], 0.2)
+      }
+
+      if (!plot.quantiles) {
+        lg <- lg[-2]
+        lg.lty <- lg.lty[-2]
+        lg.lwd <- lg.lwd[-2]
+        lg.col <- lg.col[-2]
+      }
+
+      legend("topleft", legend = lg, lty = lg.lty, lwd = lg.lwd, col = lg.col,
+             bty = "n", adj = c(0, 0.75), y.intersp = 1.5, seg.len = 2.5)
+
+    }
+
+    if (!is.na(xmain)) {
+      mtext(xmain, side = 3, line = 2.5, adj = 0,
+            cex = par()$cex.lab * par()$cex, font = 2)
+    }
+    if (!is.na(ymain)) {
+      mtext(ymain, side = 2, line = 6, las = 0,
+            cex = par()$cex.lab * par()$cex, font = 2)
+    }
   }
 
-  if (!is.na(xmain)) {
-    mtext(xmain, side = 3, line = 2.5, adj = 0,
-          cex = par()$cex.lab * par()$cex, font = 2)
-  }
-  if (!is.na(ymain)) {
-    mtext(ymain, side = 2, line = 6, las = 0,
-          cex = par()$cex.lab * par()$cex, font = 2)
-  }
+  return(probability)
 
 }
 
