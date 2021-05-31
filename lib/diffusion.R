@@ -544,3 +544,82 @@ DiffuseRecord <- function(rec, sigma, res = 1, debug = FALSE){
   return(rec.diffused)
 
 }
+
+#' Diffuse NGT records
+#'
+#' Forward diffuse the NGT records such that each entire record is smoothed as
+#' if it had passed the firn-ice transition. This is achieved by calculating the
+#' local diffusion length at each time step in temporal units and comparing it
+#' to the value at the firn-ice transition. The record is then smoothed applying
+#' the local differential diffusion length.
+#'
+#' @param NGT data frame with each individual NGT record prior to the merging of
+#'   old and redrilled records, i.e. the output of processNGT().
+#' @param result character string to control the return result of the function;
+#'   the default means to return the full forward diffused NGT data,
+#'   alternatively, for \code{result = "sigma"}, the estimated diffusion lengths
+#'   locally and at the firn-ice transition are returned.
+#' @return either a single data frame or a list of data frames.
+#' @author Thomas Münch
+#'
+diffuseNGT <- function(NGT, result = "data") {
+
+  if (!result %in% c("data", "sigma")) {
+    stop("'result' must be one of 'data' or 'sigma'", call. = FALSE)
+  }
+
+  applyDiffusion <- function(x, siteID, sigma) {
+
+    siteID    <- strsplit(siteID, "_")[[1]][1]
+    siteIndex <- match(siteID, colnames(sigma))
+    inm       <- which(!is.na(x))
+
+    x[inm] <- DiffuseRecord(x[inm], sigma = sigma[seq(inm), siteIndex])
+
+    return(x)
+
+  }
+
+
+  # local climate parameters
+  climatePar <- loadClimPar()
+
+  # get the local (firn) diffusion length in units of time
+  sigma <- TemporalDiffusionLength(nt = nrow(NGT),
+                                   T = climatePar$meanTemperature + 273.15,
+                                   P = climatePar$surfacePressure,
+                                   bdot = climatePar$accRate,
+                                   rho.surface = climatePar$surfaceDensity,
+                                   names = climatePar$Site)
+
+  # get the maximum diffusion length in the ice
+  sigma.ice <- lapply(sigma, max) %>%
+    as.data.frame()
+
+  # get the differential diffusion length between local (firn) and ice value
+  sigma.differential <- sigma
+  for (i in 2 : ncol(sigma)) {
+    sigma.differential[, i] <- sqrt((sigma.ice[, i])^2 - (sigma[, i])^2)
+  }
+
+  if (result == "data") {
+
+    # forward diffuse complete NGT records till firn-ice transition
+    diffusedNGT <- NGT
+    for (i in 2 : ncol(NGT)) {
+
+      diffusedNGT[, i] <- applyDiffusion(NGT[, i], siteID = colnames(NGT)[i],
+                                         sigma = sigma.differential)
+    }
+
+    res <- diffusedNGT
+
+  } else {
+
+    res <- list(sigma = sigma, sigma.differential = sigma.differential,
+                sigma.ice = sigma.ice)
+  }
+
+  return(res)
+
+}

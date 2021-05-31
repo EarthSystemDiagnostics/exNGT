@@ -359,12 +359,15 @@ selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
 #'   description in \code{mergeCores()}.
 #' @param use_NEGIS_NEEM logical; whether to include the NEGIS and NEEM records
 #'   in the stack.
+#' @param diffuse logical; whether to forward diffuse the NGT data prior to
+#'   the merging and stacking in order to mimic maximum smoothing at the firn
+#'   ice transition.
 #' @return a data frame the running mean filtered stack data.
 #' @author Thomas Münch
 #'
 selectHistogramData <- function(type = "main", filter.window = 11,
                                 adjustMean = TRUE, method = 1,
-                                use_NEGIS_NEEM = TRUE) {
+                                use_NEGIS_NEEM = TRUE, diffuse = FALSE) {
 
   if (!type %in% c("main", "stack_old_new", "stack_all")) {
     stop("'type' must be one of 'main', 'stack_old_new' or 'stack_all'",
@@ -372,6 +375,14 @@ selectHistogramData <- function(type = "main", filter.window = 11,
   }
 
   NGT <- processNGT()
+
+  if (diffuse) {
+
+    cat("Forward diffusing data...\n")
+    NGT <- diffuseNGT(NGT)
+    cat("done.\n")
+
+  }
 
   switch(type,
 
