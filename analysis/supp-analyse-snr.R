@@ -68,32 +68,63 @@ spectraNGT <- selectNGTForSpectra() %>%
   proxysnr::ArraySpectra(df.log = 0.1) %>%
   proxysnr::SeparateSpectra()
 
-# obtain signal-to-noise ratio spectrum
-snrNGT <- spectraNGT %>%
-  proxysnr::StackCorrelation(N = 10,
-                             freq.cut.lower = 1 / 200,
-                             freq.cut.upper = 1 / 5)
+# min, max and mean number of records contributing to NGT stack 1000-2011 CE
+N <- processNGT() %>%
+  stackNGT(stack = FALSE) %>%
+  countRecords() %>%
+  dplyr::filter(Year >= 1000) %>%
+  dplyr::summarise(min = min(n), max = max(n), mean = round(mean(n)))
 
-yat.snr <- c(0.1, 0.2, 0.5, 1, 2)
-yat.r   <- seq(0.3, 0.8, 0.1)
+# obtain signal-to-noise ratio spectrum between 1/200 and 1/5 yr^-1
+f1 <- 1 / 200
+f2 <- 1 / 5
+snrNGT.min <- spectraNGT %>%
+  proxysnr::IntegratedSNR(N = N$min, freq.cut.lower = f1, freq.cut.upper = f2)
+snrNGT.max <- spectraNGT %>%
+  proxysnr::IntegratedSNR(N = N$max, freq.cut.lower = f1, freq.cut.upper = f2)
+snrNGT.mean <- spectraNGT %>%
+  proxysnr::IntegratedSNR(N = N$mean, freq.cut.lower = f1, freq.cut.upper = f2)
+
+# obtain timescale threshold below which spectra are dominated by diffusion;
+# i.e. timescale at which diffusion transfer function drops to 1/e given the
+# maximum estimated diffusion length in years across all NGT records
+getDiffusionThreshold <- function(s, k) {
+  if (k >= 1 | k <= 0) stop("Need 0 < k < 1.", call. = FALSE)
+  sqrt(-1 * (2 * pi *s)^2 / log(k))
+}
+diffThreshold <- diffuseNGT(NGT, result = "sigma") %>%
+  .$sigma %>%
+  dplyr::select(-Time) %>%
+  max() %>%
+  getDiffusionThreshold(k = exp(-1))
+
+# ------------------------------------------------------------------------------
+# Plot
+
+yat.snr <- c(0.5, 1, 2, 5, 10, 20)
+yat.r   <- c(seq(0.6, 0.9, 0.1), 0.95, 0.97)
 
 xlab  <- "Time period (yr)"
-ylab1 <- expression("Signal PSD " * "(\u2030"^{2}%.%"yr)")
+ylab1 <- grfxtools::LabelAxis("Signal PSD", time.unit = "yr", unit.type = "psd")
 ylab2 <- "Signal-to-Noise Ratio"
 ylab3 <- "Correlation"
+
+xlim <- c(225, 5)
+ylim1 <- c(0.05, 5)
+ylim2 <- c(0.5, 20)
 
 label1 <- expression(bold("a"))
 label2 <- expression(bold("b"))
 
 n.crit.lower <- 1
-n.crit.upper <- length(which(spectraNGT$signal$freq > 1 / 5))
+n.crit.upper <- length(which(spectraNGT$signal$freq > f2))
 
-grfxtools::Quartz(file = "./fig/ngt-snr.pdf",
+grfxtools::Quartz(file = "./fig/supplement-ngt-snr.pdf",
                   height = 4.5, width = 12, mfcol = c(1, 2),
                   oma = c(5, 0, 0.5, 5.5), mar = c(0, 5.5, 0, 0))
 
 proxysnr:::LPlot(spectraNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
-                 xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.05, 5))
+                 xlab = "", ylab = "", xlim = xlim, ylim = ylim1)
 
 axis(1)
 axis(2)
@@ -103,22 +134,31 @@ mtext(ylab1, 2, 3.75, cex = par()$cex.lab, las = 0)
 mtext(label1, side = 3, line = -1.5, cex = par()$cex.lab,
       adj = 0.02, padj = 0.2)
 
+grfxtools::Polyplot(c(diffThreshold, 5), rep(ylim1[1], 2), rep(ylim1[2], 2),
+                    col = "firebrick4")
+
 proxysnr:::LLines(spectraNGT$signal, bPeriod = TRUE, lwd = 2,
                   removeFirst = n.crit.lower, removeLast = n.crit.upper)
 
-proxysnr:::LPlot(snrNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
-                 xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.1, 2))
+proxysnr:::LPlot(spectraNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
+                 xlab = "", ylab = "", xlim = xlim, ylim = ylim2)
 axis(1)
 axis(2, at = yat.snr)
-axis(4, at = yat.r^2 / (1 - yat.r^2), labels = yat.r)
+axis(4, at = yat.r^2 / (1 - yat.r^2), labels = sprintf("%1.2f", yat.r))
 
 mtext(xlab, 1, 3.5, cex = par()$cex.lab)
 mtext(ylab2, 2, 3.5, cex = par()$cex.lab, las = 0)
-text(2, sqrt(0.1 * 2), ylab3, xpd = NA, srt = -90, cex = par()$cex.lab)
+text(1.85, sqrt(prod(range(yat.snr))), ylab3, xpd = NA, srt = -90,
+     cex = par()$cex.lab)
 mtext(label2, side = 3, line = -1.5, cex = par()$cex.lab,
       adj = 0.02, padj = 0.2)
 
-lines(1 / snrNGT$signal$freq, snrNGT$signal$spec / snrNGT$noise$spec, lwd = 2)
+grfxtools::Polyplot(c(diffThreshold, 5), rep(ylim2[1], 2), rep(ylim2[2], 2),
+                    col = "firebrick4")
+
+grfxtools::Polyplot(1 / snrNGT.min$freq, snrNGT.min$spec, snrNGT.max$spec)
+proxysnr:::LLines(snrNGT.min, bPeriod = TRUE, lwd = 1)
+proxysnr:::LLines(snrNGT.max, bPeriod = TRUE, lwd = 1)
+proxysnr:::LLines(snrNGT.mean, bPeriod = TRUE, lwd = 2)
 
 dev.off()
-
