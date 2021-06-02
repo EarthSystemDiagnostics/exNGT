@@ -23,6 +23,7 @@ remotes::install_github("EarthSystemDiagnostics/grfxtools")
 # ------------------------------------------------------------------------------
 # install optional dependencies needed only for processing of the raw data
 
+install.packages("ncdf4")
 install.packages("pangaear")
 install.packages("pdftools")
 install.packages("plyr")

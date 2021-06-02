@@ -17,7 +17,7 @@ source("init.R")
 filter.window <- 11
 correlation.window <- 101
 
-analysis.period <- 2000 : 1000
+analysis.period <- 2011 : 1000
 
 # ------------------------------------------------------------------------------
 # Load NGT and Arctic2k data and process for correlation analysis
@@ -27,6 +27,7 @@ NGT <- processNGT() %>%
   stackNGT()
 
 Arctic2k <- readArctic2k() %>%
+  extendWithHadCrut() %>%
   filterData(window = filter.window)
 
 NGTsubset <- processNGT() %>%
@@ -34,6 +35,7 @@ NGTsubset <- processNGT() %>%
   subsetData(analysis.period, "stack")
 
 Arctic2kSubset <- readArctic2k() %>%
+  extendWithHadCrut() %>%
   subsetData(analysis.period, "TempAnomaly")
 
 # Number of records contributing to NGT-2012 stack
@@ -54,9 +56,9 @@ correlation <- estimateRunningCorrelation(
 xlim <- range(analysis.period)
 ylim <- c(-0.5, 1)
 
-ylim.ngt <- c(-4, 2)
+ylim.ngt <- c(-5, 2)
 ylim.nbr <- c(-130, 20)
-ylim.a2k <- c(-2, 4)
+ylim.a2k <- c(-2, 5)
 
 xlab <- "Year CE"
 ylab <- "Correlation"
@@ -68,7 +70,7 @@ x1 <- 845
 x2 <- 2160
 y1 <- 0.
 y2 <- 10
-y3 <- -0.5
+y3 <- 0.
 
 col <- c("black", "dodgerblue4", "darkgrey")
 
@@ -87,7 +89,7 @@ mtext("a", side = 3, adj = 0.01, padj = 0.5,
       line = -1, font = 2, cex = par()$cex.lab, col = col[1])
 mtext("b", side = 3, adj = 0.99, padj = 0.5,
       line = -1, font = 2, cex = par()$cex.lab, col = col[3])
-mtext("c", side = 3, adj = 0.99, padj = 8,
+mtext("c", side = 3, adj = 0.99, padj = 7,
       line = -1, font = 2, cex = par()$cex.lab, col = col[2])
 
 abline(h = 0, lty = 2, lwd = 1.5, col = "darkgrey")
@@ -107,7 +109,7 @@ par(new = TRUE)
 plot(Arctic2k$Year, Arctic2k$TempAnomaly, type = "n", axes = FALSE,
      xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
 
-axis(4, at = seq(-2, 1, 1), col = col[2], col.axis = col[2])
+axis(4, at = seq(-2, 2, 1), col = col[2], col.axis = col[2])
 text(x2, y3, ylab.a2k, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex,
      col = col[2])
 

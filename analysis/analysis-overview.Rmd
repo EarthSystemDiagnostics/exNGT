@@ -53,9 +53,13 @@ filteredStackedNGT <- processNGT() %>%
 
 Load the Arctic2k and weather station data and filter it:
 ```{r}
-Arctic2k <- readArctic2k()
+Arctic2k <- readArctic2k() %>%
+  extendWithHadCrut()
 
-filteredArctic2k <- Arctic2k %>%
+filteredExtendedArctic2k <- Arctic2k %>%
+  filterData(window = filter.window)
+
+filteredArctic2k <- readArctic2k() %>%
   filterData(window = filter.window)
 
 filteredDMI <- readDMI() %>%
@@ -75,23 +79,41 @@ filteredStackedTemperatureNGT <- filteredStackedNGT %>%
 ## Comparison of NGT-2012 temperature stack with Arctic2k
 
 * Overall correlation between NGT-2012 temperature stack and Arctic2k
-  compilation 1000--2000 CE:
+  compilation from 1000 CE onwards with and without including HadCrut extension:
   ```{r}
+  analysis.period <- 2011 : 1000
+  res <- estimateCorrelation(stackedTemperatureNGT,
+                             filteredStackedTemperatureNGT, filteredExtendedArctic2k,
+                             filter.window = filter.window,
+                             analysis.period = analysis.period,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
+
+  analysis.period <- 2000 : 1000
   res <- estimateCorrelation(stackedTemperatureNGT,
                              filteredStackedTemperatureNGT, filteredArctic2k,
                              filter.window = filter.window,
-                             analysis.period = 2000 : 1000,
+                             analysis.period = analysis.period,
                              nmc = 10000)
   sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
   ```
 
 * Correlation between NGT temperature stack and Arctic2k compilation for the
-  20th century:
+  20th century and for the 20th century including up to 2011 CE:
   ```{r}
+  analysis.period <- 2000 : 1901
   res <- estimateCorrelation(stackedTemperatureNGT,
                              filteredStackedTemperatureNGT, filteredArctic2k,
                              filter.window = filter.window,
-                             analysis.period = 2000 : 1901,
+                             analysis.period = analysis.period,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+
+  analysis.period <- 2011 : 1901
+  res <- estimateCorrelation(stackedTemperatureNGT,
+                             filteredStackedTemperatureNGT, filteredExtendedArctic2k,
+                             filter.window = filter.window,
+                             analysis.period = analysis.period,
                              nmc = 10000)
   sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
   ```
@@ -100,7 +122,7 @@ filteredStackedTemperatureNGT <- filteredStackedNGT %>%
   over pre-industrial and industrial era:
   ```{r}
   t1 <- 1800 : 1000
-  t2 <- 2000 : 1800
+  t2 <- 2011 : 1800
 
   regressionData <- list(
     data.frame(x = t1, y = subsetData(stackedTemperatureNGT, t1, "stack")),
@@ -124,12 +146,12 @@ filteredStackedTemperatureNGT <- filteredStackedNGT %>%
   # +/-
   (regressionSlopes[2, 3] * 100) %>% round(digits = 2)
   
-  # NGT 1800-2000 CE:
+  # NGT 1800-2011 CE:
   (regressionSlopes[1, 2] * 100) %>% round(digits = 2)
   # +/-
   (regressionSlopes[2, 2] * 100) %>% round(digits = 2)
 
-  # Arctic2k 1800-2000 CE:
+  # Arctic2k 1800-2011 CE:
   (regressionSlopes[1, 4] * 100) %>% round(digits = 2)
   # +/-
   (regressionSlopes[2, 4] * 100) %>% round(digits = 2)

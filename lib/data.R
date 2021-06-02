@@ -91,6 +91,53 @@ readDMI <- function(path = "data/gr_annual_temperature_1873_2015.csv") {
 
 }
 
+#' Read HadCrut instrumental temperature for the Arctic region
+#'
+#' Read the annual mean HadCrut v5.0.1 60 to 90 degree N area mean temperature
+#' data set from 1850 to 2021 CE.
+#'
+#' @param path file path (relative to working directory) of the HadCrut data
+#'   set.
+#' @return a data frame of two columns and 172 rows with the read HadCrut
+#'   data set.
+#' @author Thomas Münch
+readHadCrut <- function(path = "data/HadCrut_5.0.1_Arctic_annual.csv") {
+
+  read.csv(path, header = TRUE) %>%
+    dplyr::arrange(dplyr::desc(dplyr::row_number()))
+
+}
+
+#' Extend Arctic2k by HadCrut
+#'
+#' Extend the Arctic2k annual mean temperature reconstruction data set until
+#' 2011 CE using the annual mean HadCrut v5.0.1 60 to 90 degree N area mean
+#' temperature data.
+#'
+#' @param a2k data frame with the read Arctic2k reconstruction data obtained
+#'   from \code{readArctic2k()}.
+#' @param path file path (relative to working directory) of the HadCrut data
+#'   set.
+#' @return a data frame of four columns and 2011 rows with the Arctic2k
+#'   data set extended by HadCrut until 2011 CE. Note that the columns
+#'   \code{"2SigmaLow"} and \code{"2SigmaHigh"} are \code{NA} for the extension
+#'   period.
+#' @author Thomas Münch
+extendWithHadCrut <- function(a2k,
+                              path = "data/HadCrut_5.0.1_Arctic_annual.csv") {
+
+  # ensure identical anomalies 1961-1990
+  d <- mean(subsetData(readHadCrut(), 1990 : 1961, "TempAnomaly")) -
+    mean(subsetData(a2k, 1990 : 1961, "TempAnomaly"))
+
+  readHadCrut() %>%
+    dplyr::mutate(TempAnomaly = TempAnomaly - d) %>%
+    dplyr::mutate(`2SigmaLow` = NA, `2SigmaHigh` = NA) %>%
+    dplyr::filter(Year >= 2001 & Year <= 2011) %>%
+    rbind(a2k)
+
+}
+
 #' Site climatological parameters
 #'
 #' This function provides the relevant climatological parameters at the firn

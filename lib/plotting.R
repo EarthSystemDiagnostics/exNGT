@@ -243,7 +243,8 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
       filterData(window = filter.window) %>%
       stackNGT()
 
-    Arctic2k <- readArctic2k()
+    Arctic2k <- readArctic2k() %>%
+      extendWithHadCrut()
 
     filteredArctic2k <- Arctic2k %>%
       filterData(window = filter.window)
@@ -251,7 +252,7 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
     # Linear regression data (annual means)
 
     t1 <- 1800 : 1000
-    t2 <- 2000 : 1800
+    t2 <- 2011 : 1800
 
     regressionData <- list(
       data.frame(x = t1, y = subsetData(stackedNGT, t1, "stack")),
@@ -283,8 +284,8 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
     ylab.a2k <- grfxtools::LabelAxis("Arctic2k", unit = "celsius")
 
     xlim <- c(1000, 2020)
-    ylim.ngt <- c(-5, 2)
-    ylim.a2k <- c(-2, 5)
+    ylim.ngt <- c(-6, 2.5)
+    ylim.a2k <- c(-2, 6.5)
 
     xanml <- c(800, 2020)
     yanml <- rep(0, 2)
@@ -295,7 +296,8 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
 
     x1 <- 845
     x2 <- 2175
-    y <- 0.
+    y1 <- 0.
+    y2 <- 0.5
 
     col <- c("black", "dodgerblue4")
 
@@ -312,14 +314,14 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
     lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = 2.5)
 
     axis(2, at = seq(-2, 2, 1))
-    axis(4, labels = seq(-2, 2, 1), at = seq(-2, 2, 1) / permil2temperature)
+    axis(4, labels = seq(-2, 3, 1), at = seq(-2, 3, 1) / permil2temperature)
 
-    text(x1, y, ylab.ngt.pm, srt = +90, xpd = NA,
+    text(x1, y1, ylab.ngt.pm, srt = +90, xpd = NA,
          cex = par()$cex.lab * par()$cex, col = col[1])
-    text(x2, y, ylab.ngt.dc, srt = -90, xpd = NA,
+    text(x2, y2, ylab.ngt.dc, srt = -90, xpd = NA,
          cex = par()$cex.lab * par()$cex, col = col[1])
 
-    mtext("a", side = 3, adj = 0.01, line = -2, font = 2, cex = par()$cex.lab)
+    mtext("a", side = 3, adj = 0.01, line = -3.65, font = 2, cex = par()$cex.lab)
 
     lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
           col = col[1], lwd = 2, lty = 2)
@@ -328,16 +330,14 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
 
     par(new = TRUE)
 
-    y <- -0.5
-
     plot(Arctic2k$Year, Arctic2k$TempAnomaly, type = "n", axes = FALSE,
          xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
 
     axis(1)
-    axis(4, at = seq(-2, 1, 1), col = col[2], col.axis = col[2])
+    axis(4, at = seq(-2, 2, 1), col = col[2], col.axis = col[2])
 
     mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-    text(x2, y, ylab.a2k, srt = -90, xpd = NA,
+    text(x2, y1, ylab.a2k, srt = -90, xpd = NA,
          cex = par()$cex.lab * par()$cex, col = col[2])
 
     lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
@@ -352,7 +352,7 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
     lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
           col = col[2], lwd = 2, lty = 2)
 
-    mtext("c", side = 3, adj = 0.99, line = -17.5,
+    mtext("c", side = 3, adj = 0.99, line = -16.5,
           font = 2, cex = par()$cex.lab, col = col[2])
 
     par(op)
