@@ -67,7 +67,7 @@ filteredDMI <- readDMI() %>%
   filterData(window = filter.window)
 ```
 
-Convert the filtered NGT stack data to temperature:
+Convert the NGT stack data to temperature:
 ```{r}
 stackedTemperatureNGT <- stackedNGT %>%
   dplyr::mutate(stack = permil2temperature * stack)
@@ -237,9 +237,9 @@ danmarkshavn <- dplyr::select(filteredDMI, "Year", "Danmarkshavn")
   sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
 ```
 
-## Temperature increase of recent 15 years relative to past
+## Temperature increase of recent 11 years relative to past
 
-We compare the mean temperature over the recent 15 years of the NGT stack with
+We compare the mean temperature over the recent 11 years of the NGT stack with
 the mean value of the 1961-1990 period and the mean value of the 20th century
 (1901--2000). We do this assuming the standard spatial isotope--temperature
 slope for Greenland as well as assuming stronger and weaker values from the
@@ -251,53 +251,53 @@ Get NGT temperature stack data for the alternative isotope--temperature slopes:
 permil2temperature.max <- 2.1     # Vinther et al. (2009)
 permil2temperature.min <- 1 / 1.1 # Masson-Delmotte et al. (2015)
 
-maxFilteredStackedTemperatureNGT <- filteredStackedNGT %>%
+maxStackedTemperatureNGT <- stackedNGT %>%
   dplyr::mutate(stack = permil2temperature.max * stack)
 
-minFilteredStackedTemperatureNGT <- filteredStackedNGT %>%
+minStackedTemperatureNGT <- stackedNGT %>%
   dplyr::mutate(stack = permil2temperature.min * stack)
 ```
 
-* Recent 15 years versus 1961-1990 reference period:
+* Recent 11 years versus 1961-1990 reference period:
   ```{r}
-  t1 <- 2011 : 1997
+  t1 <- 2011 : 2001
   t2 <- 1990 : 1961
 
   # spatial slope
-  (mean(subsetData(filteredStackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(filteredStackedTemperatureNGT, t2, var = "stack"))) %>%
+  (mean(subsetData(stackedTemperatureNGT, t1, var = "stack")) -
+   mean(subsetData(stackedTemperatureNGT, t2, var = "stack"))) %>%
     round(digits = 1)
 
   # minimum slope
-  (mean(subsetData(minFilteredStackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(minFilteredStackedTemperatureNGT, t2, var = "stack"))) %>%
+  (mean(subsetData(minStackedTemperatureNGT, t1, var = "stack")) -
+   mean(subsetData(minStackedTemperatureNGT, t2, var = "stack"))) %>%
     round(digits = 1)
 
   # maximum slope
-  (mean(subsetData(maxFilteredStackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(maxFilteredStackedTemperatureNGT, t2, var = "stack"))) %>%
+  (mean(subsetData(maxStackedTemperatureNGT, t1, var = "stack")) -
+   mean(subsetData(maxStackedTemperatureNGT, t2, var = "stack"))) %>%
     round(digits = 1)
 
   ```
 
-* Recent 15 years versus 20th century (1901-2000):
+* Recent 11 years versus 20th century (1901-2000):
   ```{r}
-  t1 <- 2011 : 1997
+  t1 <- 2011 : 2011
   t2 <- 2000 : 1901
   
   # spatial slope
-  (mean(subsetData(filteredStackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(filteredStackedTemperatureNGT, t2, var = "stack"))) %>%
+  (mean(subsetData(stackedTemperatureNGT, t1, var = "stack")) -
+   mean(subsetData(stackedTemperatureNGT, t2, var = "stack"))) %>%
     round(digits = 1)
 
   # minimum slope
-  (mean(subsetData(minFilteredStackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(minFilteredStackedTemperatureNGT, t2, var = "stack"))) %>%
+  (mean(subsetData(minStackedTemperatureNGT, t1, var = "stack")) -
+   mean(subsetData(minStackedTemperatureNGT, t2, var = "stack"))) %>%
     round(digits = 1)
 
   # maximum slope
-  (mean(subsetData(maxFilteredStackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(maxFilteredStackedTemperatureNGT, t2, var = "stack"))) %>%
+  (mean(subsetData(maxStackedTemperatureNGT, t1, var = "stack")) -
+   mean(subsetData(maxStackedTemperatureNGT, t2, var = "stack"))) %>%
     round(digits = 1)
 
   ```
@@ -308,7 +308,7 @@ Masson-Delmotte, V., Steen-Larsen, H. C., Ortega, P., Swingedouw, D., Popp, T.,
 Vinther, B. M., Oerter, H., Sveinbjornsdottir, A. E., Gudlaugsdottir, H., Box,
 J. E., Falourd, S., Fettweis, X., Gallée, H., Garnier, E., Gkinis, V., Jouzel,
 J., Landais, A., Minster, B., Paradis, N., Orsi, A., Risi, C., Werner, M. and
-White, J. W. C. , Recent changes in north-west Greenland climate documented by
+White, J. W. C., Recent changes in north-west Greenland climate documented by
 NEEM shallow ice core data and simulations, and implications for
 past-temperature reconstructions, The Cryosphere, 9(4), 1481--1504,
 https://doi.org/10.5194/tc-9-1481-2015, 2015.
