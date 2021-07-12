@@ -31,13 +31,9 @@ readArctic2k <- function(path = "data/Reconstruction_Arc2kv1.1.1.csv") {
   # skip unneeded data columns
   colClasses <- c(rep(NA, 4), rep("NULL", 6))
   
-  colNames <- c("Year", "TempAnomaly", "2SigmaLow", "2SigmaHigh")
-  
-  dat <- read.csv(path, header = TRUE, colClasses = colClasses)
-  
-  colnames(dat) <- colNames
-  
-  return(dat)
+  read.csv(path, header = TRUE, colClasses = colClasses) %>%
+    setNames(c("Year", "TempAnomaly", "2SigmaLow", "2SigmaHigh")) %>%
+    dplyr::arrange(dplyr::desc(dplyr::row_number()))
   
 }
 
@@ -95,6 +91,53 @@ readDMI <- function(path = "data/gr_annual_temperature_1873_2015.csv") {
 
 }
 
+#' Read HadCrut instrumental temperature for the Arctic region
+#'
+#' Read the annual mean HadCrut v5.0.1 60 to 90 degree N area mean temperature
+#' data set from 1850 to 2021 CE.
+#'
+#' @param path file path (relative to working directory) of the HadCrut data
+#'   set.
+#' @return a data frame of two columns and 172 rows with the read HadCrut
+#'   data set.
+#' @author Thomas Münch
+readHadCrut <- function(path = "data/HadCrut_5.0.1_Arctic_annual.csv") {
+
+  read.csv(path, header = TRUE) %>%
+    dplyr::arrange(dplyr::desc(dplyr::row_number()))
+
+}
+
+#' Extend Arctic2k by HadCrut
+#'
+#' Extend the Arctic2k annual mean temperature reconstruction data set until
+#' 2011 CE using the annual mean HadCrut v5.0.1 60 to 90 degree N area mean
+#' temperature data.
+#'
+#' @param a2k data frame with the read Arctic2k reconstruction data obtained
+#'   from \code{readArctic2k()}.
+#' @param path file path (relative to working directory) of the HadCrut data
+#'   set.
+#' @return a data frame of four columns and 2011 rows with the Arctic2k
+#'   data set extended by HadCrut until 2011 CE. Note that the columns
+#'   \code{"2SigmaLow"} and \code{"2SigmaHigh"} are \code{NA} for the extension
+#'   period.
+#' @author Thomas Münch
+extendWithHadCrut <- function(a2k,
+                              path = "data/HadCrut_5.0.1_Arctic_annual.csv") {
+
+  # ensure identical anomalies 1961-1990
+  d <- mean(subsetData(readHadCrut(), 1990 : 1961, "TempAnomaly")) -
+    mean(subsetData(a2k, 1990 : 1961, "TempAnomaly"))
+
+  readHadCrut() %>%
+    dplyr::mutate(TempAnomaly = TempAnomaly - d) %>%
+    dplyr::mutate(`2SigmaLow` = NA, `2SigmaHigh` = NA) %>%
+    dplyr::filter(Year >= 2001 & Year <= 2011) %>%
+    rbind(a2k)
+
+}
+
 #' Site climatological parameters
 #'
 #' This function provides the relevant climatological parameters at the firn
@@ -132,11 +175,13 @@ readDMI <- function(path = "data/gr_annual_temperature_1873_2015.csv") {
 #' NEEM community members, Nature, https://doi.org/10.1038/nature11789, 2013.
 #'
 #' * NEGIS elevation and accumulation rate data from
-#' Vallelonga et al., The Cryosphere, https://10.5194/tc-8-1275-2014, 2014.
+#' Vallelonga et al., The Cryosphere, https://doi.org/10.5194/tc-8-1275-2014, 2014.
 #'
 #' * NEGIS temperature from
-#' Zuhr et al., Depositional processes of surface snow on the Greenland ice
-#'   sheet, manuscript in preparation.
+#' Zuhr et al., The Cryosphere Discuss., https://doi.org/10.5194/tc-2021-36, 2021.
+#'
+#' * Average surface snow density (0-1 m) from
+#' Schaller et al., PANGAEA, https://doi.org/10.1594/PANGAEA.867874, 2016.
 #' @author Thomas Münch
 #'
 loadClimPar <- function() {
@@ -296,4 +341,154 @@ makeAnomalies <- function(data, age = NULL, reference.period = 1990 : 1961,
   }
 
   return(result)
+}
+
+#' Subset data set
+#'
+#' Subset a data set by specifying a time window and variable name.
+#'
+#' @param x a data frame or tibble including a time column and one or more named
+#'   data columns.
+#' @param t vector of time points to subset from \code{x}.
+#' @param var the name of the data column to extract from \code{x}.
+#' @param timeColumn the name of the time column in \code{x}; defaults to
+#'   "Year".
+#' @return a numeric vector with the data values for the requested data variable
+#'   and the specified time window, ordered in time as in the original data
+#'   set \code{x}.
+#' @author Thomas Münch
+#' @examples
+#' NGT <- processNGT()
+#' subsetData(NGT, t = 2011 : 2000, var = "B18_12")
+subsetData <- function(x, t, var, timeColumn = "Year") {
+
+  x %>%
+    dplyr::filter(!!as.name(timeColumn) %in% t) %>%
+    dplyr::pull(!!as.name(var))
+}
+
+#' Isotope data for spectral analyses
+#'
+#' This is a wrapper function to quickly select those North Greenland isotope
+#' records which have continuous data in a given time window; the default time
+#' window is used to select those records suitable for the applied spectral
+#' analyses.
+#'
+#' @param timeWindow vector of time points; default range is the one suited for
+#'   the spectral analyses applied in the paper.
+#' @return a data frame with all the North Greenland isotope data from the data
+#'   compilation that have continuous data in the specified time window.
+#' @author Thomas Münch
+selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
+
+  noMissingVal <- function(x) {!any(is.na(x))}
+
+  processNGT() %>%
+    stackNGT(stack = FALSE) %>%
+    dplyr::mutate(B23 = approx(Year, B23, Year)$y) %>%
+    dplyr::slice(match(timeWindow, Year)) %>%
+    dplyr::select(where(noMissingVal)) %>%
+    dplyr::select(-Year)
+}
+
+#' Compile data for histogram
+#'
+#' This wrapper function compiles the NGT isotope stack data for the histogram
+#' analysis depending on a chosen stacking and merging method.
+#'
+#' @param type character string to signal the stacking method: one of "main"
+#'   (main paper analyses), "stack_old_new" or "stack_all".
+#' @param filter.window single integer giving the size of the running mean
+#'   window to use for filtering the stack data.
+#' @param adjustMean logical; whether to adjust the mean upon merging; see the
+#'   description in \code[{mergeCores()}.
+#' @param mergePoint character signalling the time point of merging; see the
+#'   description in \code{mergeCores()}.
+#' @param use_NEGIS_NEEM logical; whether to include the NEGIS and NEEM records
+#'   in the stack.
+#' @param diffuse logical; whether to forward diffuse the NGT data prior to
+#'   the merging and stacking in order to mimic maximum smoothing at the firn
+#'   ice transition.
+#' @param nfix non-negative integer to set a constant number of records which
+#'   are selected from the merged NGT data for stacking ("frozen" stack).
+#' @return a data frame the running mean filtered stack data.
+#' @author Thomas Münch
+#'
+selectHistogramData <- function(type = "main", filter.window = 11,
+                                adjustMean = TRUE, mergePoint = "start",
+                                use_NEGIS_NEEM = TRUE, diffuse = FALSE,
+                                nfix = NULL) {
+
+  if (!type %in% c("main", "stack_old_new", "stack_all", "fix_N")) {
+    stop("'type' must be one of 'main', 'stack_old_new', 'stack_all'",
+         " or 'fix_N'.", call. = FALSE)
+  }
+
+  if (length(nfix) & type != "fix_N") {
+    stop("Fixed number of records incompatible with",
+         " this stacking method, use 'fix_N'.", call. = FALSE)
+  }
+
+  if (!length(nfix) & type == "fix_N") {
+    stop("Method 'fix_N' requires setting a fixed number of records.",
+         call. = FALSE)
+  }
+
+  selectFixedNumber <- function(NGT, nfix) {
+
+    NGT <- NGT %>%
+      dplyr::mutate(B18 = approx(Year, B18, Year)$y)
+
+    rslt <- NULL
+    nrow <- nrow(NGT)
+
+    for (i in 1 : nrow) {
+
+      row <- c(na.omit(unlist(unname(NGT[i, ]))))
+
+      if (length(row) >= (nfix + 1)) {
+        rslt <- rbind(rslt, row[1 : (nfix + 1)])
+      } else {
+        break
+      }
+    }
+
+    return(rslt)
+  }
+
+  NGT <- processNGT()
+
+  if (diffuse) {
+
+    cat("Forward diffusing data...\n")
+    NGT <- diffuseNGT(NGT)
+    cat("done.\n")
+  }
+
+  if (length(nfix)) {
+
+    NGT <- NGT %>%
+      filterData(window = filter.window) %>%
+      stackNGT(stack = FALSE) %>%
+      selectFixedNumber(nfix = nfix)
+  }
+
+  switch(type,
+
+         main = filterData(NGT, window = filter.window) %>%
+           mergeCores(adjustMean = adjustMean, mergePoint = mergePoint) %>%
+           stackExtendedCores(filterData(NGT, window = filter.window)),
+
+         stack_old_new = NGT %>%
+           stackOldAndNew(use_NEGIS_NEEM = use_NEGIS_NEEM) %>%
+           filterData(window = filter.window) %>%
+           mergeCores(sites = "stack", adjustMean = adjustMean,
+                      mergePoint = mergePoint),
+
+         stack_all = NGT %>%
+           filterData(window = filter.window) %>%
+           stackAllCores(use_NEGIS_NEEM = use_NEGIS_NEEM),
+
+         fix_N = data.frame(Year = NGT[, 1], stack = rowMeans(NGT[, -1]))
+         )
 }

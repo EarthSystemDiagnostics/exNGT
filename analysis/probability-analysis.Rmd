@@ -1,0 +1,136 @@
+---
+title: "exNGT: summary of probabilities for the recent value to occur under the preindustrial distribution"
+author: "Thomas Münch"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+knitr::opts_knit$set(
+  root.dir = "../"
+)
+```
+
+
+```{r, echo = FALSE, results = "hide", message = FALSE}
+
+source("init.R")
+
+# vary the stacking method
+method <- c("main", "main", "main", "simple", "simple", "main")
+variant <- c("", "forward diffused", "frozen (N = 5)", "", "forward diffused",
+             "non-adjusted mean")
+pi <- rep("default", 6)
+rec <- rep("default", 6)
+window <- rep("default", 6)
+
+p <- sprintf("%1.2e", c(
+
+  plotHistogram(stack.method = "main", plot = FALSE),
+
+  plotHistogram(stack.method = "main", diffuse = TRUE, plot = FALSE),
+
+  plotHistogram(stack.method = "fix_N", nfix = 5, plot = FALSE),
+
+  plotHistogram(stack.method = "stack_all", plot = FALSE),
+
+  plotHistogram(stack.method = "stack_all", diffuse = TRUE, plot = FALSE),
+
+  plotHistogram(stack.method = "main", adjustMean = FALSE, plot = FALSE)
+))
+
+df1 <- data.frame(method, variant, pi, rec, window, p)
+
+# vary the filter window
+method <- rep("main", 4)
+variant <- rep("", 4)
+pi <- rep("default", 4)
+rec <- rep("default", 4)
+window <- c(3, 7, 15, 21)
+
+p <- sprintf("%1.2e", c(
+
+  plotHistogram(stack.method = "main", filter.window = window[1], plot = FALSE),
+
+  plotHistogram(stack.method = "main", filter.window = window[2], plot = FALSE),
+
+  plotHistogram(stack.method = "main", filter.window = window[3], plot = FALSE),
+
+  plotHistogram(stack.method = "main", filter.window = window[4], plot = FALSE)
+))
+
+df2 <- data.frame(method, variant, pi, rec, window = as.factor(window), p)
+
+# vary the pI period
+method <- rep("main", 3)
+variant <- c("", "merge at start", "merge at end")
+pi <- c("1000 - 1850", "1000 - 1900", "1000 - 1900")
+rec <- rep("default", 3)
+window <- rep("default", 3)
+
+p <- sprintf("%1.2e", c(
+
+  plotHistogram(stack.method = "main", piPeriod = 1000 : 1850,
+                          mergePoint = "start", plot = FALSE),
+
+  plotHistogram(stack.method = "main", piPeriod = 1000 : 1900,
+                          mergePoint = "start", plot = FALSE),
+
+  plotHistogram(stack.method = "main", piPeriod = 1000 : 1900,
+                          mergePoint = "end", plot = FALSE)
+))
+
+df3 <- data.frame(method, variant, pi, rec, window, p)
+
+# vary the recent period
+method <- rep("main", 5)
+variant <- rep("", 5)
+pi <- rep("default", 5)
+rec <- c("2000 - 2010", "1999 - 2009", "1998 - 2008", "1997 - 2007", "1996 - 2006")
+window <- rep("default", 5)
+
+p <- sprintf("%1.2e", c(
+
+  plotHistogram(stack.method = "main", endRecentPeriod = 2010, plot = FALSE),
+
+  plotHistogram(stack.method = "main", endRecentPeriod = 2009, plot = FALSE),
+
+  plotHistogram(stack.method = "main", endRecentPeriod = 2008, plot = FALSE),
+
+  plotHistogram(stack.method = "main", endRecentPeriod = 2007, plot = FALSE),
+
+  plotHistogram(stack.method = "main", endRecentPeriod = 2006, plot = FALSE)  
+))
+
+df4 <- data.frame(method, variant, pi, rec, window, p)
+
+
+
+df <- rbind(df1, df2, df3, df4)
+
+```
+The following table lists probabilities for the recent NGT-2012 value to occur
+under the pre-indistrial distribution depending on different parameter
+combinations underlying the analysis. The source code for computing the
+probabilities is hidden here due to its length and can be viewed in the R
+markdown file corresponding to this document. The first five analysis variations
+listed in the table correspond to the histograms shown in the figure
+"supplement-histograms.pdf".
+
+```{r, echo = FALSE}
+caption <- paste("Probability for the recent value to occur under the",
+             "pre-industrial distribution for different parameter combinations",
+             "of creating and analysing the NGT-2012 stack. The meaning of the",
+             "settings named \"default\" are: Pre-industrial period = ",
+             "1000 - 1800 CE, Recent period = 2001 - 2011 CE,",
+             "Filter window = 11 yr.")
+
+knitr::kable(df, col.names = c("Method", "Variant", "Pre-industrial period",
+                               "Recent period", "Filter window", "Probability"),
+             caption = caption)
+```
