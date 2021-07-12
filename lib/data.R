@@ -402,7 +402,7 @@ selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
 #'   window to use for filtering the stack data.
 #' @param adjustMean logical; whether to adjust the mean upon merging; see the
 #'   description in \code[{mergeCores()}.
-#' @param method integer (1 or 2) to choose the merging method; see the
+#' @param mergePoint character signalling the time point of merging; see the
 #'   description in \code{mergeCores()}.
 #' @param use_NEGIS_NEEM logical; whether to include the NEGIS and NEEM records
 #'   in the stack.
@@ -415,7 +415,7 @@ selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
 #' @author Thomas Münch
 #'
 selectHistogramData <- function(type = "main", filter.window = 11,
-                                adjustMean = TRUE, method = 1,
+                                adjustMean = TRUE, mergePoint = "start",
                                 use_NEGIS_NEEM = TRUE, diffuse = FALSE,
                                 nfix = NULL) {
 
@@ -476,14 +476,14 @@ selectHistogramData <- function(type = "main", filter.window = 11,
   switch(type,
 
          main = filterData(NGT, window = filter.window) %>%
-           mergeCores(adjustMean = adjustMean, method = method) %>%
+           mergeCores(adjustMean = adjustMean, mergePoint = mergePoint) %>%
            stackExtendedCores(filterData(NGT, window = filter.window)),
 
          stack_old_new = NGT %>%
            stackOldAndNew(use_NEGIS_NEEM = use_NEGIS_NEEM) %>%
            filterData(window = filter.window) %>%
            mergeCores(sites = "stack", adjustMean = adjustMean,
-                      method = method),
+                      mergePoint = mergePoint),
 
          stack_all = NGT %>%
            filterData(window = filter.window) %>%

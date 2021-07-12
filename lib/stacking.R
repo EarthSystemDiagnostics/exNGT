@@ -152,7 +152,7 @@ stackExtendedCores <- function(dataMerged, data, use_NEGIS_NEEM = TRUE,
 stackNGT <- function(ngt, stack = TRUE) {
 
   ngt %>%
-    mergeCores(adjustMean = TRUE, method = 1) %>%
+    mergeCores(adjustMean = TRUE, mergePoint = "start") %>%
     stackExtendedCores(ngt, stack = stack)
 
 }

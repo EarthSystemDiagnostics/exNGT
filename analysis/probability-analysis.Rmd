@@ -75,11 +75,14 @@ window <- rep("default", 3)
 
 p <- sprintf("%1.2e", c(
 
-  plotHistogram(stack.method = "main", piPeriod = 1000 : 1850, method = 1, plot = FALSE),
+  plotHistogram(stack.method = "main", piPeriod = 1000 : 1850,
+                          mergePoint = "start", plot = FALSE),
 
-  plotHistogram(stack.method = "main", piPeriod = 1000 : 1900, method = 1, plot = FALSE),
+  plotHistogram(stack.method = "main", piPeriod = 1000 : 1900,
+                          mergePoint = "start", plot = FALSE),
 
-  plotHistogram(stack.method = "main", piPeriod = 1000 : 1900, method = 2, plot = FALSE)
+  plotHistogram(stack.method = "main", piPeriod = 1000 : 1900,
+                          mergePoint = "end", plot = FALSE)
 ))
 
 df3 <- data.frame(method, variant, pi, rec, window, p)

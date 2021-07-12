@@ -8,43 +8,45 @@
 #'   new records; must match the list of sites for which re-drilled records are
 #'   available.
 #' @param data data frame with the NGT and associated oxygen isotope records.
-#' @param method integer signalling the merging method: for \code{method = 1}
-#'   the new record is used over the entire length of the common overlap period
-#'   until its start (year CE), for \code{method = 2} it is used only until the
-#'   end of the common overlap period.
+#' @param mergePoint character signalling the time point of merging: for
+#'   \code{"start"} (the default) the new record is merged with the old record
+#'   at the start (i.e. oldest age) of their common overlap period, for
+#'   \code{"end"} the records are merged at the end (i.e. one year after the
+#'   youngest age) of the overlap period.
 #' @param adjustMean logical; shall the mean values of the two records within
 #'   the common overlap period be adjusted prior to the merging? Defaults to
 #'   \code{FALSE}. If \code{TRUE}, mean adjustment is always performed for the
 #'   new record relative to the old one.
 #' @return numeric vector with the merged record.
 #' @author Thomas Münch
-doMerge <- function(site = "B18", data, method = 1, adjustMean = FALSE) {
+doMerge <- function(site = c("B18", "B21", "B23", "B26", "NGRIP", "stack"),
+                    data, mergePoint = c("start", "end"), adjustMean = FALSE) {
 
-  if (!site %in% c("B18", "B21", "B23", "B26", "NGRIP", "stack"))
-    stop("Unsuitable site requested.")
+  site <- match.arg(site)
+  mergePoint <- match.arg(mergePoint)
 
-  if (!method %in% c(1, 2))
-    stop("Only 'method = 1' or 'method = 2' available.")
+  cores <- calculateOverlapStatistics(data = data, site = site)
 
   startYear <- data$Year[1]
-  cores <- calculateOverlapStatistics(data = data, site = site)
+  endYear   <- ifelse(mergePoint == "start", cores$stat$startOverlap,
+                      cores$stat$endOverlap + 1)
+
+  if (endYear > startYear) {
+    stop("Cannot define merging point: ",
+         "old and new records have same final age.", call. = FALSE)
+  }
+  if (endYear == dplyr::last(data$Year)) {
+   stop("Cannot define merging point: ",
+         "old and new records have same start age.", call. = FALSE)
+  }
 
   if (adjustMean) {  
     cores$dat$pairData[, 3] <-
       cores$dat$pairData[, 3] - cores$stat$diffMeanOverlap
   }
 
-  if (method == 1) {
-
-    i <- match(startYear : cores$stat$startOverlap, data$Year)
-    merged <- c(cores$dat$pairData[i, 3], cores$dat$pairData[-i, 2])
-
-  } else {
-
-    i <- match(startYear : (cores$stat$endOverlap + 1), data$Year)
-    merged <- c(cores$dat$pairData[i, 3], cores$dat$pairData[-i, 2])
-
-  }
+  i <- match(startYear : endYear, data$Year)
+  merged <- c(cores$dat$pairData[i, 3], cores$dat$pairData[-i, 2])
 
   return(merged)
 
@@ -59,10 +61,11 @@ doMerge <- function(site = "B18", data, method = 1, adjustMean = FALSE) {
 #' @param sites vector of the character IDs of the sites for which the merging
 #'   shall be conducted; defaults to the list of sites with available paired
 #'   records.
-#' @param method integer signalling the merging method: for \code{method = 1}
-#'   the new record is used over the entire length of the common overlap period
-#'   until its start (year CE), for \code{method = 2} it is used only until the
-#'   end of the common overlap period.
+#' @param mergePoint character signalling the time point of merging: for
+#'   \code{"start"} (the default) the new record is merged with the old record
+#'   at the start (i.e. oldest age) of their common overlap period, for
+#'   \code{"end"} the records are merged at the end (i.e. one year after the
+#'   youngest age) of the overlap period.
 #' @param adjustMean logical; shall the mean values of the two records within
 #'   the common overlap period be adjusted prior to the merging? Defaults to
 #'   \code{FALSE}. If \code{TRUE}, mean adjustment is always performed for the
@@ -72,15 +75,14 @@ doMerge <- function(site = "B18", data, method = 1, adjustMean = FALSE) {
 #' @author Thomas Münch
 mergeCores <- function(data,
                        sites = c("B18", "B21", "B23", "B26", "NGRIP"),
-                       method = 1, adjustMean = FALSE) {
+                       mergePoint = c("start", "end"), adjustMean = FALSE) {
 
-  if (!method %in% c(1, 2))
-    stop("Only 'method = 1' or 'method = 2' available.")
+  mergePoint <- match.arg(mergePoint)
 
   if (any(is.na(match(sites, names(data)))))
     stop("Requested site(s) not found in given data.")
 
-  merged <- sapply(sites, doMerge, data, method, adjustMean)
+  merged <- sapply(sites, doMerge, data, mergePoint, adjustMean)
   merged <- as.data.frame(cbind(Year = data$Year, merged))
 
   return(merged)
