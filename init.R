@@ -10,14 +10,14 @@
 
 
 # ------------------------------------------------------------------------------
-# Load all required packages
+# Check if required packages are available
 
-required.packages <- c("grfxtools", "proxysnr", "tibble", "ggplot2", "dplyr",
-                       "rmarkdown", "zoo")
+required.packages <- c("grfxtools", "proxysnr", "tibble", "ggplot2", "magrittr",
+                       "dplyr", "rmarkdown", "zoo")
 
 for (pkg in required.packages) {
 
-  if (!require(pkg, character.only = TRUE, quietly = TRUE)) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
     stop(sprintf("Package \"%s\" needed for \"exNGT\". ", pkg),
          "Please install it using \"dependencies.R\".", call. = FALSE)
   }
@@ -36,7 +36,8 @@ sourceDir <- function (path, trace = TRUE, local = FALSE, ...) {
 }
 
 # ------------------------------------------------------------------------------
-# Source the "exNGT" library directory
+# Attach necessary packages and source the "exNGT" library directory
 
+library("magrittr")
 sourceDir("lib")
 
