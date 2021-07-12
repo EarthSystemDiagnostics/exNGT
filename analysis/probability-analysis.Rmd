@@ -22,11 +22,12 @@ knitr::opts_knit$set(
 source("init.R")
 
 # vary the stacking method
-method <- c("main", "main", "main", "simple", "simple")
-variant <- c("", "forward diffused", "frozen (N = 5)", "", "forward diffused")
-pi <- rep("default", 5)
-rec <- rep("default", 5)
-window <- rep("default", 5)
+method <- c("main", "main", "main", "simple", "simple", "main")
+variant <- c("", "forward diffused", "frozen (N = 5)", "", "forward diffused",
+             "non-adjusted mean")
+pi <- rep("default", 6)
+rec <- rep("default", 6)
+window <- rep("default", 6)
 
 p <- sprintf("%1.2e", c(
 
@@ -38,7 +39,9 @@ p <- sprintf("%1.2e", c(
 
   plotHistogram(stack.method = "stack_all", plot = FALSE),
 
-  plotHistogram(stack.method = "stack_all", diffuse = TRUE, plot = FALSE)
+  plotHistogram(stack.method = "stack_all", diffuse = TRUE, plot = FALSE),
+
+  plotHistogram(stack.method = "main", adjustMean = FALSE, plot = FALSE)
 ))
 
 df1 <- data.frame(method, variant, pi, rec, window, p)
