@@ -241,21 +241,16 @@ danmarkshavn <- dplyr::select(filteredDMI, "Year", "Danmarkshavn")
 
 We compare the mean temperature over the recent 11 years of the NGT stack with
 the mean value of the 1961-1990 period and the mean value of the 20th century
-(1901--2000). We do this assuming the standard spatial isotope--temperature
-slope for Greenland as well as assuming stronger and weaker values from the
-temporal slopes derived by Vinther et al. (2009) and Masson-Delmotte et
+(1901--2000), including an estimation of the standard error of the
+difference. We do this assuming the standard spatial isotope--temperature
+calibration slope for Greenland as well as assuming stronger and weaker values
+from the temporal slopes derived by Vinther et al. (2009) and Masson-Delmotte et
 al. (2015).
 
-Get NGT temperature stack data for the alternative isotope--temperature slopes:
+Set the alternative isotope--temperature calibration slopes:
 ```{r}
 permil2temperature.max <- 2.1     # Vinther et al. (2009)
 permil2temperature.min <- 1 / 1.1 # Masson-Delmotte et al. (2015)
-
-maxStackedTemperatureNGT <- stackedNGT %>%
-  dplyr::mutate(stack = permil2temperature.max * stack)
-
-minStackedTemperatureNGT <- stackedNGT %>%
-  dplyr::mutate(stack = permil2temperature.min * stack)
 ```
 
 * Recent 11 years versus 1961-1990 reference period:
@@ -263,41 +258,61 @@ minStackedTemperatureNGT <- stackedNGT %>%
   t1 <- 2011 : 2001
   t2 <- 1990 : 1961
 
-  # spatial slope
-  (mean(subsetData(stackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(stackedTemperatureNGT, t2, var = "stack"))) %>%
+  recentPeriod <- stackedNGT %>%
+    subsetData(t1, var = "stack") %>%
+    dplyr::tibble() %>%
+    setNames("d18O") %>%
+    dplyr::summarise(mean1 = mean(d18O), se1 = sd(d18O) / sqrt(dplyr::n()))
+  referencePeriod <- stackedNGT %>%
+    subsetData(t2, var = "stack") %>%
+    dplyr::tibble() %>%
+    setNames("d18O") %>%
+    dplyr::summarise(mean2 = mean(d18O), se2 = sd(d18O) / sqrt(dplyr::n()))
+
+  difference <- cbind(recentPeriod, referencePeriod)
+
+  # mean difference and s.e. for spatial slope
+  (difference * permil2temperature) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
     round(digits = 1)
 
-  # minimum slope
-  (mean(subsetData(minStackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(minStackedTemperatureNGT, t2, var = "stack"))) %>%
+  # mean difference and s.e. for minimum slope
+  (difference * permil2temperature.min) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
     round(digits = 1)
 
-  # maximum slope
-  (mean(subsetData(maxStackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(maxStackedTemperatureNGT, t2, var = "stack"))) %>%
+  # mean difference and s.e. for maximum slope
+  (difference * permil2temperature.max) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
     round(digits = 1)
 
   ```
 
 * Recent 11 years versus 20th century (1901-2000):
   ```{r}
-  t1 <- 2011 : 2001
   t2 <- 2000 : 1901
-  
-  # spatial slope
-  (mean(subsetData(stackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(stackedTemperatureNGT, t2, var = "stack"))) %>%
+
+  referencePeriod <- stackedNGT %>%
+    subsetData(t2, var = "stack") %>%
+    dplyr::tibble() %>%
+    setNames("d18O") %>%
+    dplyr::summarise(mean2 = mean(d18O), se2 = sd(d18O) / sqrt(dplyr::n()))
+
+  difference <- cbind(recentPeriod, referencePeriod)
+
+  # mean difference and s.e. for spatial slope
+  (difference * permil2temperature) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
     round(digits = 1)
 
-  # minimum slope
-  (mean(subsetData(minStackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(minStackedTemperatureNGT, t2, var = "stack"))) %>%
+  # mean difference and s.e. for minimum slope
+  (difference * permil2temperature.min) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
     round(digits = 1)
 
-  # maximum slope
-  (mean(subsetData(maxStackedTemperatureNGT, t1, var = "stack")) -
-   mean(subsetData(maxStackedTemperatureNGT, t2, var = "stack"))) %>%
+  # mean difference and s.e. for maximum slope
+  (difference * permil2temperature.max) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
     round(digits = 1)
 
   ```
