@@ -282,7 +282,7 @@ minStackedTemperatureNGT <- stackedNGT %>%
 
 * Recent 11 years versus 20th century (1901-2000):
   ```{r}
-  t1 <- 2011 : 2011
+  t1 <- 2011 : 2001
   t2 <- 2000 : 1901
   
   # spatial slope
