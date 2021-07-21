@@ -54,7 +54,8 @@ filteredStackedNGT <- processNGT() %>%
 Load the Arctic2k and weather station data and filter it:
 ```{r}
 Arctic2k <- readArctic2k() %>%
-  extendWithHadCrut()
+  extendWithHadCrut() %>%
+  dplyr::select("Year", "TempAnomaly")
 
 filteredExtendedArctic2k <- Arctic2k %>%
   filterData(window = filter.window)
