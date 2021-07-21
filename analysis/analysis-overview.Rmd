@@ -262,12 +262,12 @@ permil2temperature.min <- 1 / 1.1 # Masson-Delmotte et al. (2015)
     subsetData(t1, var = "stack") %>%
     dplyr::tibble() %>%
     setNames("d18O") %>%
-    dplyr::summarise(mean1 = mean(d18O), se1 = sd(d18O) / sqrt(dplyr::n()))
+    dplyr::summarise(mean1 = mean(d18O), se1 = sdError(d18O))
   referencePeriod <- stackedNGT %>%
     subsetData(t2, var = "stack") %>%
     dplyr::tibble() %>%
     setNames("d18O") %>%
-    dplyr::summarise(mean2 = mean(d18O), se2 = sd(d18O) / sqrt(dplyr::n()))
+    dplyr::summarise(mean2 = mean(d18O), se2 = sdError(d18O))
 
   difference <- cbind(recentPeriod, referencePeriod)
 
@@ -296,7 +296,7 @@ permil2temperature.min <- 1 / 1.1 # Masson-Delmotte et al. (2015)
     subsetData(t2, var = "stack") %>%
     dplyr::tibble() %>%
     setNames("d18O") %>%
-    dplyr::summarise(mean2 = mean(d18O), se2 = sd(d18O) / sqrt(dplyr::n()))
+    dplyr::summarise(mean2 = mean(d18O), se2 = sdError(d18O))
 
   difference <- cbind(recentPeriod, referencePeriod)
 
