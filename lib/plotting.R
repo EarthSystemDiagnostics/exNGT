@@ -285,7 +285,7 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
 
     xlim <- c(1000, 2020)
     ylim.ngt <- c(-6, 2.5)
-    ylim.a2k <- c(-2, 6.5)
+    ylim.a2k <- c(-2, 10.75)
 
     xanml <- c(800, 2020)
     yanml <- rep(0, 2)
@@ -293,6 +293,9 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
     startNew <- 1993
     i <- match(startNew, stackedNGT$Year)
     n <- nrow(stackedNGT)
+    startHadCrut <- 2000
+    j <- match(startHadCrut, Arctic2k$Year)
+    m <- nrow(Arctic2k)
 
     x1 <- 845
     x2 <- 2175
@@ -334,7 +337,7 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
          xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
 
     axis(1)
-    axis(4, at = seq(-2, 2, 1), col = col[2], col.axis = col[2])
+    axis(4, at = seq(-2, 3, 1), col = col[2], col.axis = col[2])
 
     mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
     text(x2, y1, ylab.a2k, srt = -90, xpd = NA,
@@ -344,7 +347,10 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
 
     lines(Arctic2k$Year, Arctic2k$TempAnomaly,
           col = adjustcolor(col[2], alpha = 0.6))
-    lines(filteredArctic2k$Year, filteredArctic2k$TempAnomaly,
+
+    lines(filteredArctic2k$Year[1 : j], filteredArctic2k$TempAnomaly[1 : j],
+          col = "deepskyblue1", lwd = 2.5)
+    lines(filteredArctic2k$Year[j : m], filteredArctic2k$TempAnomaly[j : m],
           col = col[2], lwd = 2.5)
 
     lines(t1, regressionModels[[3]][1] + regressionModels[[3]][2] * t1,
@@ -352,7 +358,7 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
     lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
           col = col[2], lwd = 2, lty = 2)
 
-    mtext("c", side = 3, adj = 0.99, line = -16.5,
+    mtext("c", side = 3, adj = 0.99, line = -18.6,
           font = 2, cex = par()$cex.lab, col = col[2])
 
     par(op)
