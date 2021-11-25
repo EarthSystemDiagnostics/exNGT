@@ -10,9 +10,10 @@
 #' Compile exNGT 2012 annual isotope data set
 #'
 #' This function calculates the annual mean isotope data of the new extended NGT
-#' 2012 cores (namely, B18_2012, B21_2012, B23_2012, and NGRIP_2012), reads all
-#' other published North Greenland annual mean isotope time series, and compiles
-#' all data into a single data set which is saved to disk in the ./data folder.
+#' 2012 cores (namely, B18_2012, B21_2012, B23_2012, B26_2012, and NGRIP_2012),
+#' reads all other published North Greenland annual mean isotope time series,
+#' and compiles all data into a single data set which is saved to disk in the
+#' ./data folder.
 #'
 #' @param path path to your copy of the 'exNGT' repository containing the
 #'   relevant data and source files needed.
@@ -51,11 +52,8 @@ compileDataset <- function(path, filename) {
   ngrip <- getNGRIP()
 
   # ----------------------------------------------------------------------------
-  # read annual B26, NEGIS and NEEM core data provided by Bo Vinther
+  # read annual NEGIS and NEEM core data provided by Bo Vinther
 
-  b26_12 <- readr::read_csv(file.path(path, "data-raw/in-other",
-                                      "B26_2012_AnnualMean.csv"),
-                            col_types = cols())
   negis <- readr::read_csv(file.path(path, "data-raw/in-other",
                                      "NEGIS_AnnualMean.csv"),
                            col_types = cols())
@@ -68,8 +66,8 @@ compileDataset <- function(path, filename) {
 
   filename <- paste0(tools::file_path_sans_ext(filename), ".csv")
 
-  c(exNGT, list(b26_12), NGT, list(gisp2 = gisp2, ngrip = ngrip,
-                                   negis = negis, neem = neem)) %>%
+  c(exNGT, NGT, list(gisp2 = gisp2, ngrip = ngrip,
+                     negis = negis, neem = neem)) %>%
     purrr::reduce(dplyr::full_join, by = "Year") %>%
     readr::write_csv(
       file = file.path(path, "data", filename),

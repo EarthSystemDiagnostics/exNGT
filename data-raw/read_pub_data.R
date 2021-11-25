@@ -51,24 +51,23 @@ getPangaeaData <- function() {
 
 }
 
-#' Download and parse GISP2 annual isotope data from U Washington archive
+#' Download and parse GISP2 annual isotope data from PANGAE repository
 #'
 ##' @return a tibble with two variables: time in years CE and annual isotope
 #'   value in permil.
 #' @author Thomas Münch
 getGISP2 <- function() {
 
-  require(readr)
+  require(pangaear)
   require(dplyr)
-  
-  file <- "https://depts.washington.edu/qil/datasets/gisp2_1yr.txt"
 
-  readr::read_delim(file, delim = " ", skip = 12,
-                    col_names = c("depth", "Year", "GISP2"),
-                    col_types = "nnn") %>%
-    dplyr::mutate(Year = 1950 - Year) %>%
-    dplyr::select(-depth) %>%
-    round(2)
+  "10.1594/PANGAEA.55532" %>%
+    pangaear::pg_data() %>%
+    .[[1]] %>%
+    .$data %>%
+    dplyr::select("Age [ka BP]", 3) %>%
+    setNames(c("Year", "GISP2")) %>%
+    dplyr::mutate(Year = round(1950 - 1000 * Year))
 
 }
 

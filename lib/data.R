@@ -6,7 +6,7 @@
 #' @return a data frame with the read NGT data set.
 #' @author Thomas Münch, Maria Hoerhold
 #'
-readNGT <- function(path = "data/NGT2012_AnnualMean_20210325.csv") {
+readNGT <- function(path = "data/NGT2012_AnnualMean_20211124.csv") {
 
   if (file.exists(path)) {
     read.csv(path, header = TRUE)
