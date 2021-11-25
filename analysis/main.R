@@ -27,7 +27,7 @@ dev.off()
 # ------------------------------------------------------------------------------
 # Figure 02 - histogram
 
-grfxtools::Quartz(file = "./fig/main-figure02.pdf", height = 5, width = 7.5)
+grfxtools::Quartz(file = "./fig/main-figure02.pdf", height = 6.2, width = 7.5)
 
 makeFigure02()
 dev.off()

@@ -45,7 +45,8 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
                           col = c("black", "firebrick4"),
                           plot = TRUE, plot.quantiles = TRUE,
                           quantile.probs = c(0.025, 0.5, 0.975),
-                          xmain = NA, ymain = NA, plot.legend = TRUE) {
+                          xmain = NA, ymain = NA, plot.legend = TRUE,
+                          plot.2xaxes = FALSE, permil2temperature = 1 / 0.67) {
 
   if (!type %in% c("anomaly", "trend")) {
     stop("'type' must be either 'anomaly' or 'trend'.", call. = FALSE)
@@ -72,6 +73,13 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
 
     var <- "stack"
     xlab <- grfxtools::LabelAxis(suffix = "anomaly")
+    ylab <- grfxtools::LabelAxis("Probability density", unit.type = "freq")
+
+    if (plot.2xaxes) {
+      xlab <- "NGT-2012 anomaly"
+      pm.unit <- grfxtools::LabelAxis("")
+      dc.unit <- grfxtools::LabelAxis("", unit = "celsius")
+    }
 
   } else if (type == "trend") {
 
@@ -80,9 +88,17 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
     var <- "slope"
     xlab <- grfxtools::LabelAxis(suffix = "trend", unit.type = "trend",
                                  time.unit = "yr")
-  }
+    ylab <- grfxtools::LabelAxis("Probability density",
+                                 unit = bquote("\u2030"^{"-1"} ~ "yr"))
 
-  ylab <- "Probability density"
+    if (plot.2xaxes) {
+      xlab <- "NGT-2012 trend"
+      pm.unit <- grfxtools::LabelAxis("", unit.type = "trend",
+                                      time.unit = "yr")
+      dc.unit <- grfxtools::LabelAxis("", unit.type = "trend", unit = "celsius",
+                                      time.unit = "yr")
+    }
+  }
 
   # ----------------------------------------------------------------------------
   # Obtain distribution and recent data
@@ -116,11 +132,32 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
     q <- seq(xlim[1], xlim[2], diff(breaks)[1] / 100)
 
     hst <- hist(piData, freq = FALSE, breaks = breaks, xlim = xlim, ylim = ylim,
-                main = "", xlab = "", ylab = "",
+                main = "", xlab = "", ylab = "", axes = FALSE,
                 col = adjustcolor(col[1], alpha = 0.2), yaxs = "i")
 
-    mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-    mtext(ylab, side = 2, line = 3.5, cex = par()$cex.lab * par()$cex, las = 0)
+    axx <- axis(1)
+    axy <- axis(2)
+
+    mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
+
+    if (plot.2xaxes) {
+
+      at <- pretty(range(axx) * permil2temperature, length(axx))
+      axis(1, line = 5, labels = FALSE, lwd.ticks = 0)
+      axis(1, at = at / permil2temperature, labels = at,
+           line = 5, lwd = 0, lwd.ticks = 1)
+      mtext(xlab, side = 1, line = 9.25, cex = par()$cex.lab * par()$cex)
+      mtext(pm.unit, side = 1, line = 2.75,
+            cex = par()$cex.lab * par()$cex, adj = 0.975)
+      mtext(dc.unit, side = 1, line = 7.75,
+            cex = par()$cex.lab * par()$cex, adj = 0.975)
+
+    } else {
+
+      axis(1)
+      mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+
+    }
 
     lines(q, gq <- dnorm(q, mean = mean(piData), sd = sd(piData)),
           col = col[1], lwd = 2)
@@ -417,9 +454,9 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
 makeFigure02 <- function() {
 
   layout(matrix(1 : 2, 1, 2), widths = c(0.7, 0.3))
-  par(cex = 1)
+  par(cex = 1, mar = c(11, 5, 0.5, 0.5))
 
-  plotHistogram(type = "anomaly", plot.legend = FALSE)
+  plotHistogram(type = "anomaly", plot.legend = FALSE, plot.2xaxes = TRUE)
 
   par(mar = c(0, 0, 0, 0))
   plot(1, type = "n", axes = FALSE, xlab = "", ylab = "")
