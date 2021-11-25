@@ -31,7 +31,7 @@ calculateAnnualMeansExNGT2012 <- function(path, update = FALSE) {
   # ----------------------------------------------------------------------------
   # read age-depth relationship and raw isotope depth profiles
 
-  sites <- c("B18", "B21", "B23", "NGRIP")
+  sites <- c("B18", "B21", "B23", "NGRIP", "B26")
 
   files <- sprintf("%s/in-raw/%s_2012_DepthAge.txt", path, sites)
 
