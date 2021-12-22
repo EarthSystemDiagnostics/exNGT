@@ -51,7 +51,7 @@ filteredStackedNGT <- processNGT() %>%
   stackNGT()
 ```
 
-Load the Arctic2k and weather station data and filter it:
+Load the Arctic2k, weather station and MAR data and filter it:
 ```{r}
 Arctic2k <- readArctic2k() %>%
   extendWithHadCrut() %>%
@@ -65,6 +65,9 @@ filteredArctic2k <- readArctic2k() %>%
 
 filteredDMI <- readDMI() %>%
   makeAnomalies() %>%
+  filterData(window = filter.window)
+
+filteredMAR <- readMAR() %>%
   filterData(window = filter.window)
 ```
 
@@ -234,6 +237,20 @@ danmarkshavn <- dplyr::select(filteredDMI, "Year", "Danmarkshavn")
   res <- estimateCorrelation(stackedNGT, filteredStackedNGT, danmarkshavn,
                              filter.window = filter.window,
                              analysis.period = 2011 : 1901,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+```
+
+## Comparison of NGT-2012 isotope stack with MAR3.12 temperature data
+
+We calculate the correlation of the NGT isotope stack with the annual 2m surface
+air temperature from the regional climate model MAR version 3.12, extracted from
+the NGT-2012 firn core locations and averaged, using 11-yr running mean time
+series over the common period from 1950 to 2011 CE.
+```{r}
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT, filteredMAR,
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1950,
                              nmc = 10000)
   sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
 ```

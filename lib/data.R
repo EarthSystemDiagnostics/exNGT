@@ -138,6 +138,30 @@ extendWithHadCrut <- function(a2k,
 
 }
 
+#' Read MAR3.12 temperature
+#'
+#' Read the MAR3.12 2m monthly surface air temperature averaged over the
+#' NGT-2012 firn core locations and process them to annual mean anomalies
+#' relative to the 1961-1990 CE reference interval.
+#'
+#' @param path file path (relative to working directory) of the MAR data set.
+#' @return a data frame of two columns and 72 rows with the read MAR3.12
+#'   temperature data set from 1950 to 2020 CE.
+#' @author Thomas Münch
+readMAR <- function(path = "data/MAR_3.12_t2m_firn_core_sites_monthly.csv") {
+
+  read.csv(path, header = TRUE) %>%
+    setNames(c("Year.dec", "Year", "Month", "t2m")) %>%
+    dplyr::group_by(Year) %>%
+    dplyr::summarise(t2m = mean(t2m)) %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(Year < 2021) %>%
+    dplyr::arrange(dplyr::desc(dplyr::row_number())) %>%
+    as.data.frame() %>%
+    makeAnomalies()
+
+}
+
 #' Site climatological parameters
 #'
 #' This function provides the relevant climatological parameters at the firn
