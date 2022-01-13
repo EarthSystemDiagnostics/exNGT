@@ -104,23 +104,3 @@ egg::ggarrange(plots = ggplt, nrow = 2, ncol = 2, labels = labels,
 filename <- "supplement_point_cor_20cr.pdf"
 dev.copy2pdf(file = file.path("fig", filename))
 
-# ------------------------------------------------------------------------------
-# Plot ERA20C results
-
-# data
-dat <- readRDS("out/supplement-point-correlations-ERA20C.rds")
-dat <- dat[c(3, 4, 1, 2)]
-
-# summary statistics for Greenland region
-extractGreenlandRegion(dat$ngt.ann)
-extractGreenlandRegion(dat$ngt.11y)
-
-# create plots
-ggplt <- lapply(dat, plotMap, markNonsignificance = TRUE)
-
-grfxtools::Quartz(height = 12, width = 14)
-egg::ggarrange(plots = ggplt, nrow = 2, ncol = 2, labels = labels,
-               label.args = list(gp = grid::gpar(cex = 1.25)))
-
-filename <- "supplement_point_cor_era20c.pdf"
-dev.copy2pdf(file = file.path("fig", filename))
