@@ -1,6 +1,6 @@
 ##
 ## aim:
-## plot point correlations between HadCrut/20CR fields and NGT-2012/Arctic2k
+## plot point correlation between 20CR reanalysis field and NGT-2012/Arctic2k
 ## relation:
 ## NGT paper supplementary; https://github.com/EarthSystemDiagnostics/exNGT
 ##
@@ -59,7 +59,7 @@ plotMap <- function(map, MAX = 1, MIN = -MAX, markNonsignificance = FALSE,
 
 }
 
-# extract summar values for our ice core region on Greenland
+# extract summary values for our ice core region on Greenland
 extractGreenlandRegion <- function(x) {
 
   corePos <- loadPositions() %>%

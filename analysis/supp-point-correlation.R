@@ -2,7 +2,7 @@
 
 ##
 ## aim:
-## analyse point correlations between HadCrut/20CR fields and NGT-2012/Arctic2k
+## analyse point correlation between 20CR reanalysis field and NGT-2012/Arctic2k
 ## relation:
 ## NGT paper supplementary; https://github.com/EarthSystemDiagnostics/exNGT
 ##
@@ -53,15 +53,9 @@ filteredArctic2k <- readArctic2k() %>%
 
 load(file = "data/NOAA_CIRES_DOE_20CR_v3_50to90_annual_field.rda",
      verbose = TRUE)
-load("data/ECMWF_ERA20C_50to90_annual_field.rda", verbose = TRUE)
 
 filteredTwenCR <- TwenCR
 filteredTwenCR$dat <- apply(filteredTwenCR$dat, 2, filterData,
-                            window = filter.window,
-                            hasAgeColumn = FALSE)
-
-filteredERA20C <- ERA20C
-filteredERA20C$dat <- apply(filteredERA20C$dat, 2, filterData,
                             window = filter.window,
                             hasAgeColumn = FALSE)
 
@@ -130,35 +124,6 @@ cat("Saving data...\n\n")
 list(ngt.ann = cor.ngt.ann, a2k.ann = cor.a2k.ann,
      ngt.11y = cor.ngt.11y, a2k.11y = cor.a2k.11y) %>%
   saveRDS(file = "out/supplement-point-correlations-20CR.rds")
-
-# ------------------------------------------------------------------------------
-# Run analyses for 20CR
-
-cat(as.character(Sys.time()), "Running annual NGT-ERA20C...\n")
-cor.ngt.ann <- getPointCorrelation(NGT, NGT, TwenCR,
-                                   filter.window = 1, nmc = nmc,
-                                   analysis.period = 1900 : 2000)
-cat(as.character(Sys.time()), "Running annual A2k-ERA20C...\n")
-cor.a2k.ann <- getPointCorrelation(Arctic2k, Arctic2k, TwenCR,
-                                   filter.window = 1, nmc = nmc,
-                                   analysis.period = 1900 : 2000)
-cat(as.character(Sys.time()), "Running 11-yr NGT-ERA20C...\n")
-cor.ngt.11y <- getPointCorrelation(NGT, filteredNGT, filteredTwenCR,
-                                   filter.window = filter.window, nmc = nmc,
-                                   analysis.period = 1900 : 2000)
-cat(as.character(Sys.time()), "Running 11-yr A2k-ERA20C...\n")
-cor.a2k.11y <- getPointCorrelation(Arctic2k, filteredArctic2k, filteredTwenCR,
-                                   filter.window = filter.window, nmc = nmc,
-                                   analysis.period = 1900 : 2000)
-
-cat("\n")
-cat(as.character(Sys.time()), "...done.", "\n\n")
-
-cat("Saving data...\n\n")
-
-list(ngt.ann = cor.ngt.ann, a2k.ann = cor.a2k.ann,
-     ngt.11y = cor.ngt.11y, a2k.11y = cor.a2k.11y) %>%
-  saveRDS(file = "out/supplement-point-correlations-ERA20C.rds")
 
 cat("Good bye.\n\n")
 
