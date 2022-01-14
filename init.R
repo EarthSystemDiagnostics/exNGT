@@ -5,15 +5,15 @@
 ## relation:
 ## https://github.com/EarthSystemDiagnostics/exNGT
 ##
-## Maria Hoerhold and Thomas Muench, 05/2021
+## Maria Hoerhold and Thomas Muench, 01/2022
 ##
 
 
 # ------------------------------------------------------------------------------
 # Check if required packages are available
 
-required.packages <- c("grfxtools", "proxysnr", "tibble", "ggplot2", "magrittr",
-                       "dplyr", "rmarkdown", "zoo")
+required.packages <- c("grfxtools", "proxysnr", "tibble", "ggplot2", "egg",
+                       "magrittr", "dplyr", "rmarkdown", "zoo")
 
 for (pkg in required.packages) {
 

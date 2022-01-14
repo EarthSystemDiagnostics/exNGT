@@ -4,7 +4,7 @@
 ## relation:
 ## https://github.com/EarthSystemDiagnostics/exNGT
 ##
-## Maria Hoerhold and Thomas Muench, 05/2021
+## Maria Hoerhold and Thomas Muench, 01/2022
 ##
 
 # ------------------------------------------------------------------------------
@@ -12,6 +12,7 @@
 
 install.packages("dplyr")
 install.packages("ggplot2")
+install.packages("egg")
 install.packages("tibble")
 install.packages("rmarkdown")
 install.packages("zoo")
