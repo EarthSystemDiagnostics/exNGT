@@ -5,15 +5,23 @@
 ## relation:
 ## https://github.com/EarthSystemDiagnostics/exNGT
 ##
-## Maria Hoerhold and Thomas Muench, 11/2019
+## Maria Hoerhold and Thomas Muench, 01/2022
 ##
 
 
 # ------------------------------------------------------------------------------
-# Load all required packages
+# Check if required packages are available
 
-## none to load so far
+required.packages <- c("grfxtools", "proxysnr", "tibble", "ggplot2", "egg",
+                       "magrittr", "dplyr", "rmarkdown", "zoo")
 
+for (pkg in required.packages) {
+
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    stop(sprintf("Package \"%s\" needed for \"exNGT\". ", pkg),
+         "Please install it using \"dependencies.R\".", call. = FALSE)
+  }
+}
 
 # ------------------------------------------------------------------------------
 # Define function to source entire directory with .R files
@@ -27,9 +35,9 @@ sourceDir <- function (path, trace = TRUE, local = FALSE, ...) {
   }
 }
 
-
 # ------------------------------------------------------------------------------
-# Source the "exNGT" library directory
+# Attach necessary packages and source the "exNGT" library directory
 
-sourceDir(file.path(path, "lib"))
+library("magrittr")
+sourceDir("lib")
 

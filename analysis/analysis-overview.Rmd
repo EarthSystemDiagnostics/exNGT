@@ -1,0 +1,354 @@
+---
+title: "exNGT: an overview of various correlation and other analyses"
+author: "Thomas Münch"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+knitr::opts_knit$set(
+  root.dir = "../"
+)
+```
+
+## Introduction
+
+This document summarises various analyses of the NGT firn core stack:
+
+* comparison of the NGT stack with other temperature data sets from the Arctic2k
+  compilation and weather station measurements;
+* comparison of individual NGT firn cores with the Arctic2k data set;
+* comparison of the mean temperature anomalies derived from the NGT stack
+  between the recent 15 year period and the reference period 1961-1990 as well
+  as the entire 20th century.
+
+## Prepare data
+
+Load relevant source files and packages:  
+```{r, echo = TRUE, results = "hide", message = FALSE}
+source("init.R")
+```
+
+Set the running mean filter window size (yr) and the isotope--temperature slope
+(K/$\text{\textperthousand}$):
+```{r}
+filter.window <- 11
+permil2temperature <- 1 / 0.67
+```
+
+Load the NGT data, filter it and calculate the isotope stack:
+```{r}
+stackedNGT <- processNGT() %>%
+  stackNGT()
+
+filteredStackedNGT <- processNGT() %>%
+  filterData(window = filter.window) %>%
+  stackNGT()
+```
+
+Load the Arctic2k, weather station and MAR data and filter it:
+```{r}
+Arctic2k <- readArctic2k() %>%
+  extendWithHadCrut() %>%
+  dplyr::select("Year", "TempAnomaly")
+
+filteredExtendedArctic2k <- Arctic2k %>%
+  filterData(window = filter.window)
+
+filteredArctic2k <- readArctic2k() %>%
+  filterData(window = filter.window)
+
+filteredDMI <- readDMI() %>%
+  makeAnomalies() %>%
+  filterData(window = filter.window)
+
+filteredMAR <- readMAR() %>%
+  filterData(window = filter.window)
+```
+
+Convert the NGT stack data to temperature:
+```{r}
+stackedTemperatureNGT <- stackedNGT %>%
+  dplyr::mutate(stack = permil2temperature * stack)
+
+filteredStackedTemperatureNGT <- filteredStackedNGT %>%
+  dplyr::mutate(stack = permil2temperature * stack)
+```
+
+## Comparison of NGT-2012 temperature stack with Arctic2k
+
+* Overall correlation between NGT-2012 temperature stack and Arctic2k
+  compilation from 1000 CE onwards with and without including HadCrut extension:
+  ```{r}
+  analysis.period <- 2011 : 1000
+  res <- estimateCorrelation(stackedTemperatureNGT,
+                             filteredStackedTemperatureNGT, filteredExtendedArctic2k,
+                             filter.window = filter.window,
+                             analysis.period = analysis.period,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
+
+  analysis.period <- 2000 : 1000
+  res <- estimateCorrelation(stackedTemperatureNGT,
+                             filteredStackedTemperatureNGT, filteredArctic2k,
+                             filter.window = filter.window,
+                             analysis.period = analysis.period,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
+  ```
+
+* Correlation between NGT temperature stack and Arctic2k compilation for the
+  20th century and for the 20th century including up to 2011 CE:
+  ```{r}
+  analysis.period <- 2000 : 1901
+  res <- estimateCorrelation(stackedTemperatureNGT,
+                             filteredStackedTemperatureNGT, filteredArctic2k,
+                             filter.window = filter.window,
+                             analysis.period = analysis.period,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+
+  analysis.period <- 2011 : 1901
+  res <- estimateCorrelation(stackedTemperatureNGT,
+                             filteredStackedTemperatureNGT, filteredExtendedArctic2k,
+                             filter.window = filter.window,
+                             analysis.period = analysis.period,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+  ```
+
+* Linear trends (in degree Celsius / 100 years) of Arctic2k and NGT-2012 stack
+  over pre-industrial and industrial era:
+  ```{r}
+  t1 <- 1800 : 1000
+  t2 <- 2011 : 1800
+
+  regressionData <- list(
+    data.frame(x = t1, y = subsetData(stackedTemperatureNGT, t1, "stack")),
+    data.frame(x = t2, y = subsetData(stackedTemperatureNGT, t2, "stack")),
+    data.frame(x = t1, y = subsetData(Arctic2k, t1, "TempAnomaly")),
+    data.frame(x = t2, y = subsetData(Arctic2k, t2, "TempAnomaly"))
+  )
+
+  regressionSlopes <- regressionData %>%
+    sapply(function(df) {unname(coef(summary(lm(y ~ x, df)))[2, 1 : 2])})
+  ```
+
+  ```{r}
+  # NGT 1000-1800 CE:
+  (regressionSlopes[1, 1] * 100) %>% round(digits = 2)
+  # +/-
+  (regressionSlopes[2, 1] * 100) %>% round(digits = 2)
+
+  # Arctic2k 1000-1800 CE:
+  (regressionSlopes[1, 3] * 100) %>% round(digits = 2)
+  # +/-
+  (regressionSlopes[2, 3] * 100) %>% round(digits = 2)
+  
+  # NGT 1800-2011 CE:
+  (regressionSlopes[1, 2] * 100) %>% round(digits = 2)
+  # +/-
+  (regressionSlopes[2, 2] * 100) %>% round(digits = 2)
+
+  # Arctic2k 1800-2011 CE:
+  (regressionSlopes[1, 4] * 100) %>% round(digits = 2)
+  # +/-
+  (regressionSlopes[2, 4] * 100) %>% round(digits = 2)
+  ```
+
+## Comparison of individual NGT firn core records with Arctic2k
+
+We here use those NGT records which are also part of the Arctic2k compilation to
+assess the extent to which these records contribute to the overall Arctic2k
+temperature reconstruction. These firn cores are GRIP, GISP2, NGRIP, B16, B18
+and B21 and we use the merged versions when redrilled cores are available.
+
+```{r}
+mergedFilteredNGT <- processNGT() %>%
+  filterData(window = filter.window) %>%
+  stackNGT(stack = FALSE)
+
+t <- 2000 : 1000
+a2k <- subsetData(filteredArctic2k, t, "TempAnomaly")
+grip <- subsetData(mergedFilteredNGT, t, "GRIP")
+gisp2 <- subsetData(mergedFilteredNGT, t, "GISP2")
+ngrip <- subsetData(mergedFilteredNGT, t, "NGRIP")
+b16 <- subsetData(mergedFilteredNGT, t, "B16")
+b18 <- subsetData(mergedFilteredNGT, t, "B18")
+b21 <- subsetData(mergedFilteredNGT, t, "B21")
+```
+
+```{r}
+cor(grip, a2k, use = "pairwise") %>%
+  round(digits = 2)
+
+cor(gisp2, a2k, use = "pairwise") %>%
+  round(digits = 2)
+
+cor(ngrip, a2k, use = "pairwise") %>%
+  round(digits = 2)
+
+cor(b16, a2k, use = "pairwise") %>%
+  round(digits = 2)
+
+cor(b18, a2k, use = "pairwise") %>%
+  round(digits = 2)
+
+cor(b21, a2k, use = "pairwise") %>%
+  round(digits = 2)
+```
+
+
+## Comparison of NGT isotope stack with DMI temperature data
+
+We calculate the correlations of the NGT isotope stack with the temperature data
+from three coastal Greenland weather stations for the time period 1901--2011.
+```{r}
+pituffik <- dplyr::select(filteredDMI, "Year", "Pituffik")
+upernavik <- dplyr::select(filteredDMI, "Year", "Upernavik")
+danmarkshavn <- dplyr::select(filteredDMI, "Year", "Danmarkshavn")
+```
+
+* Correlation of NGT isotope stack and Pituffik weather station temperature:
+  ```{r}
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT, pituffik,
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1901,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+  ```
+
+* Correlation of NGT isotope stack and Upernavik weather station temperature:
+  ```{r}
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT, upernavik,
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1901,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+```
+
+* Correlation of NGT isotope stack and Danmarkshavn weather station temperature:
+  ```{r}
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT, danmarkshavn,
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1901,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+```
+
+## Comparison of NGT-2012 isotope stack with MAR3.12 temperature data
+
+We calculate the correlation of the NGT isotope stack with the annual 2m surface
+air temperature from the regional climate model MAR version 3.12, extracted from
+the NGT-2012 firn core locations and averaged, using 11-yr running mean time
+series over the common period from 1950 to 2011 CE.
+```{r}
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT, filteredMAR,
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1950,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+```
+
+## Temperature increase of recent 11 years relative to past
+
+We compare the mean temperature over the recent 11 years of the NGT stack with
+the mean value of the 1961-1990 period and the mean value of the 20th century
+(1901--2000), including an estimation of the standard error of the
+difference. We do this assuming the standard spatial isotope--temperature
+calibration slope for Greenland as well as assuming stronger and weaker values
+from the temporal slopes derived by Vinther et al. (2009) and Masson-Delmotte et
+al. (2015).
+
+Set the alternative isotope--temperature calibration slopes:
+```{r}
+permil2temperature.max <- 2.1     # Vinther et al. (2009)
+permil2temperature.min <- 1 / 1.1 # Masson-Delmotte et al. (2015)
+```
+
+* Recent 11 years versus 1961-1990 reference period:
+  ```{r}
+  t1 <- 2011 : 2001
+  t2 <- 1990 : 1961
+
+  recentPeriod <- stackedNGT %>%
+    subsetData(t1, var = "stack") %>%
+    dplyr::tibble() %>%
+    setNames("d18O") %>%
+    dplyr::summarise(mean1 = mean(d18O), se1 = sdError(d18O))
+  referencePeriod <- stackedNGT %>%
+    subsetData(t2, var = "stack") %>%
+    dplyr::tibble() %>%
+    setNames("d18O") %>%
+    dplyr::summarise(mean2 = mean(d18O), se2 = sdError(d18O))
+
+  difference <- cbind(recentPeriod, referencePeriod)
+
+  # mean difference and s.e. for spatial slope
+  (difference * permil2temperature) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
+    round(digits = 1)
+
+  # mean difference and s.e. for minimum slope
+  (difference * permil2temperature.min) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
+    round(digits = 1)
+
+  # mean difference and s.e. for maximum slope
+  (difference * permil2temperature.max) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
+    round(digits = 1)
+
+  ```
+
+* Recent 11 years versus 20th century (1901-2000):
+  ```{r}
+  t2 <- 2000 : 1901
+
+  referencePeriod <- stackedNGT %>%
+    subsetData(t2, var = "stack") %>%
+    dplyr::tibble() %>%
+    setNames("d18O") %>%
+    dplyr::summarise(mean2 = mean(d18O), se2 = sdError(d18O))
+
+  difference <- cbind(recentPeriod, referencePeriod)
+
+  # mean difference and s.e. for spatial slope
+  (difference * permil2temperature) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
+    round(digits = 1)
+
+  # mean difference and s.e. for minimum slope
+  (difference * permil2temperature.min) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
+    round(digits = 1)
+
+  # mean difference and s.e. for maximum slope
+  (difference * permil2temperature.max) %>%
+    dplyr::transmute(deltaT = mean1 - mean2, se = sqrt(se1^2 + se2^2)) %>%
+    round(digits = 1)
+
+  ```
+
+## References
+
+Masson-Delmotte, V., Steen-Larsen, H. C., Ortega, P., Swingedouw, D., Popp, T.,
+Vinther, B. M., Oerter, H., Sveinbjornsdottir, A. E., Gudlaugsdottir, H., Box,
+J. E., Falourd, S., Fettweis, X., Gallée, H., Garnier, E., Gkinis, V., Jouzel,
+J., Landais, A., Minster, B., Paradis, N., Orsi, A., Risi, C., Werner, M. and
+White, J. W. C., Recent changes in north-west Greenland climate documented by
+NEEM shallow ice core data and simulations, and implications for
+past-temperature reconstructions, The Cryosphere, 9(4), 1481--1504,
+https://doi.org/10.5194/tc-9-1481-2015, 2015.
+  
+Vinther, B. M., Buchardt, S. L., Clausen, H. B., Dahl-Jensen, D., Johnsen,
+  S. J., Fisher, D. A., Koerner, R. M., Raynaud, D., Lipenkov, V., Andersen,
+  K. K., Blunier, T., Rasmussen, S. O., Steffensen, J. P. and Svensson, A. M.,
+  Holocene thinning of the Greenland ice sheet, Nature, 461(7262), 385--388,
+  https://doi.org/10.1038/nature08355, 2009.
+

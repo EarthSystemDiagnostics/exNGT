@@ -1,0 +1,97 @@
+---
+title: "exNGT: Analysis of overlap periods of existing and re-drilled cores"
+author: "Thomas Münch"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::pdf_document
+---
+
+This document analyses the overlap periods of the available pairs of original
+and re-drilled NGT isotope records. The results are summarised in a table at the
+end of the document.
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+knitr::opts_knit$set(
+  root.dir = "../"
+)
+```
+
+Obtain the relevant data:
+```{r, echo = TRUE, results = "hide", message = FALSE}
+source("init.R")
+
+# all NGT anomaly records
+NGT <- processNGT()
+
+# add the stacks across the old and across the new records
+NGT <- cbind(NGT, stackOldAndNew(NGT, use_NEGIS_NEEM = FALSE)[-1])
+
+```
+
+Loop over running mean window sizes and calculate the overlap statistics for each core:
+```{r, echo = TRUE, results = "hide", message = FALSE}
+# set running mean window sizes
+w <- c(1, 3, 5, 7, 11, 21)
+
+# record IDs which have old and new records available
+sites <- c("B18", "B21", "B23", "B26", "NGRIP", "stack")
+
+# calculate running mean averages
+filteredRecords <- sapply(w, simplify = FALSE, function(x) {
+  filterData(NGT, window = x)
+})
+
+# calculate overlap statistics for each core and window size
+overlapStats <- sapply(sites, simplify = FALSE, FUN = function(s) {
+
+  res <- sapply(w, simplify = FALSE, function(x) {
+
+    rec <- filteredRecords[[match(x, w)]]
+
+    res <- data.frame(window = x)
+    res <- cbind(res, calculateOverlapStatistics(rec, site = s)$stat)
+
+    return(res)
+
+  })
+
+  do.call(rbind, res)
+})
+
+# arrange as single data frame
+overlapStats <- do.call(function(...){rbind(..., make.row.names = FALSE)},
+                        overlapStats)
+```
+
+Arrange as a nice data frame:
+```{r, echo = TRUE, results = "hide", message = FALSE}
+meta <- overlapStats %>%
+  dplyr::filter(window == 1) %>%
+  dplyr::transmute(corePair = corePair,
+                   overlap = paste(startOverlap, endOverlap, sep = " - "))
+
+emptyRows <- data.frame(
+  corePair = rep("", length(w) - 1), overlap = rep("", length(w) - 1))
+df <- data.frame()
+for (i in 1 : nrow(meta)) {df <- rbind(df, meta[i, ], emptyRows)}
+
+df <- cbind(df, dplyr::select(overlapStats, window, sdErrorOverlapOld,
+                              sdErrorOverlapNew, diffMeanOverlap, corrOverlap))
+```
+
+Print the table:
+```{r}
+caption <- paste("Statistics for the overlap periods of original and re-drilled",
+                 "NGT isotope records for the sites where record pairs are available,",
+                 "depending on the length of the running mean filter window applied",
+                 "on the data.")
+knitr::kable(df, row.names = FALSE, digits = 2,
+             col.names = c("Record pair", "Overlap period (yr CE)", "Filter window (yr)",
+                           "SE (old) (\u2030)", "SE (new) (\u2030)",
+                           "Mean difference (\u2030)", "Correlation"),
+             caption = caption)
+```
