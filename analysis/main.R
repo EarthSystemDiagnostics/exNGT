@@ -25,18 +25,18 @@ makeFigure01(panel = "map")
 dev.off()
 
 # ------------------------------------------------------------------------------
-# Figure 02 - histogram
+# Figure 02 - spectra
 
-grfxtools::Quartz(file = "./fig/main-figure02.pdf", height = 6.2, width = 7.5)
+grfxtools::Quartz(file = "./fig/main-figure02.pdf",
+                  height = 5, width = 8, mar = c(5, 6, 0.5, 0.5))
 
 makeFigure02()
 dev.off()
 
 # ------------------------------------------------------------------------------
-# Figure 03 - spectra
+# Figure 03 - histogram
 
-grfxtools::Quartz(file = "./fig/main-figure03.pdf",
-                  height = 5, width = 8, mar = c(5, 6, 0.5, 0.5))
+grfxtools::Quartz(file = "./fig/main-figure03.pdf", height = 6.2, width = 7.5)
 
 makeFigure03()
 dev.off()

@@ -449,35 +449,12 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
 
 #' Produce paper figure 02
 #'
-#' @author Thomas Münch
-#'
-makeFigure02 <- function() {
-
-  layout(matrix(1 : 2, 1, 2), widths = c(0.7, 0.3))
-  par(cex = 1, mar = c(11, 5, 0.5, 0.5))
-
-  plotHistogram(type = "anomaly", plot.legend = FALSE, plot.2xaxes = TRUE)
-
-  par(mar = c(0, 0, 0, 0))
-  plot(1, type = "n", axes = FALSE, xlab = "", ylab = "")
-
-  lg <- c("Pre-ind. distribution\n(1000-1800 CE)", "Gaussian fit",
-          "2.5, 50, 97.5 %\nquantiles", "Recent value\n(2001-2011 CE)")
-
-  legend("topleft", legend = lg, lty = c(1, 1, 5, 1), lwd = c(10, 2, 1, 2.5),
-         col = c(adjustcolor("black", 0.2), "black", "black", "firebrick4"),
-         bty = "n", adj = c(0, 0.75), y.intersp = 1.5, seg.len = 2.5)
-
-}
-
-#' Produce paper figure 03
-#'
 #' @param filter.window single integer giving the size of the running mean
 #'   window to use for filtering the isotope and Arctic2k data; defaults to 11
 #'   (years).
 #' @author Thomas Münch
 #'
-makeFigure03 <- function(filter.window = 11) {
+makeFigure02 <- function(filter.window = 11) {
 
   if (filter.window < 1) {
     stop("Running mean filter window needs to be >= 1.", call. = FALSE)
@@ -583,5 +560,28 @@ makeFigure03 <- function(filter.window = 11) {
   cat("\nVariability ratio NGT vs. A2k (11 - 51 yr time scale):\n")
   print(variabilityRatio)
   cat("\n")
+
+}
+
+#' Produce paper figure 03
+#'
+#' @author Thomas Münch
+#'
+makeFigure03 <- function() {
+
+  layout(matrix(1 : 2, 1, 2), widths = c(0.7, 0.3))
+  par(cex = 1, mar = c(11, 5, 0.5, 0.5))
+
+  plotHistogram(type = "anomaly", plot.legend = FALSE, plot.2xaxes = TRUE)
+
+  par(mar = c(0, 0, 0, 0))
+  plot(1, type = "n", axes = FALSE, xlab = "", ylab = "")
+
+  lg <- c("Pre-ind. distribution\n(1000-1800 CE)", "Gaussian fit",
+          "2.5, 50, 97.5 %\nquantiles", "Recent value\n(2001-2011 CE)")
+
+  legend("topleft", legend = lg, lty = c(1, 1, 5, 1), lwd = c(10, 2, 1, 2.5),
+         col = c(adjustcolor("black", 0.2), "black", "black", "firebrick4"),
+         bty = "n", adj = c(0, 0.75), y.intersp = 1.5, seg.len = 2.5)
 
 }
