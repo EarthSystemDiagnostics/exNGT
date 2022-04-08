@@ -45,6 +45,7 @@ dev.compile <- function() {
        ) %>%
     purrr::reduce(dplyr::full_join, by = "Year") %>%
     dplyr::filter(Year <= 2011) %>%
+    dplyr::mutate(dplyr::across(!Year, ~ .x * 1.e3)) %>% # in mm w.eq.
     as.data.frame()
 
 }
@@ -69,6 +70,11 @@ dev.neem <- function(path = "data-raw/in-other", file = "NEEM_Acc.xlsx",
 
 }
 
+processAccumulationNGT <- function() {
+
+  dev.compile() %>%
+    makeAnomalies()
+}
 
 
 # ------------------------------------------------------------------------------
@@ -76,12 +82,10 @@ dev.neem <- function(path = "data-raw/in-other", file = "NEEM_Acc.xlsx",
 
 filter.window <- 11
 
-filteredStackedNGTacc <- dev.compile() %>%
-  makeAnomalies() %>%
+filteredStackedNGTacc <- processAccumulationNGT() %>%
   filterData(window = filter.window) %>%
   stackAllCores() %>%
-  dplyr::filter(Year >= 1500) %>%
-  dplyr::mutate(stack = stack * 1.e3) # in mm w.eq.
+  dplyr::filter(Year >= 1500)
 
 stackedNGT <- processNGT() %>%
   stackNGT()
