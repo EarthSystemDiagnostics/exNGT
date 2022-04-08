@@ -28,6 +28,7 @@ dev.compile <- function() {
   list(b18.12 = dev.read(),
        b21.12 = dev.read(file = "B21_2012_AccmRate.txt", name = "B21-2012"),
        b23.12 = dev.read(file = "B23_2012_AccmRate.txt", name = "B23-2012"),
+       b26.12 = dev.read(file = "B26_2011_AccmRate.txt", name = "B26-2012"),
        ngrip.12 = dev.read(file = "NGRIP_2012_AccmRate.txt", name = "NGRIP-2012",
                         delim = " "),
        b16 = dev.read(path = "data-raw/in-other",
@@ -39,12 +40,33 @@ dev.compile <- function() {
        b26 = dev.read(path = "data-raw/in-other",
                       file = "B26_Schwager_Accmrate_we.txt", name = "B26"),
        b29 = dev.read(path = "data-raw/in-other",
-                      file = "B29_Schwager_Accmrate_we.txt", name = "B29")
+                      file = "B29_Schwager_Accmrate_we.txt", name = "B29"),
+       neem = dev.neem()
        ) %>%
+   purrr::reduce(dplyr::full_join, by = "Year") %>%
+   dplyr::filter(Year <= 2011) %>%
+   as.data.frame()
+
+}
+
+dev.neem <- function(path = "data-raw/in-other", file = "NEEM_Acc.xlsx",
+                     name = "NEEM") {
+
+  require(readxl)
+
+  tmp <- list(readxl::read_xlsx(path = file.path(path, file), range = "A2:B157") %>%
+                setNames(c("Year", "NEEM2010S2")),
+              readxl::read_xlsx(path = file.path(path, file), range = "D2:E284") %>%
+                setNames(c("Year", "NEEM2008S3")),
+              readxl::read_xlsx(path = file.path(path, file), range = "G2:H267") %>%
+                setNames(c("Year", "NEEM2007S3")),
+              readxl::read_xlsx(path = file.path(path, file), range = "J2:K156") %>%
+                setNames(c("Year", "NEEM2008S2"))) %>%
     purrr::reduce(dplyr::full_join, by = "Year") %>%
-    dplyr::filter(Year <= 2011) %>%
     as.data.frame()
- 
+
+  data.frame(Year = tmp$Year, NEEM = rowMeans(tmp[, -1], na.rm = TRUE))
+
 }
 
 # ------------------------------------------------------------------------------
@@ -59,9 +81,9 @@ filteredNGT <- ngt %>%
   filterData(window = filter.window)
 
 yoff <- 0.12
-grfxtools::Quartz(height = 10, file = "./zzz/ngt_acc_records.pdf")
+grfxtools::Quartz(height = 12)#, file = "./zzz/ngt_acc_records.pdf")
 
-plot(ngt$Year, ngt$`B18-2012`, type = "n", ylim = c(-0.05, 1),
+plot(ngt$Year, ngt$`B18-2012`, type = "n", ylim = c(-0.05, 1.5),
      xlab = "Year CE", ylab = "Accumulation anomaly (a.u.)")
 
 lines(ngt$Year, ngt$`B18-2012`, lwd = 1, col = 1)
@@ -73,27 +95,33 @@ lines(ngt$Year, filteredNGT$`B21-2012` + 1 * yoff, lwd = 2, col = "darkgrey")
 lines(ngt$Year, ngt$`B23-2012` + 2 * yoff, lwd = 1, col = 3)
 lines(ngt$Year, filteredNGT$`B23-2012` + 2 * yoff, lwd = 2, col = "darkgrey")
 
-lines(ngt$Year, ngt$`NGRIP-2012` + 3 * yoff, lwd = 1, col = 4)
-lines(ngt$Year, filteredNGT$`NGRIP-2012` + 3 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B26-2012` + 3 * yoff, lwd = 1, col = 4)
+lines(ngt$Year, filteredNGT$`B26-2012` + 3 * yoff, lwd = 2, col = "darkgrey")
 
-lines(ngt$Year, ngt$`B16` + 4 * yoff, lwd = 1, col = 5)
-lines(ngt$Year, filteredNGT$`B16` + 4 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`NGRIP-2012` + 4 * yoff, lwd = 1, col = 5)
+lines(ngt$Year, filteredNGT$`NGRIP-2012` + 4 * yoff, lwd = 2, col = "darkgrey")
 
-lines(ngt$Year, ngt$`B18` + 5 * yoff, lwd = 1, col = 6)
-lines(ngt$Year, filteredNGT$`B18` + 5 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`NEEM` + 5 * yoff, lwd = 1, col = 6)
+lines(ngt$Year, filteredNGT$`NEEM` + 5 * yoff, lwd = 2, col = "darkgrey")
 
-lines(ngt$Year, ngt$`B21` + 6 * yoff, lwd = 1, col = 7)
-lines(ngt$Year, filteredNGT$`B21` + 6 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B16` + 6 * yoff, lwd = 1, col = 7)
+lines(ngt$Year, filteredNGT$`B16` + 6 * yoff, lwd = 2, col = "darkgrey")
 
-lines(ngt$Year, ngt$`B26` + 7 * yoff, lwd = 1, col = 8)
-lines(ngt$Year, filteredNGT$`B26` + 7 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B18` + 7 * yoff, lwd = 1, col = 8)
+lines(ngt$Year, filteredNGT$`B18` + 7 * yoff, lwd = 2, col = "darkgrey")
 
-lines(ngt$Year, ngt$`B29` + 8 * yoff, lwd = 1, col = 9)
-lines(ngt$Year, filteredNGT$`B29` + 8 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B21` + 8 * yoff, lwd = 1, col = 9)
+lines(ngt$Year, filteredNGT$`B21` + 8 * yoff, lwd = 2, col = "darkgrey")
 
-legend("bottomleft", col = 1 : 9, lwd = 1.5, lty = 1, bty = "n",
-       legend = c("B18-2012", "B21-2012", "B23-2012", "NGRIP-2012",
-                  "B16", "B18", "B21", "B26", "B29"))
+lines(ngt$Year, ngt$`B26` + 9 * yoff, lwd = 1, col = 10)
+lines(ngt$Year, filteredNGT$`B26` + 9 * yoff, lwd = 2, col = "darkgrey")
+
+lines(ngt$Year, ngt$`B29` + 10 * yoff, lwd = 1, col = 11)
+lines(ngt$Year, filteredNGT$`B29` + 10 * yoff, lwd = 2, col = "darkgrey")
+
+legend("bottomleft", col = 1 : 11, lwd = 1.5, lty = 1, bty = "n",
+       legend = c("B18-2012", "B21-2012", "B23-2012", "B26-2012", "NGRIP-2012",
+                  "NEEM", "B16", "B18", "B21", "B26", "B29"))
 
 dev.off()
 
@@ -108,6 +136,7 @@ filteredStackedNGT <- processNGT() %>%
   stackNGT()
 
 grfxtools::Quartz(file = "./zzz/ngt_acc_stack_vs_iso_stack.pdf")
+grfxtools::Quartz()
 par(mar = c(5, 5, 0.5, 5))
 
 plot(filteredAccStack, type = "l", lwd = 2, col = 1,
@@ -137,7 +166,7 @@ plot(x, y, pch = 19,
      xlab = grfxtools::LabelAxis(), ylab = "Accumulation (m w.eq.)")
 dev.off()
 
-cor.test(x, y) # 0.24 (p << 0.01)
+cor.test(x, y) # 0.16 (p << 0.01)
 
 # subset time period 1800 - 1500
 t <- 1800 : 1500
