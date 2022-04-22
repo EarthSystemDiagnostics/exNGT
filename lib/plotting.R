@@ -233,13 +233,64 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
 
 }
 
-# ------------------------------------------------------------------------------
-# main figures
-
-#' Produce paper figure 01
+#' Plot map
 #'
-#' @param panel character string to signal which subplot to produce; must be one
-#'   of "ts" for the time series plots or "map" for the Greenland map plot.
+#' Plot a map of Greenland in polar projection with the NGT-2012 firn core and
+#' Greenland weather station locations labelled.
+#'
+#' @author Thomas Münch
+plotMap <- function() {
+
+  cores <- loadPositions() %>%
+    dplyr::filter(Identifier == "core")
+  stations <- loadPositions() %>%
+    dplyr::filter(Identifier == "station")
+
+  min.lat <- 57.5
+  max.lat <- 85
+  min.lon <- -75
+  max.lon <- -10
+
+  lat.pos <- c(60, 70, 80)
+  lon.pos <- -c(20, 40, 60)
+
+  lat.pos.offset <- c(3.5, 5, 10)
+
+  p <- grfxtools::ggpolar(pole = "N",
+                          max.lat = max.lat, min.lat = min.lat,
+                          max.lon = max.lon, min.lon = min.lon,
+                          lat.ax.vals = lat.pos, long.ax.vals = lon.pos,
+                          f.long.label.ticks = Inf, f.long.label.pos = 15,
+                          rotate = TRUE, land.fill.colour = "transparent",
+                          size.outer = 0.5,
+                          lat.ax.labs.pos = min.lon - lat.pos.offset,
+                          ax.labs.size = 4.75,
+                          land.outline.colour = "burlywood4", clip = "off") +
+
+  ggplot2::geom_text(data = cores, size = 2.5,
+                     ggplot2::aes(x = Longitude, y = Latitude,
+                                  label = Site)) +
+
+  ggplot2::geom_label(data = stations,
+                      ggplot2::aes(x = Longitude, y = Latitude,
+                                   label = Site),
+                      size = 2.5, alpha = 0.75, label.size = 0) +
+
+  ggplot2::geom_point(data = cores,
+                      ggplot2::aes(x = Longitude, y = Latitude),
+                      col = "black", bg = "grey", size = 1.5,
+                      pch = 21, stroke = 0.8) +
+
+  ggplot2::geom_point(data = stations,
+                      ggplot2::aes(x = Longitude, y = Latitude),
+                      col = "black", size = 2.5, pch = 17)
+
+  p
+
+}
+
+#' Produce a plot comparing NGT-2012 and Arctic2k time series
+#'
 #' @param filter.window single integer giving the size of the running mean
 #'   window to use for filtering the isotope and Arctic2k data; defaults to 11
 #'   (years).
@@ -248,13 +299,8 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
 #'   Greenland spatial slope.
 #' @author Thomas Münch
 #'
-makeFigure01 <- function(panel = "ts", filter.window = 11,
-                         permil2temperature = 1 / 0.67) {
-
-  if (!panel %in% c("ts", "map")) {
-    stop("Unknown plot panel request; options are 'ts' or 'map'.",
-         call. = FALSE)
-  }
+plot.NGT.Arctic2k <- function(filter.window = 11,
+                              permil2temperature = 1 / 0.67) {
 
   if (filter.window < 1) {
     stop("Running mean filter window needs to be >= 1.", call. = FALSE)
@@ -265,196 +311,136 @@ makeFigure01 <- function(panel = "ts", filter.window = 11,
   }
 
   # ----------------------------------------------------------------------------
-  # Load data
+  # Load time series data
 
-  if (panel == "ts") {
+  NGT <- processNGT()
 
-    # Time series data
+  stackedNGT <- NGT %>%
+    stackNGT()
 
-    NGT <- processNGT()
+  filteredStackedNGT <- NGT %>%
+    filterData(window = filter.window) %>%
+    stackNGT()
 
-    stackedNGT <- NGT %>%
-      stackNGT()
+  Arctic2k <- readArctic2k() %>%
+    extendWithHadCrut()
 
-    filteredStackedNGT <- NGT %>%
-      filterData(window = filter.window) %>%
-      stackNGT()
+  filteredArctic2k <- Arctic2k %>%
+    filterData(window = filter.window)
 
-    Arctic2k <- readArctic2k() %>%
-      extendWithHadCrut()
+  # Linear regression data (annual means)
 
-    filteredArctic2k <- Arctic2k %>%
-      filterData(window = filter.window)
+  t1 <- 1800 : 1000
+  t2 <- 2011 : 1800
 
-    # Linear regression data (annual means)
+  regressionData <- list(
+    data.frame(x = t1, y = subsetData(stackedNGT, t1, "stack")),
+    data.frame(x = t2, y = subsetData(stackedNGT, t2, "stack")),
+    data.frame(x = t1, y = subsetData(Arctic2k, t1, "TempAnomaly")),
+    data.frame(x = t2, y = subsetData(Arctic2k, t2, "TempAnomaly"))
+  )
 
-    t1 <- 1800 : 1000
-    t2 <- 2011 : 1800
-
-    regressionData <- list(
-      data.frame(x = t1, y = subsetData(stackedNGT, t1, "stack")),
-      data.frame(x = t2, y = subsetData(stackedNGT, t2, "stack")),
-      data.frame(x = t1, y = subsetData(Arctic2k, t1, "TempAnomaly")),
-      data.frame(x = t2, y = subsetData(Arctic2k, t2, "TempAnomaly"))
-    )
-
-    regressionModels <- regressionData %>%
-      lapply(function(lst) {coef(lm(y ~ x, lst))})
-
-  } else {
-
-    cores <- loadPositions() %>%
-      dplyr::filter(Identifier == "core")
-    stations <- loadPositions() %>%
-      dplyr::filter(Identifier == "station")
-
-  }
+  regressionModels <- regressionData %>%
+    lapply(function(lst) {coef(lm(y ~ x, lst))})
 
   # ----------------------------------------------------------------------------
   # Make plots
 
-  if (panel == "ts") {
+  xlab  <- "Year CE"
+  ylab.ngt.pm <- grfxtools::LabelAxis("NGT-2012")
+  ylab.ngt.dc <- grfxtools::LabelAxis("NGT-2012", unit = "celsius")
+  ylab.a2k <- grfxtools::LabelAxis("Arctic2k", unit = "celsius")
 
-    xlab  <- "Year CE"
-    ylab.ngt.pm <- grfxtools::LabelAxis("NGT-2012")
-    ylab.ngt.dc <- grfxtools::LabelAxis("NGT-2012", unit = "celsius")
-    ylab.a2k <- grfxtools::LabelAxis("Arctic2k", unit = "celsius")
+  xlim <- c(1000, 2020)
+  ylim.ngt <- c(-6, 2.5)
+  ylim.a2k <- c(-2, 10.75)
 
-    xlim <- c(1000, 2020)
-    ylim.ngt <- c(-6, 2.5)
-    ylim.a2k <- c(-2, 10.75)
+  xanml <- c(800, 2020)
+  yanml <- rep(0, 2)
 
-    xanml <- c(800, 2020)
-    yanml <- rep(0, 2)
+  startNew <- 1993
+  i <- match(startNew, stackedNGT$Year)
+  n <- nrow(stackedNGT)
+  startHadCrut <- 2000
+  j <- match(startHadCrut, Arctic2k$Year)
+  m <- nrow(Arctic2k)
 
-    startNew <- 1993
-    i <- match(startNew, stackedNGT$Year)
-    n <- nrow(stackedNGT)
-    startHadCrut <- 2000
-    j <- match(startHadCrut, Arctic2k$Year)
-    m <- nrow(Arctic2k)
+  x1 <- 845
+  x2 <- 2175
+  y1 <- 0.
+  y2 <- 0.5
 
-    x1 <- 845
-    x2 <- 2175
-    y1 <- 0.
-    y2 <- 0.5
+  col <- c("black", "dodgerblue4")
 
-    col <- c("black", "dodgerblue4")
+  op <- par(mar = c(0, 0, 0, 0), oma = c(5, 5, 0.5, 5))
 
-    op <- par(mar = c(0, 0, 0, 0), oma = c(5, 5, 0.5, 5))
+  plot(stackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
+       xlim = xlim, ylim = ylim.ngt)
 
-    plot(stackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
-         xlim = xlim, ylim = ylim.ngt)
+  lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
 
-    lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
+  lines(stackedNGT, col = "darkgrey")
 
-    lines(stackedNGT, col = "darkgrey")
+  lines(filteredStackedNGT[i : n, ], col = col[1], lwd = 2.5)
+  lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = 2.5)
 
-    lines(filteredStackedNGT[i : n, ], col = col[1], lwd = 2.5)
-    lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = 2.5)
+  axis(2, at = seq(-2, 2, 1))
+  axis(4, labels = seq(-2, 3, 1), at = seq(-2, 3, 1) / permil2temperature)
 
-    axis(2, at = seq(-2, 2, 1))
-    axis(4, labels = seq(-2, 3, 1), at = seq(-2, 3, 1) / permil2temperature)
+  text(x1, y1, ylab.ngt.pm, srt = +90, xpd = NA,
+       cex = par()$cex.lab * par()$cex, col = col[1])
+  text(x2, y2, ylab.ngt.dc, srt = -90, xpd = NA,
+       cex = par()$cex.lab * par()$cex, col = col[1])
 
-    text(x1, y1, ylab.ngt.pm, srt = +90, xpd = NA,
-         cex = par()$cex.lab * par()$cex, col = col[1])
-    text(x2, y2, ylab.ngt.dc, srt = -90, xpd = NA,
-         cex = par()$cex.lab * par()$cex, col = col[1])
+  mtext("a", side = 3, adj = 0.01, line = -3.65, font = 2, cex = par()$cex.lab)
 
-    mtext("a", side = 3, adj = 0.01, line = -3.65, font = 2, cex = par()$cex.lab)
+  lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
+        col = col[1], lwd = 2, lty = 2)
+  lines(t2, regressionModels[[2]][1] + regressionModels[[2]][2] * t2,
+        col = col[1], lwd = 2, lty = 2)
 
-    lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
-          col = col[1], lwd = 2, lty = 2)
-    lines(t2, regressionModels[[2]][1] + regressionModels[[2]][2] * t2,
-          col = col[1], lwd = 2, lty = 2)
+  par(new = TRUE)
 
-    par(new = TRUE)
+  plot(Arctic2k$Year, Arctic2k$TempAnomaly, type = "n", axes = FALSE,
+       xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
 
-    plot(Arctic2k$Year, Arctic2k$TempAnomaly, type = "n", axes = FALSE,
-         xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
+  axis(1)
+  axis(4, at = seq(-2, 3, 1), col = col[2], col.axis = col[2])
 
-    axis(1)
-    axis(4, at = seq(-2, 3, 1), col = col[2], col.axis = col[2])
+  mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+  text(x2, y1, ylab.a2k, srt = -90, xpd = NA,
+       cex = par()$cex.lab * par()$cex, col = col[2])
 
-    mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-    text(x2, y1, ylab.a2k, srt = -90, xpd = NA,
-         cex = par()$cex.lab * par()$cex, col = col[2])
+  lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
 
-    lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
+  lines(Arctic2k$Year, Arctic2k$TempAnomaly,
+        col = adjustcolor(col[2], alpha = 0.6))
 
-    lines(Arctic2k$Year, Arctic2k$TempAnomaly,
-          col = adjustcolor(col[2], alpha = 0.6))
+  lines(filteredArctic2k$Year[1 : j], filteredArctic2k$TempAnomaly[1 : j],
+        col = "deepskyblue1", lwd = 2.5)
+  lines(filteredArctic2k$Year[j : m], filteredArctic2k$TempAnomaly[j : m],
+        col = col[2], lwd = 2.5)
 
-    lines(filteredArctic2k$Year[1 : j], filteredArctic2k$TempAnomaly[1 : j],
-          col = "deepskyblue1", lwd = 2.5)
-    lines(filteredArctic2k$Year[j : m], filteredArctic2k$TempAnomaly[j : m],
-          col = col[2], lwd = 2.5)
+  lines(t1, regressionModels[[3]][1] + regressionModels[[3]][2] * t1,
+        col = col[2], lwd = 2, lty = 2)
+  lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
+        col = col[2], lwd = 2, lty = 2)
 
-    lines(t1, regressionModels[[3]][1] + regressionModels[[3]][2] * t1,
-          col = col[2], lwd = 2, lty = 2)
-    lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
-          col = col[2], lwd = 2, lty = 2)
+  mtext("c", side = 3, adj = 0.99, line = -18.6,
+        font = 2, cex = par()$cex.lab, col = col[2])
 
-    mtext("c", side = 3, adj = 0.99, line = -18.6,
-          font = 2, cex = par()$cex.lab, col = col[2])
-
-    par(op)
-
-  } else {
-
-    min.lat <- 57.5
-    max.lat <- 85
-    min.lon <- -75
-    max.lon <- -10
-
-    lat.pos <- c(60, 70, 80)
-    lon.pos <- -c(20, 40, 60)
-
-    lat.pos.offset <- c(3.5, 5, 10)
-
-    p <- grfxtools::ggpolar(pole = "N",
-                            max.lat = max.lat, min.lat = min.lat,
-                            max.lon = max.lon, min.lon = min.lon,
-                            lat.ax.vals = lat.pos, long.ax.vals = lon.pos,
-                            f.long.label.ticks = Inf, f.long.label.pos = 15,
-                            rotate = TRUE, land.fill.colour = "transparent",
-                            size.outer = 0.5,
-                            lat.ax.labs.pos = min.lon - lat.pos.offset,
-                            ax.labs.size = 4.75,
-                            country.outline.colour = "burlywood4", clip = "off") +
-
-      ggplot2::geom_text(data = cores, size = 2.5,
-                         ggplot2::aes(x = Longitude, y = Latitude,
-                                      label = Site)) +
-
-      ggplot2::geom_label(data = stations,
-                          ggplot2::aes(x = Longitude, y = Latitude,
-                                       label = Site),
-                          size = 2.5, alpha = 0.75, label.size = 0) +
-
-      ggplot2::geom_point(data = cores,
-                          ggplot2::aes(x = Longitude, y = Latitude),
-                          col = "black", bg = "grey", size = 1.5,
-                          pch = 21, stroke = 0.8) +
-
-      ggplot2::geom_point(data = stations,
-                          ggplot2::aes(x = Longitude, y = Latitude),
-                          col = "black", size = 2.5, pch = 17)
-
-    p
-
-  }
+  par(op)
 
 }
 
-#' Produce paper figure 02
+#' Produce spectrum plot of NGT-2012 versus Arctic2k
 #'
 #' @param filter.window single integer giving the size of the running mean
 #'   window to use for filtering the isotope and Arctic2k data; defaults to 11
 #'   (years).
 #' @author Thomas Münch
 #'
-makeFigure02 <- function(filter.window = 11) {
+plotSpectrum <- function(filter.window = 11) {
 
   if (filter.window < 1) {
     stop("Running mean filter window needs to be >= 1.", call. = FALSE)
@@ -507,7 +493,8 @@ makeFigure02 <- function(filter.window = 11) {
   n.crit.lower <- 1
 
   proxysnr:::LPlot(spectraNGT$mid, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
-                   xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.05, 10))
+                   xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.05, 10),
+                   xaxs = "i")
 
   axis(1)
   axis(2)
@@ -560,6 +547,26 @@ makeFigure02 <- function(filter.window = 11) {
   cat("\nVariability ratio NGT vs. A2k (11 - 51 yr time scale):\n")
   print(variabilityRatio)
   cat("\n")
+
+}
+
+# ------------------------------------------------------------------------------
+# main figures
+
+#' Produce paper figure 01
+#'
+#' @param filter.window single integer giving the size of the running mean
+#'   window to use for filtering the isotope and Arctic2k data; defaults to 11
+#'   (years).
+#' @param permil2temperature numeric; isotope-to-temperature conversion slope
+#'   (permil / K) to use for a second NGT-2012 plot axis; defaults to the
+#'   Greenland spatial slope.
+#' @author Thomas Münch
+#'
+makeFigure01 <- function(filter.window = 11, permil2temperature = 1 / 0.67) {
+
+  plot.NGT.Arctic2k(filter.window = filter.window,
+                    permil2temperature = permil2temperature)
 
 }
 
