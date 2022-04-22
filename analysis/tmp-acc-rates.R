@@ -100,8 +100,7 @@ ylab2 <- grfxtools::LabelAxis(suffix = "anomaly")
 cols <- c("darkblue", "black")
 fsc <- 0.95
 
-grfxtools::Quartz(file = "./zzz/ngt_acc_stack_vs_iso_stack.pdf")
-grfxtools::Quartz(height = 6.5)
+grfxtools::Quartz(height = 6.5, file = "./zzz/ngt_acc_stack_vs_iso_stack.pdf")
 par(mar = c(5, 5, 2.5, 5))
 
 plot(filteredStackedNGTacc, type = "l", axes = FALSE, lwd = 2, col = cols[1],
@@ -117,10 +116,10 @@ mtext(ylab1, side = 2, line = 3.25, col = cols[1],
 par(new = TRUE)
 
 plot(filteredStackedNGT, type = "l", axes = FALSE, lwd = 2, col = cols[2],
-     xlim = c(1500, 2020), ylim = c(-1.5, 3), xlab = "", ylab = "")
+     xlim = c(1500, 2020), ylim = c(-2.5, 5), xlab = "", ylab = "")
 
-axis(side = 4, at = -1 : 2)
-text(2120, 0.5, ylab2, srt = -90, xpd = NA,
+axis(side = 4, at = -2 : 2)
+text(2120, 0, ylab2, srt = -90, xpd = NA,
      cex = fsc * par()$cex.lab * par()$cex, col = cols[2])
 
 dev.off()
@@ -146,8 +145,30 @@ y2 <- subsetData(filteredStackedNGTacc, t2, "stack")
 x3 <- subsetData(filteredStackedNGT, t3, "stack")
 y3 <- subsetData(filteredStackedNGTacc, t3, "stack")
 
-# scatter
-grfxtools::Quartz()#file = "./zzz/ngt_acc_iso_scatter_1500-2011.pdf")
+# get correlations
+# overall
+res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                           filteredStackedNGTacc, filter.window = filter.window,
+                           analysis.period = t0, nmc = 10000)
+sprintf("r = %1.2f (p = %1.2f)", res$r, res$p) # 0.23 (p = 0.05)
+# 1500--1800
+res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                           filteredStackedNGTacc, filter.window = filter.window,
+                           analysis.period = t1, nmc = 10000)
+sprintf("r = %1.2f (p = %1.2f)", res$r, res$p) # 0.04 (p = 0.42)
+#1801--1960
+res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                           filteredStackedNGTacc, filter.window = filter.window,
+                           analysis.period = t2, nmc = 10000)
+sprintf("r = %1.2f (p = %1.2f)", res$r, res$p) # 0.43 (p = 0.04)
+#1961-2011
+res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                           filteredStackedNGTacc, filter.window = filter.window,
+                           analysis.period = t3, nmc = 10000)
+sprintf("r = %1.2f (p = %1.2f)", res$r, res$p) # 0.78 (p = 0.04)
+
+# scatter plot
+grfxtools::Quartz(file = "./zzz/ngt_acc_iso_scatter.pdf")
 
 plot(x1, y1, type = "n", xlab = ylab2, ylab = ylab1,
      xlim = c(-1, 2), ylim = c(-10, 30))
@@ -156,42 +177,22 @@ points(x1, y1, pch = 19, col = "black")
 points(x2, y2, pch = 19, col = "dodgerblue4")
 points(x3, y3, pch = 19, col = "firebrick4")
 
+legend("bottomright", c("1500-1800 CE (R = 0.04, p = 0.42)",
+                        "1801-1960 CE (R = 0.43, p = 0.04)",
+                        "1961-2011 CE (R = 0.78, p = 0.04)"),
+       pch = 19, col = c("black", "dodgerblue4", "firebrick4"), bty = "n")
+
 dev.off()
-
-# overall:
-cor.test(x0, y0) # 0.23 (p << 0.01)
-
-cor.test(x1, y1) # 0.04 (p ~ 0.5)
-cor.test(x2, y2) # 0.43 (p << 0.01)
-cor.test(x3, y3) # 0.78 (p << 0.01)
-
-# overall
-res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
-                           filteredStackedNGTacc, filter.window = filter.window,
-                           analysis.period = t0, nmc = 1000)
-sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
-# 1500--1800
-res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
-                           filteredStackedNGTacc, filter.window = filter.window,
-                           analysis.period = t1, nmc = 1000)
-sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
-#1801--1960
-res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
-                           filteredStackedNGTacc, filter.window = filter.window,
-                           analysis.period = t2, nmc = 1000)
-sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
-#1961-2011
-res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
-                           filteredStackedNGTacc, filter.window = filter.window,
-                           analysis.period = t3, nmc = 1000)
-sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
 
 # ------------------------------------------------------------------------------
 # plot histogram
 
+grfxtools::Quartz(height = 6, width = 6,
+                  file = "zzz/ngt_acc_histogram.pdf")
 plotHistogram(piPeriod = 1500 : 1800, type = "anomaly", data.source = "acc",
               stack.method = "stack_all", plot.legend = FALSE,
               breaks = seq(-20, 40, 2.5), ylim = c(0, 0.1))
+dev.off()
 
 # ==============================================================================
 # preliminary codes
