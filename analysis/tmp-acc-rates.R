@@ -186,6 +186,12 @@ res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
                            analysis.period = t3, nmc = 1000)
 sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
 
+# ------------------------------------------------------------------------------
+# plot histogram
+
+plotHistogram(piPeriod = 1500 : 1800, type = "anomaly", data.source = "acc",
+              stack.method = "stack_all", plot.legend = FALSE,
+              breaks = seq(-20, 40, 2.5), ylim = c(0, 0.1))
 
 # ==============================================================================
 # preliminary codes
