@@ -241,16 +241,29 @@ danmarkshavn <- dplyr::select(filteredDMI, "Year", "Danmarkshavn")
   sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
 ```
 
-## Comparison of NGT-2012 isotope stack with MAR3.12 temperature data
+## Comparison of NGT-2012 isotope stack with MAR3.5 data
 
-We calculate the correlation of the NGT isotope stack with the annual 2m surface
-air temperature from the regional climate model MAR version 3.12, extracted from
-the NGT-2012 firn core locations and averaged, using 11-yr running mean time
-series over the common period from 1950 to 2011 CE.
+We calculate the correlation of the NGT isotope stack with data from the
+regional climate model MAR version 3.5; specifically, with the annual 2m surface
+air temperature extracted and averaged over the NGT-2012 firn core locations, and
+with the Greenland-wide melt runoff rate, using 11-yr running mean time series
+over the common period from 1871 to 2011 CE in both cases.
+
+* Correlation with MAR temperature:
 ```{r}
-  res <- estimateCorrelation(stackedNGT, filteredStackedNGT, filteredMAR,
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                             filteredMAR[, c("Year", "t2m")],
                              filter.window = filter.window,
-                             analysis.period = 2011 : 1950,
+                             analysis.period = 2011 : 1871,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+```
+* Correlation with MAR melt runoff:
+```{r}
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                             filteredMAR[, c("Year", "melt")],
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1871,
                              nmc = 10000)
   sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
 ```
