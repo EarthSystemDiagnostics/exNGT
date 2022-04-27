@@ -349,7 +349,7 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   xlab  <- "Year CE"
   ylab.ngt.pm <- grfxtools::LabelAxis("NGT-2012")
   ylab.ngt.dc <- grfxtools::LabelAxis("NGT-2012", unit = "celsius")
-  ylab.a2k <- grfxtools::LabelAxis("Arctic2k", unit = "celsius")
+  ylab.a2k <- grfxtools::LabelAxis("Arctic 2k", unit = "celsius")
 
   xlim <- c(1000, 2020)
   ylim.ngt <- c(-6, 2.5)
@@ -372,7 +372,7 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
 
   col <- c("black", "dodgerblue4")
 
-  op <- par(mar = c(0, 0, 0, 0), oma = c(5, 5, 0.5, 5))
+  op <- par(mar = c(0, 0, 0, 0), oma = c(5, 5, 0, 5))
 
   plot(stackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
        xlim = xlim, ylim = ylim.ngt)
@@ -389,10 +389,10 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
 
   text(x1, y1, ylab.ngt.pm, srt = +90, xpd = NA,
        cex = par()$cex.lab * par()$cex, col = col[1])
-  text(x2, y2, ylab.ngt.dc, srt = -90, xpd = NA,
+  text(x2, y2 / permil2temperature, ylab.ngt.dc, srt = -90, xpd = NA,
        cex = par()$cex.lab * par()$cex, col = col[1])
 
-  mtext("a", side = 3, adj = 0.01, line = -3.65, font = 2, cex = par()$cex.lab)
+  mtext("a", side = 3, adj = 0.01, line = -2, font = 2, cex = par()$cex.lab)
 
   lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
         col = col[1], lwd = 2, lty = 2)
@@ -408,7 +408,7 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   axis(4, at = seq(-2, 3, 1), col = col[2], col.axis = col[2])
 
   mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-  text(x2, y1, ylab.a2k, srt = -90, xpd = NA,
+  text(x2, y2, ylab.a2k, srt = -90, xpd = NA,
        cex = par()$cex.lab * par()$cex, col = col[2])
 
   lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
@@ -426,8 +426,7 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
         col = col[2], lwd = 2, lty = 2)
 
-  mtext("c", side = 3, adj = 0.99, line = -18.6,
-        font = 2, cex = par()$cex.lab, col = col[2])
+  mtext("c", side = 3, adj = 0.01, line = -19.5, font = 2, cex = par()$cex.lab)
 
   par(op)
 
@@ -475,15 +474,15 @@ plot.NGT.MAR <- function(filter.window = 11) {
   # Make plots
 
   xlab  <- "Year CE"
-  ylab1 <- grfxtools::LabelAxis("Temperature anomaly", unit = "celsius")
-  ylab2 <- grfxtools::LabelAxis("Melt runoff anomaly", unit = "Gt",
+  ylab1 <- grfxtools::LabelAxis("Temperature", unit = "celsius")
+  ylab2 <- grfxtools::LabelAxis("Melt runoff", unit = "Gt",
                                 unit.type = "trend", time.unit = "yr")
 
   xlim <- c(1871, 2011)
-  ylim1 <- c(-2.5, 3)
+  ylim1 <- c(-2.5, 3.5)
   ylim2 <- c(-55, 300)
 
-  x1 <- 2030
+  x1 <- 2042.5
   y1 <- 125
 
   col <- c("black", "#d95f02", "#7570b3")
@@ -491,12 +490,13 @@ plot.NGT.MAR <- function(filter.window = 11) {
   plot(filteredStackedTemperatureNGT.mid, type = "n", axes = FALSE,
        xlab = "", ylab = "", xlim = xlim, ylim = ylim1, xaxs = "i")
 
-  lines(filteredStackedTemperatureNGT.mid, lwd = 2, col = col[1])
-
   axis(1)
   axis(2)
   mtext(xlab, 1, 3.5, cex = par()$cex.lab)
-  mtext(ylab1, 2, 3, cex = par()$cex.lab, las = 0)
+  mtext(ylab1, 2, 3.25, cex = par()$cex.lab, las = 0)
+  mtext("b", side = 3, adj = 0.01, line = -0.5, font = 2, cex = par()$cex.lab)
+
+  lines(filteredStackedTemperatureNGT.mid, lwd = 2, col = col[1])
 
   grfxtools::Polyplot(filteredStackedTemperatureNGT.mid$Year,
                       filteredStackedTemperatureNGT.low$stack,
@@ -513,10 +513,11 @@ plot.NGT.MAR <- function(filter.window = 11) {
        col = col[3], lwd = 2, xlim = xlim, ylim = ylim2, xaxs = "i",
        xlab = "", ylab = "")
 
-  axis(4)
-  text(x1, y1, ylab2, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex)
+  axis(4, col = col[3], col.axis = col[3])
+  text(x1, y1, ylab2, srt = -90, xpd = NA,
+       col = col[3], cex = par()$cex.lab * par()$cex)
 
-  legend("topleft",
+  legend("top",
          c("NGT-2012 temperature", "MAR3.5 temperature", "MAR3.5 melt runoff"),
          lty = 1, lwd = 2, col = col, bty = "n")
 
@@ -576,8 +577,9 @@ plotSpectrum <- function(filter.window = 11) {
   col <- c("black", "dodgerblue4")
 
   xlab  <- "Time period (yr)"
-  ylab <- grfxtools::LabelAxis("Power spectral density", unit = "celsius",
+  ylab <- grfxtools::LabelAxis("PSD", unit = "celsius",
                                time.unit = "yr", unit.type = "psd")
+  tcklab <- c(expression(10^{-1}), expression(10^{0}), expression(10^{1}))
 
   n.crit.lower <- 1
 
@@ -586,10 +588,12 @@ plotSpectrum <- function(filter.window = 11) {
                    xaxs = "i")
 
   axis(1)
-  axis(2)
+  axis(2, at = c(0.1, 1, 10), labels = tcklab)
 
   mtext(xlab, 1, 3.5, cex = par()$cex.lab)
-  mtext(ylab, 2, 3.75, cex = par()$cex.lab, las = 0)
+  mtext(ylab, 2, 3.25, cex = par()$cex.lab, las = 0, adj = 0.625)
+
+  mtext("d", side = 3, adj = 0.01, line = 0.25, font = 2, cex = par()$cex.lab)
 
   n.crit.upper <- length(which(spectraNGT$mid$freq > 1 / 5))
   proxysnr:::LLines(spectraNGT$mid, bPeriod = TRUE, lwd = 3, col = col[1],
@@ -611,7 +615,7 @@ plotSpectrum <- function(filter.window = 11) {
                     removeFirst = n.crit.lower, removeLast = n.crit.upper,
                     col = col[2])
 
-  legend("bottomleft", c("NGT-2012", "Arctic2k"),
+  legend("bottomleft", c("NGT-2012", "Arctic 2k"),
          lty = 1, lwd = 3, col = col, bty = "n")
 
   # ----------------------------------------------------------------------------
@@ -654,16 +658,27 @@ plotSpectrum <- function(filter.window = 11) {
 #'
 makeFigure01 <- function(filter.window = 11, permil2temperature = 1 / 0.67) {
 
+  x1 <- 0.53
+  x2 <- 0.6
+
+  par(fig = c(0, x1, 0, 1))
   plot.NGT.Arctic2k(filter.window = filter.window,
                     permil2temperature = permil2temperature)
 
+  par(mar = c(5, 6, 0.5, 5), fig = c(x2, 1, 0.5, 1), new = TRUE,
+      oma = c(0, 0.5, 1, 0.5))
+  plot.NGT.MAR(filter.window = filter.window)
+
+  par(fig = c(x2, 1, 0, 0.5), new = TRUE)
+  plotSpectrum(filter.window = filter.window)
+
 }
 
-#' Produce paper figure 03
+#' Produce paper figure 02
 #'
 #' @author Thomas Münch
 #'
-makeFigure03 <- function() {
+makeFigure02 <- function() {
 
   layout(matrix(1 : 2, 1, 2), widths = c(0.7, 0.3))
   par(cex = 1, mar = c(11, 5, 0.5, 0.5))
