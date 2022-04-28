@@ -78,7 +78,7 @@ processAccumulationNGT <- function() {
 
 
 # ------------------------------------------------------------------------------
-# Create and plot stack
+# Prepare plotting
 
 filter.window <- 11
 
@@ -97,21 +97,28 @@ filteredStackedNGT <- processNGT() %>%
 xlab  <- "Year CE"
 ylab1 <- "Accumulation anomaly (mm w.eq.)"
 ylab2 <- grfxtools::LabelAxis(suffix = "anomaly")
-cols <- c("darkblue", "black")
-fsc <- 0.95
+cols <- c("deepskyblue4", "black")
 
-grfxtools::Quartz(height = 6.5, file = "./zzz/ngt_acc_stack_vs_iso_stack.pdf")
-par(mar = c(5, 5, 2.5, 5))
+grfxtools::Quartz(height = 12, width = 12,
+                  mar = c(5, 5, 5, 5),
+                  file = "./fig/supplement-ngt-2012-accumulation.pdf")
+layout(matrix(c(1, 2, 1, 3), 2, 2))
+
+# ------------------------------------------------------------------------------
+# I. Plot stack
 
 plot(filteredStackedNGTacc, type = "l", axes = FALSE, lwd = 2, col = cols[1],
      xlim = c(1500, 2020), ylim = c(-50, 30), xlab = "", ylab = "")
 
 axis(1)
-axis(2, at = seq(-10, 30, 10), , col = cols[1], col.axis = cols[1])
+axis(2, at = seq(-10, 30, 10), col = cols[1], col.axis = cols[1])
 
 mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 mtext(ylab1, side = 2, line = 3.25, col = cols[1],
-      at = 10, cex = fsc * par()$cex.lab * par()$cex, las = 0)
+      at = 10, cex = par()$cex.lab * par()$cex, las = 0)
+
+mtext("a", side = 3, adj = 0.01, padj = 0.5,
+      line = 2, font = 2, cex = par()$cex.lab)
 
 par(new = TRUE)
 
@@ -119,13 +126,11 @@ plot(filteredStackedNGT, type = "l", axes = FALSE, lwd = 2, col = cols[2],
      xlim = c(1500, 2020), ylim = c(-2.5, 5), xlab = "", ylab = "")
 
 axis(side = 4, at = -2 : 2)
-text(2120, 0, ylab2, srt = -90, xpd = NA,
-     cex = fsc * par()$cex.lab * par()$cex, col = cols[2])
-
-dev.off()
+text(2075, 0, ylab2, srt = -90, xpd = NA,
+     cex = par()$cex.lab, col = cols[2])
 
 # ------------------------------------------------------------------------------
-# Scatter plots differentiating between time periods
+# II. Scatter plots differentiating between time periods
 
 # subset time periods
 t0 <- 2011 : 1500
@@ -147,51 +152,57 @@ y3 <- subsetData(filteredStackedNGTacc, t3, "stack")
 
 # get correlations
 # overall
-res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+res0 <- estimateCorrelation(stackedNGT, filteredStackedNGT,
                            filteredStackedNGTacc, filter.window = filter.window,
                            analysis.period = t0, nmc = 10000)
-sprintf("r = %1.2f (p = %1.2f)", res$r, res$p) # 0.23 (p = 0.05)
+sprintf("r = %1.2f (p = %1.2f)", res0$r, res0$p) # 0.23 (p = 0.05)
 # 1500--1800
-res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+res1 <- estimateCorrelation(stackedNGT, filteredStackedNGT,
                            filteredStackedNGTacc, filter.window = filter.window,
                            analysis.period = t1, nmc = 10000)
-sprintf("r = %1.2f (p = %1.2f)", res$r, res$p) # 0.04 (p = 0.42)
+sprintf("r = %1.2f (p = %1.2f)", res1$r, res1$p) # 0.04 (p = 0.42)
 #1801--1960
-res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+res2 <- estimateCorrelation(stackedNGT, filteredStackedNGT,
                            filteredStackedNGTacc, filter.window = filter.window,
                            analysis.period = t2, nmc = 10000)
-sprintf("r = %1.2f (p = %1.2f)", res$r, res$p) # 0.43 (p = 0.04)
+sprintf("r = %1.2f (p = %1.2f)", res2$r, res2$p) # 0.43 (p = 0.04)
 #1961-2011
-res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+res3 <- estimateCorrelation(stackedNGT, filteredStackedNGT,
                            filteredStackedNGTacc, filter.window = filter.window,
                            analysis.period = t3, nmc = 10000)
-sprintf("r = %1.2f (p = %1.2f)", res$r, res$p) # 0.78 (p = 0.04)
+sprintf("r = %1.2f (p = %1.2f)", res3$r, res3$p) # 0.78 (p = 0.04)
 
 # scatter plot
-grfxtools::Quartz(file = "./zzz/ngt_acc_iso_scatter.pdf")
-
-plot(x1, y1, type = "n", xlab = ylab2, ylab = ylab1,
+plot(x1, y1, type = "n", axes = FALSE, xlab = "", ylab = "",
      xlim = c(-1, 2), ylim = c(-10, 30))
+
+axis(1)
+axis(2)
+mtext(ylab2, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+mtext(ylab1, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
+
+mtext("b", side = 3, adj = 0.01, padj = 0.5,
+      line = 2, font = 2, cex = par()$cex.lab)
 
 points(x1, y1, pch = 19, col = "black")
 points(x2, y2, pch = 19, col = "dodgerblue4")
 points(x3, y3, pch = 19, col = "firebrick4")
 
-legend("bottomright", c("1500-1800 CE (R = 0.04, p = 0.42)",
-                        "1801-1960 CE (R = 0.43, p = 0.04)",
-                        "1961-2011 CE (R = 0.78, p = 0.04)"),
-       pch = 19, col = c("black", "dodgerblue4", "firebrick4"), bty = "n")
-
-dev.off()
+legend("bottomright",
+       c(sprintf("1500-1800 CE (%1.2f, p = %1.2f)", res1$r, res1$p),
+         sprintf("1801-1960 CE (%1.2f, p = %1.2f)", res2$r, res2$p),
+         sprintf("1961-2011 CE (%1.2f, p = %1.2f)", res3$r, res3$p)),
+       pch = 19, col = c("black", "dodgerblue4", "firebrick4"),
+       inset = c(0.025, 0), bty = "n")
 
 # ------------------------------------------------------------------------------
-# plot histogram
+# III. Plot histogram
 
-grfxtools::Quartz(height = 6, width = 6,
-                  file = "zzz/ngt_acc_histogram.pdf")
 plotHistogram(piPeriod = 1500 : 1800, type = "anomaly", data.source = "acc",
               stack.method = "stack_all", plot.legend = FALSE,
               breaks = seq(-20, 40, 2.5), ylim = c(0, 0.1))
+mtext("c", side = 3, adj = 0.01, padj = 0.5,
+      line = 2, font = 2, cex = par()$cex.lab)
 dev.off()
 
 # ==============================================================================
