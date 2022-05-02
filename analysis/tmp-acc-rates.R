@@ -53,7 +53,7 @@ dev.compile <- function() {
 dev.neem <- function(path = "data-raw/in-other", file = "NEEM_Acc.xlsx",
                      name = "NEEM") {
 
-  require(readxl)
+  #require(readxl)
 
   tmp <- list(readxl::read_xlsx(path = file.path(path, file), range = "A2:B157") %>%
                 setNames(c("Year", "NEEM2010S2")),
@@ -208,59 +208,147 @@ dev.off()
 # ==============================================================================
 # preliminary codes
 
+selectFixedNumber <- function(NGT, nfix) {
+
+  rslt <- NULL
+  nrow <- nrow(NGT)
+
+  for (i in 1 : nrow) {
+
+    row <- c(na.omit(unlist(unname(NGT[i, ]))))
+
+    if (length(row) >= (nfix + 1)) {
+      rslt <- rbind(rslt, row[1 : (nfix + 1)])
+    } else {
+      break
+    }
+  }
+
+  return(rslt)
+}
+
+# ------------------------------------------------------------------------------
+# plot different stacking versions
+
+# 1. stack_all vs stack_old vs stack_new
+
+filter.window <- 11
+
+ngt <- processAccumulationNGT() %>%
+  dplyr::filter(Year >= 1502) %>%
+  filterData(window = filter.window)
+
+# stack_all
+acc1 <- ngt %>%
+  stackAllCores()
+# stack_new
+acc2 <- data.frame(
+  Year = ngt$Year,
+  stack = rowMeans(ngt[, 2 : 6], na.rm = TRUE))
+# stack_new w/o B21-12
+acc3 <- data.frame(
+  Year = ngt$Year,
+  stack = rowMeans(ngt[, c(2, 4 : 6)], na.rm = TRUE))
+# stack_old
+acc4 <- data.frame(
+  Year = ngt$Year,
+  stack = rowMeans(ngt[, 7 : 12], na.rm = TRUE))
+# frozen stack (n=4, from 2010, w/o B21-12)
+tmp <- ngt %>%
+  dplyr::filter(Year <= 2010) %>%
+  dplyr::select(-`B21_12`) %>%
+  selectFixedNumber(nfix = 4)
+acc5 <- data.frame(Year = tmp[, 1], stack = rowMeans(tmp[, -1]))
+
+cols <- c("black", "#1b9e77", "#d95f02", "#7570b3")
+
+grfxtools::Quartz(height = 6, width = 10,
+                  file = "./zzz/ngt_acc_stack_versions_zoom.pdf")
+
+plot(acc1, type = "n",
+     xlim = c(1850, 2020), ylim = c(-10, 60), xlab = "", ylab = "")
+
+lines(acc1, lwd = 3, col = cols[1])
+lines(acc2, lwd = 1.5, col = cols[2])
+lines(acc3, lwd = 2.5, col = "grey", lty = 2)
+lines(acc4, lwd = 1.5, col = cols[3])
+lines(acc5, lwd = 1.5, col = cols[4])
+
+legend("topleft",
+       c("stack_all", "stack_new_only", "stack_old_only",
+         "frozen stack (n = 4, until 2010 CE, w/o B21-12)",
+         "stack_new_only w/o B21-12"),
+       lwd = 2, col = c(cols, "grey"), lty = c(rep(1, 4), 2), bty = "n")
+
+dev.off()
+
 # ------------------------------------------------------------------------------
 # plot singe records
 
 filter.window <- 11
 
-ngt <- dev.compile() %>%
-  makeAnomalies()
+ngt <- processAccumulationNGT() %>%
+  dplyr::filter(Year >= 1500)
 
 filteredNGT <- ngt %>%
   filterData(window = filter.window)
 
-yoff <- 0.12
-grfxtools::Quartz(height = 12)#, file = "./zzz/ngt_acc_records.pdf")
+yoff <- 0.14 * 1.e3
+yoff2 <- 0.075 * 1.e3
+cols <- c("black", "red", "blue")
 
-plot(ngt$Year, ngt$`B18_12`, type = "n", ylim = c(-0.05, 1.5),
+grfxtools::Quartz(height = 12, file = "./zzz/ngt_all_acc_records.pdf")
+
+plot(ngt$Year, ngt$`B18_12`, type = "n", ylim = c(-0.05, 1.5) * 1.e3,
      xlab = "Year CE", ylab = "Accumulation anomaly (a.u.)")
 
-lines(ngt$Year, ngt$`B18_12`, lwd = 1, col = 1)
-lines(ngt$Year, filteredNGT$`B18_12`, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B18_12`, lwd = 1, col = cols[1])
+lines(ngt$Year, filteredNGT$`B18_12`, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 0, "B18-12", col = cols[1], cex = 1.25)
 
-lines(ngt$Year, ngt$`B21_12` + 1 * yoff, lwd = 1, col = 2)
-lines(ngt$Year, filteredNGT$`B21_12` + 1 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B21_12` + 1 * yoff, lwd = 1, col = cols[2])
+lines(ngt$Year, filteredNGT$`B21_12` + 1 * yoff, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 1 * yoff, "B21-12", col = cols[2], cex = 1.25)
 
-lines(ngt$Year, ngt$`B23_12` + 2 * yoff, lwd = 1, col = 3)
-lines(ngt$Year, filteredNGT$`B23_12` + 2 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B23_12` + 2 * yoff, lwd = 1, col = cols[3])
+lines(ngt$Year, filteredNGT$`B23_12` + 2 * yoff, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 2 * yoff, "B23-12", col = cols[3], cex = 1.25)
 
-lines(ngt$Year, ngt$`B26_12` + 3 * yoff, lwd = 1, col = 4)
-lines(ngt$Year, filteredNGT$`B26_12` + 3 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B26_12` + 3 * yoff, lwd = 1, col = cols[1])
+lines(ngt$Year, filteredNGT$`B26_12` + 3 * yoff, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 3 * yoff, "B26-12", col = cols[1], cex = 1.25)
 
-lines(ngt$Year, ngt$`NGRIP_12` + 4 * yoff, lwd = 1, col = 5)
-lines(ngt$Year, filteredNGT$`NGRIP_12` + 4 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`NGRIP_12` + 4 * yoff, lwd = 1, col = cols[2])
+lines(ngt$Year, filteredNGT$`NGRIP_12` + 4 * yoff, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 4 * yoff, "NGRIP-12", col = cols[2], cex = 1.25)
 
-lines(ngt$Year, ngt$`NEEM` + 5 * yoff, lwd = 1, col = 6)
-lines(ngt$Year, filteredNGT$`NEEM` + 5 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`NEEM` + 5 * yoff, lwd = 1, col = cols[3])
+lines(ngt$Year, filteredNGT$`NEEM` + 5 * yoff, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 5 * yoff, "NEEM", col = cols[3], cex = 1.25)
 
-lines(ngt$Year, ngt$`B16` + 6 * yoff, lwd = 1, col = 7)
-lines(ngt$Year, filteredNGT$`B16` + 6 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B16` + 6 * yoff, lwd = 1, col = cols[1])
+lines(ngt$Year, filteredNGT$`B16` + 6 * yoff, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 6 * yoff + yoff2, "B16", col = cols[1], cex = 1.25)
 
-lines(ngt$Year, ngt$`B18` + 7 * yoff, lwd = 1, col = 8)
-lines(ngt$Year, filteredNGT$`B18` + 7 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B18` + 7 * yoff, lwd = 1, col = cols[2])
+lines(ngt$Year, filteredNGT$`B18` + 7 * yoff, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 7 * yoff + yoff2, "B18", col = cols[2], cex = 1.25)
 
-lines(ngt$Year, ngt$`B21` + 8 * yoff, lwd = 1, col = 9)
-lines(ngt$Year, filteredNGT$`B21` + 8 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B21` + 8 * yoff, lwd = 1, col = cols[3])
+lines(ngt$Year, filteredNGT$`B21` + 8 * yoff, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 8 * yoff + yoff2, "B21", col = cols[3], cex = 1.25)
 
-lines(ngt$Year, ngt$`B26` + 9 * yoff, lwd = 1, col = 10)
-lines(ngt$Year, filteredNGT$`B26` + 9 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B26` + 9 * yoff, lwd = 1, col = cols[1])
+lines(ngt$Year, filteredNGT$`B26` + 9 * yoff, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 9 * yoff + yoff2, "B26", col = cols[1], cex = 1.25)
 
-lines(ngt$Year, ngt$`B29` + 10 * yoff, lwd = 1, col = 11)
-lines(ngt$Year, filteredNGT$`B29` + 10 * yoff, lwd = 2, col = "darkgrey")
+lines(ngt$Year, ngt$`B29` + 10 * yoff, lwd = 1, col = cols[2])
+lines(ngt$Year, filteredNGT$`B29` + 10 * yoff, lwd = 3, col = "darkgrey")
+text(x = 1525, y = 10 * yoff + yoff2, "B29", col = cols[2], cex = 1.25)
 
-legend("bottomleft", col = 1 : 11, lwd = 1.5, lty = 1, bty = "n",
-       legend = c("B18-2012", "B21-2012", "B23-2012", "B26-2012", "NGRIP-2012",
-                  "NEEM", "B16", "B18", "B21", "B26", "B29"))
+## legend("bottomleft", col = 1 : 11, lwd = 1.5, lty = 1, bty = "n",
+##        legend = c("B18-2012", "B21-2012", "B23-2012", "B26-2012", "NGRIP-2012",
+##                   "NEEM", "B16", "B18", "B21", "B26", "B29"))
 
 dev.off()
 
