@@ -401,3 +401,76 @@ lines(ngt$Year, filteredNGT$`B26_12` + 6 * yoff, lwd = 2, col = "darkgrey")
 
 legend("bottomleft", col = c(1, 2, 4), lwd = 1.5, lty = 1, bty = "n",
        legend = c("B18", "B21", "B26"))
+
+# ------------------------------------------------------------------------------
+# spectrum/SNR analysis similar to d18O data
+
+recordOccurrence <- data.frame(
+  Year = filteredAccumulationNGT$Year,
+  matrix(1 : (ncol(filteredAccumulationNGT) - 1),
+         nrow = nrow(filteredAccumulationNGT), ncol = ncol(filteredAccumulationNGT) - 1,
+         byrow = TRUE)) %>%
+  setNames(colnames(filteredAccumulationNGT))
+
+recordOccurrence[which(is.na(filteredAccumulationNGT), arr.ind = TRUE)] <- NA
+
+grfxtools::Quartz(mar = c(5, 5, 0.5, 1))
+plot.new()
+plot.window(xlim = c(1000, 2011), ylim = c(1, 16), xaxs = 'i')
+box()
+
+axis(1)
+axis(2, at = 1 : 11, labels = colnames(recordOccurrence)[-1])
+mtext("Year CE", 1, 3.5, cex = par()$cex.lab)
+
+for (i in 2 : 12) {
+  lines(recordOccurrence$Year, recordOccurrence[, i], lwd = 1.5, col = "black")
+}
+
+noMissingVal <- function(x) {!any(is.na(x))}
+spectraNGT <- filteredAccumulationNGT %>%
+  dplyr::slice(match(1992 : 1502, Year)) %>%
+  dplyr::select(where(noMissingVal)) %>%
+  dplyr::select(-Year) %>%
+  proxysnr::ArraySpectra(df.log = 0.1) %>%
+  proxysnr::SeparateSpectra()
+
+# min, max and mean number of records contributing to stack
+N <- filteredAccumulationNGT %>%
+  countRecords() %>%
+  dplyr::filter(Year >= 1502) %>%
+  dplyr::summarise(min = min(n), max = max(n), mean = round(mean(n)))
+
+# obtain signal-to-noise ratio spectrum between 1/200 and 1/5 yr^-1
+f1 <- 1 / 200
+f2 <- 1 / 5
+snrNGT.min <- spectraNGT %>%
+  proxysnr::IntegratedSNR(N = N$min, freq.cut.lower = f1, freq.cut.upper = f2)
+snrNGT.max <- spectraNGT %>%
+  proxysnr::IntegratedSNR(N = N$max, freq.cut.lower = f1, freq.cut.upper = f2)
+snrNGT.mean <- spectraNGT %>%
+  proxysnr::IntegratedSNR(N = N$mean, freq.cut.lower = f1, freq.cut.upper = f2)
+
+yat.snr <- c(0.5, 1, 2, 5, 10, 20)
+
+xlab  <- "Time period (yr)"
+ylab1 <- grfxtools::LabelAxis("Signal PSD", time.unit = "yr", unit.type = "psd")
+ylab2 <- "Signal-to-Noise Ratio"
+
+xlim <- c(225, 5)
+ylim <- c(0.5, 20)
+
+grfxtools::Quartz(height = 4.5, width = 6, mar = c(5, 5.5, 0.5, 0.5))
+
+proxysnr:::LPlot(snrNGT.mean, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
+                 xlab = "", ylab = "", xlim = xlim, ylim = ylim)
+
+axis(1)
+axis(2, at = yat.snr)
+mtext(xlab, 1, 3.5, cex = par()$cex.lab)
+mtext(ylab2, 2, 3.5, cex = par()$cex.lab, las = 0)
+
+grfxtools::Polyplot(1 / snrNGT.min$freq, snrNGT.min$spec, snrNGT.max$spec)
+proxysnr:::LLines(snrNGT.min, bPeriod = TRUE, lwd = 1)
+proxysnr:::LLines(snrNGT.max, bPeriod = TRUE, lwd = 1)
+proxysnr:::LLines(snrNGT.mean, bPeriod = TRUE, lwd = 2)
