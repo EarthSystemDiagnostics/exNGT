@@ -84,9 +84,9 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
 
     if (data.source == "acc") {
 
-      xlab <- grfxtools::LabelAxis("Accumulation anomaly", unit = "mm w.eq.")
-      ylab <- grfxtools::LabelAxis("Probability density", unit = "mm w.eq.",
-                                   unit.type = "freq")
+      xlab <- grfxtools::LabelAxis("Accumulation rate", unit = "mm w.eq.",
+                                   unit.type = "trend", time.unit = "yr")
+      ylab <- bquote("Probability density" * " (" * "mm w.eq."^{"-1"} ~ "yr)")
     }
 
     if (plot.2xaxes) {
@@ -107,11 +107,10 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
 
     if (data.source == "acc") {
 
-      xlab <- grfxtools::LabelAxis(label = "Accumulation trend",
-                                   unit = "mm w.eq.", unit.type = "trend",
-                                   time.unit = "yr")
-      ylab <- grfxtools::LabelAxis("Probability density",
-                                   unit = bquote("mm w.eq."^{"-1"} ~ "yr"))
+      xlab <- bquote("Accumulation rate trend" *
+                     " (" * "mm w.eq." ~ "yr"^{"-2"} * ")")
+      ylab <- bquote("Probability density" *
+                     " (" * "mm w.eq."^{"-1"} ~ "yr"^{"2"} * ")")
     }
 
     if (plot.2xaxes) {

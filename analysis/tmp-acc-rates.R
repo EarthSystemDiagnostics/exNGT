@@ -82,21 +82,35 @@ processAccumulationNGT <- function() {
 
 filter.window <- 11
 
-filteredStackedNGTacc <- processAccumulationNGT() %>%
+filteredAccumulationNGT <- processAccumulationNGT() %>%
+  filterData(window = filter.window)
+
+filteredStackedAccumulationNGT <- filteredAccumulationNGT %>%
+  stackAllCores() %>%
+  dplyr::filter(Year >= 1500)
+
+# use the same records for stacking d18O as for accumulation
+stackedNGT <- processNGT() %>%
+  dplyr::select(names(filteredAccumulationNGT)) %>%
+  stackAllCores() %>%
+  dplyr::filter(Year >= 1500)
+
+filteredStackedNGT <- processNGT() %>%
+  dplyr::select(names(filteredAccumulationNGT)) %>%
   filterData(window = filter.window) %>%
   stackAllCores() %>%
   dplyr::filter(Year >= 1500)
 
-stackedNGT <- processNGT() %>%
-  stackNGT()
-
-filteredStackedNGT <- processNGT() %>%
+# main NGT-2012 d18O stack
+NGT2012 <- processNGT() %>%
   filterData(window = filter.window) %>%
   stackNGT()
 
 xlab  <- "Year CE"
-ylab1 <- "Accumulation anomaly (mm w.eq.)"
-ylab2 <- grfxtools::LabelAxis(suffix = "anomaly")
+ylab1 <- grfxtools::LabelAxis("Accumulation rate", unit = "mm w.eq.",
+                              time.unit = "yr", unit.type = "trend")
+ylab2 <- grfxtools::LabelAxis("NGT-2012")
+ylab3 <- grfxtools::LabelAxis()
 cols <- c("deepskyblue4", "black")
 
 grfxtools::Quartz(height = 12, width = 12,
@@ -107,8 +121,9 @@ layout(matrix(c(1, 2, 1, 3), 2, 2))
 # ------------------------------------------------------------------------------
 # I. Plot stack
 
-plot(filteredStackedNGTacc, type = "l", axes = FALSE, lwd = 2, col = cols[1],
-     xlim = c(1500, 2020), ylim = c(-50, 30), xlab = "", ylab = "")
+plot(filteredStackedAccumulationNGT, type = "l", axes = FALSE, lwd = 2,
+     col = cols[1], xlim = c(1500, 2020), ylim = c(-50, 30),
+     xlab = "", ylab = "")
 
 axis(1)
 axis(2, at = seq(-10, 30, 10), col = cols[1], col.axis = cols[1])
@@ -122,7 +137,7 @@ mtext("a", side = 3, adj = 0.01, padj = 0.5,
 
 par(new = TRUE)
 
-plot(filteredStackedNGT, type = "l", axes = FALSE, lwd = 2, col = cols[2],
+plot(NGT2012, type = "l", axes = FALSE, lwd = 2, col = cols[2],
      xlim = c(1500, 2020), ylim = c(-2.5, 5), xlab = "", ylab = "")
 
 axis(side = 4, at = -2 : 2)
@@ -139,61 +154,65 @@ t2 <- 1960 : 1801
 t3 <- 2011 : 1961
 
 x0 <- subsetData(filteredStackedNGT, t0, "stack")
-y0 <- subsetData(filteredStackedNGTacc, t0, "stack")
+y0 <- subsetData(filteredStackedAccumulationNGT, t0, "stack")
 
 x1 <- subsetData(filteredStackedNGT, t1, "stack")
-y1 <- subsetData(filteredStackedNGTacc, t1, "stack")
+y1 <- subsetData(filteredStackedAccumulationNGT, t1, "stack")
 
 x2 <- subsetData(filteredStackedNGT, t2, "stack")
-y2 <- subsetData(filteredStackedNGTacc, t2, "stack")
+y2 <- subsetData(filteredStackedAccumulationNGT, t2, "stack")
 
 x3 <- subsetData(filteredStackedNGT, t3, "stack")
-y3 <- subsetData(filteredStackedNGTacc, t3, "stack")
+y3 <- subsetData(filteredStackedAccumulationNGT, t3, "stack")
 
 # get correlations
 # overall
 res0 <- estimateCorrelation(stackedNGT, filteredStackedNGT,
-                           filteredStackedNGTacc, filter.window = filter.window,
-                           analysis.period = t0, nmc = 10000)
-sprintf("r = %1.2f (p = %1.2f)", res0$r, res0$p) # 0.23 (p = 0.05)
+                            filteredStackedAccumulationNGT,
+                            filter.window = filter.window,
+                            analysis.period = t0, nmc = 10000)
+sprintf("r = %1.2f (p = %1.2f)", res0$r, res0$p) # 0.23 (p = 0.06)
 # 1500--1800
 res1 <- estimateCorrelation(stackedNGT, filteredStackedNGT,
-                           filteredStackedNGTacc, filter.window = filter.window,
-                           analysis.period = t1, nmc = 10000)
-sprintf("r = %1.2f (p = %1.2f)", res1$r, res1$p) # 0.04 (p = 0.42)
+                            filteredStackedAccumulationNGT,
+                            filter.window = filter.window,
+                            analysis.period = t1, nmc = 10000)
+sprintf("r = %1.2f (p = %1.2f)", res1$r, res1$p) # 0.02 (p = 0.47)
 #1801--1960
 res2 <- estimateCorrelation(stackedNGT, filteredStackedNGT,
-                           filteredStackedNGTacc, filter.window = filter.window,
-                           analysis.period = t2, nmc = 10000)
-sprintf("r = %1.2f (p = %1.2f)", res2$r, res2$p) # 0.43 (p = 0.04)
+                            filteredStackedAccumulationNGT,
+                            filter.window = filter.window,
+                            analysis.period = t2, nmc = 10000)
+sprintf("r = %1.2f (p = %1.2f)", res2$r, res2$p) # 0.44 (p = 0.05)
 #1961-2011
 res3 <- estimateCorrelation(stackedNGT, filteredStackedNGT,
-                           filteredStackedNGTacc, filter.window = filter.window,
-                           analysis.period = t3, nmc = 10000)
-sprintf("r = %1.2f (p = %1.2f)", res3$r, res3$p) # 0.78 (p = 0.04)
+                            filteredStackedAccumulationNGT,
+                            filter.window = filter.window,
+                            analysis.period = t3, nmc = 10000)
+sprintf("r = %1.2f (p = %1.2f)", res3$r, res3$p) # 0.78 (p = 0.06)
 
 # scatter plot
 plot(x1, y1, type = "n", axes = FALSE, xlab = "", ylab = "",
-     xlim = c(-1, 2), ylim = c(-10, 30))
+     xlim = c(-2, 2), ylim = c(-10, 30))
 
 axis(1)
 axis(2)
-mtext(ylab2, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+mtext(ylab3, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 mtext(ylab1, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
 
 mtext("b", side = 3, adj = 0.01, padj = 0.5,
       line = 2, font = 2, cex = par()$cex.lab)
 
 points(x1, y1, pch = 19, col = "black")
-points(x2, y2, pch = 19, col = "dodgerblue4")
-points(x3, y3, pch = 19, col = "firebrick4")
+points(x2, y2, pch = 19, col = "black")
+points(x3, y3, pch = 19, col = "black")
 
-legend("bottomright",
-       c(sprintf("1500-1800 CE (%1.2f, p = %1.2f)", res1$r, res1$p),
-         sprintf("1801-1960 CE (%1.2f, p = %1.2f)", res2$r, res2$p),
-         sprintf("1961-2011 CE (%1.2f, p = %1.2f)", res3$r, res3$p)),
-       pch = 19, col = c("black", "dodgerblue4", "firebrick4"),
-       inset = c(0.025, 0), bty = "n")
+## legend("bottomright",
+##        c(sprintf("1500-1800 CE (%1.2f, p = %1.2f)", res1$r, res1$p),
+##          sprintf("1801-1960 CE (%1.2f, p = %1.2f)", res2$r, res2$p),
+##          sprintf("1961-2011 CE (%1.2f, p = %1.2f)", res3$r, res3$p)),
+##        pch = 19, col = c("black", "dodgerblue4", "firebrick4"),
+##        inset = c(0.025, 0), bty = "n")
 
 # ------------------------------------------------------------------------------
 # III. Plot histogram
