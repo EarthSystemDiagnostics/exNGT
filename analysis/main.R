@@ -30,7 +30,7 @@ dev.off()
 # Figure 02 - spectrum
 
 grfxtools::Quartz(file = "./fig/main-figure02.pdf",
-                  height = 5, width = 8, mar = c(5, 6, 0.5, 0.5))
+                  height = 5, width = 6.7, mar = c(5, 6, 0.5, 0.5))
 
 makeFigure02()
 dev.off()
