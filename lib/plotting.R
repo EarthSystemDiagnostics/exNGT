@@ -366,7 +366,7 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   m <- nrow(Arctic2k)
 
   x1 <- 845
-  x2 <- 2175
+  x2 <- 2185
   y1 <- 0.
   y2 <- 0.5
 
@@ -392,7 +392,7 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   text(x2, y2 / permil2temperature, ylab.ngt.dc, srt = -90, xpd = NA,
        cex = par()$cex.lab * par()$cex, col = col[1])
 
-  mtext("a", side = 3, adj = 0.01, line = -2, font = 2, cex = par()$cex.lab)
+  mtext("a", side = 3, adj = 0.01, line = -2.5, font = 2, cex = par()$cex.lab)
 
   lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
         col = col[1], lwd = 2, lty = 2)
@@ -426,7 +426,7 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
         col = col[2], lwd = 2, lty = 2)
 
-  mtext("c", side = 3, adj = 0.01, line = -19.5, font = 2, cex = par()$cex.lab)
+  mtext("b", side = 3, adj = 0.01, line = -20, font = 2, cex = par()$cex.lab)
 
   par(op)
 
@@ -478,23 +478,23 @@ plot.NGT.MAR <- function(filter.window = 11) {
   ylab2 <- grfxtools::LabelAxis("Melt runoff", unit = "Gt",
                                 unit.type = "trend", time.unit = "yr")
 
-  xlim <- c(1871, 2011)
+  xlim <- c(1875, 2011)
   ylim1 <- c(-2.5, 3.5)
   ylim2 <- c(-55, 300)
 
-  x1 <- 2042.5
+  x1 <- 2034
   y1 <- 125
 
   col <- c("black", "#d95f02", "#7570b3")
 
   plot(filteredStackedTemperatureNGT.mid, type = "n", axes = FALSE,
-       xlab = "", ylab = "", xlim = xlim, ylim = ylim1, xaxs = "i")
+       xlab = "", ylab = "", xlim = xlim, ylim = ylim1)
 
-  axis(1)
+  axis(1, at = seq(1870, 2010, 20))
   axis(2)
   mtext(xlab, 1, 3.5, cex = par()$cex.lab)
-  mtext(ylab1, 2, 3.25, cex = par()$cex.lab, las = 0)
-  mtext("b", side = 3, adj = 0.01, line = -0.5, font = 2, cex = par()$cex.lab)
+  mtext(ylab1, 2, 3, cex = par()$cex.lab, las = 0)
+  mtext("c", side = 3, adj = 0.01, line = -1, font = 2, cex = par()$cex.lab)
 
   lines(filteredStackedTemperatureNGT.mid, lwd = 2, col = col[1])
 
@@ -510,15 +510,16 @@ plot.NGT.MAR <- function(filter.window = 11) {
   par(new = TRUE)
 
   plot(filteredMAR$Year, filteredMAR$melt, type = "l", axes = FALSE,
-       col = col[3], lwd = 2, xlim = xlim, ylim = ylim2, xaxs = "i",
+       col = col[3], lwd = 2, xlim = xlim, ylim = ylim2,
        xlab = "", ylab = "")
 
   axis(4, col = col[3], col.axis = col[3])
   text(x1, y1, ylab2, srt = -90, xpd = NA,
        col = col[3], cex = par()$cex.lab * par()$cex)
 
-  legend("top",
+  legend("topleft",
          c("NGT-2012 temperature", "MAR3.5 temperature", "MAR3.5 melt runoff"),
+         inset = c(0, 0.05),
          lty = 1, lwd = 2, col = col, bty = "n")
 
 }
@@ -577,7 +578,7 @@ plotSpectrum <- function(filter.window = 11) {
   col <- c("black", "dodgerblue4")
 
   xlab  <- "Time period (yr)"
-  ylab <- grfxtools::LabelAxis("PSD", unit = "celsius",
+  ylab <- grfxtools::LabelAxis("Power spectral density", unit = "celsius",
                                time.unit = "yr", unit.type = "psd")
   tcklab <- c(expression(10^{-1}), expression(10^{0}), expression(10^{1}))
 
@@ -591,9 +592,7 @@ plotSpectrum <- function(filter.window = 11) {
   axis(2, at = c(0.1, 1, 10), labels = tcklab)
 
   mtext(xlab, 1, 3.5, cex = par()$cex.lab)
-  mtext(ylab, 2, 3.25, cex = par()$cex.lab, las = 0, adj = 0.625)
-
-  mtext("d", side = 3, adj = 0.01, line = 0.25, font = 2, cex = par()$cex.lab)
+  mtext(ylab, 2, 3.5, cex = par()$cex.lab, las = 0, adj = 0.925)
 
   n.crit.upper <- length(which(spectraNGT$mid$freq > 1 / 5))
   proxysnr:::LLines(spectraNGT$mid, bPeriod = TRUE, lwd = 3, col = col[1],
@@ -658,27 +657,46 @@ plotSpectrum <- function(filter.window = 11) {
 #'
 makeFigure01 <- function(filter.window = 11, permil2temperature = 1 / 0.67) {
 
-  x1 <- 0.53
-  x2 <- 0.6
+  y1 <- 0.41
+  y2 <- 0.35
 
-  par(fig = c(0, x1, 0, 1))
+  par(fig = c(0, 1, y1, 1))
   plot.NGT.Arctic2k(filter.window = filter.window,
                     permil2temperature = permil2temperature)
 
-  par(mar = c(5, 6, 0.5, 5), fig = c(x2, 1, 0.5, 1), new = TRUE,
-      oma = c(0, 0.5, 1, 0.5))
+  par(mar = c(5, 5, 0.5, 5), fig = c(0, 1, 0, y2), new = TRUE)
   plot.NGT.MAR(filter.window = filter.window)
-
-  par(fig = c(x2, 1, 0, 0.5), new = TRUE)
-  plotSpectrum(filter.window = filter.window)
+  lines(x = c(2011, 2011), y = c(425, 280), col = "darkgrey",
+        lwd = 1.5, xpd = NA)
+  ## lines(x = c(1991, 1991), y = c(425, 375), col = "darkgrey",
+  ##       lwd = 1.5, xpd = NA)
+  ## lines(x = c(1991, 1871), y = c(375, 280), col = "darkgrey",
+  ##       lwd = 1.5, xpd = NA)
+  lines(x = c(1871, 1941), y = c(280, 364.5833), col = "darkgrey",
+        lwd = 1.5, xpd = NA)
+  lines(x = c(1956, 1991), y = c(382.7083, 425), col = "darkgrey",
+        lwd = 1.5, xpd = NA)
 
 }
 
 #' Produce paper figure 02
 #'
+#' @param filter.window single integer giving the size of the running mean
+#'   window to use for filtering the isotope and Arctic2k data; defaults to 11
+#'   (years).
 #' @author Thomas Münch
 #'
-makeFigure02 <- function() {
+makeFigure02 <- function(filter.window = 11) {
+
+  plotSpectrum(filter.window = filter.window)
+
+}
+
+#' Produce paper figure 03
+#'
+#' @author Thomas Münch
+#'
+makeFigure03 <- function() {
 
   layout(matrix(1 : 2, 1, 2), widths = c(0.7, 0.3))
   par(cex = 1, mar = c(11, 5, 0.5, 0.5))
