@@ -460,7 +460,8 @@ ylab2 <- "Signal-to-Noise Ratio"
 xlim <- c(225, 5)
 ylim <- c(0.5, 20)
 
-grfxtools::Quartz(height = 4.5, width = 6, mar = c(5, 5.5, 0.5, 0.5))
+grfxtools::Quartz(height = 4.5, width = 6, mar = c(5, 5.5, 0.5, 0.5),
+                  file = "./zzz/ngt_accumulation_snr.pdf")
 
 proxysnr:::LPlot(snrNGT.mean, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
                  xlab = "", ylab = "", xlim = xlim, ylim = ylim)
@@ -474,3 +475,34 @@ grfxtools::Polyplot(1 / snrNGT.min$freq, snrNGT.min$spec, snrNGT.max$spec)
 proxysnr:::LLines(snrNGT.min, bPeriod = TRUE, lwd = 1)
 proxysnr:::LLines(snrNGT.max, bPeriod = TRUE, lwd = 1)
 proxysnr:::LLines(snrNGT.mean, bPeriod = TRUE, lwd = 2)
+
+dev.off()
+
+# ------------------------------------------------------------------------------
+# scatter plot with non-anomaly data
+
+ngt <- list(oxy = readNGT(), acc = dev.compile()) %>%
+  lapply(filterData, window = 11) %>%
+  lapply(function(x) {dplyr::filter(x, Year >= 1500)})
+
+grfxtools::Quartz(height = 6, width = 6,
+                  file = "./zzz/ngt_d18O_accumulation_nonanom_buchardt.pdf")
+
+plot(ngt$oxy$B18, ngt$acc$B18, type = "n", xlim = c(-40, -30), ylim = c(0, 250),
+     xlab = grfxtools::LabelAxis(), ylab = "Accumulation rate (mm w.eq.)")
+
+for (nm in names(ngt$acc)[-1]) {
+  points(ngt$oxy[, nm], ngt$acc[, nm], pch = 19)
+}
+
+x <- seq(-40, -30, 0.1)
+y.ne <- 230 * exp(0.023 * (x + 16.75))
+y.nw <- 230 * exp(0.1 * (x + 33.64))
+
+lines(x, y.ne, lwd = 2.5, col = "green")
+lines(x, y.nw, lwd = 2.5, col = "black")
+
+legend("bottomright", c("Buchardt-NE", "Buchardt-NW"),
+       lty = 1, lwd = 2.5, col = c("green", "black"), bty = "n")
+
+dev.off()
