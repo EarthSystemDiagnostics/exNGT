@@ -129,6 +129,7 @@ readDMI <- function(path = "data/gr_annual_temperature_1873_2015.csv") {
 #' @return a data frame of two columns and 172 rows with the read HadCrut
 #'   data set.
 #' @author Thomas Münch
+#'
 readHadCrut <- function(path = "data/HadCrut_5.0.1_Arctic_annual.csv") {
 
   read.csv(path, header = TRUE) %>%
@@ -151,6 +152,7 @@ readHadCrut <- function(path = "data/HadCrut_5.0.1_Arctic_annual.csv") {
 #'   \code{"2SigmaLow"} and \code{"2SigmaHigh"} are \code{NA} for the extension
 #'   period.
 #' @author Thomas Münch
+#'
 extendWithHadCrut <- function(a2k,
                               path = "data/HadCrut_5.0.1_Arctic_annual.csv") {
 
@@ -177,6 +179,7 @@ extendWithHadCrut <- function(a2k,
 #' @return a data frame of three columns and 141 rows with the read MAR3.5
 #'   temperature and runoff (inverse melt rate) data set from 1871 to 2011 CE.
 #' @author Thomas Münch
+#'
 readMAR <- function(path = "data/MAR_3.5_t2m_melt_annual.csv") {
 
   read.csv(path, header = TRUE) %>%
@@ -185,6 +188,23 @@ readMAR <- function(path = "data/MAR_3.5_t2m_melt_annual.csv") {
     dplyr::mutate(melt = -1 * melt) %>% # convert to runoff
     as.data.frame() %>%
     makeAnomalies()
+
+}
+
+#' Read GBI data
+#'
+#' Read the Greenland Blocking Index (GBI) data of Hanna et al. (2016) for the
+#' 1851-2011 CE time period.
+#'
+#' @param path file path (relative to working directory) of the GBI data set.
+#' @return a data frame of six columns and 161 rows with the read GBI annual and
+#'   seasonal data from 1851 to 2011 CE.
+#' @author Thomas Münch
+#'
+readGBI <- function(path = "data/gbi.monthly.csv") {
+
+  read.csv(file = path, skip = 4) %>%
+    dplyr::arrange(dplyr::desc(Year))
 
 }
 
@@ -410,6 +430,7 @@ makeAnomalies <- function(data, age = NULL, reference.period = 1990 : 1961,
 #' @examples
 #' NGT <- processNGT()
 #' subsetData(NGT, t = 2011 : 2000, var = "B18_12")
+#'
 subsetData <- function(x, t, var, timeColumn = "Year") {
 
   x %>%
@@ -429,6 +450,7 @@ subsetData <- function(x, t, var, timeColumn = "Year") {
 #' @return a data frame with all the North Greenland isotope data from the data
 #'   compilation that have continuous data in the specified time window.
 #' @author Thomas Münch
+#'
 selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
 
   noMissingVal <- function(x) {!any(is.na(x))}
