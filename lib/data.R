@@ -67,6 +67,34 @@ processNGT <- function(path = NULL, reference.period = 1990 : 1961) {
 
 }
 
+#' Process NGT accumulation data
+#'
+#' Process the NGT and associated accumulation rate records, which includes
+#' reading in the data and calculating anomaly time series.
+#'
+#' @param path file path of the accumulation data set relative to the 'exNGT'
+#'   repository.
+#' @param reference.period numeric vector of ages of the reference period for
+#'   calculating the anomaly time series; defaults to the standard 1961-1990
+#'   period.
+#' @return a data frame of the accumulation rate anomaly time series.
+#' @author Thomas Münch
+#'
+processAccumulation <- function(path = "data/NGT2012_Accumulation_20220520.csv",
+                                reference.period = 1990 : 1961) {
+
+  if (file.exists(path)) {
+    ngt <- read.csv(path, header = TRUE)
+  } else {
+    stop("No such file or directory; check path or permissions.")
+  }
+
+  ngt <- makeAnomalies(ngt, reference.period = reference.period)
+
+  return(ngt)
+
+}
+
 #' Read DMI instrumental temperatures
 #'
 #' Read the Danish Meteorological Insitute (DMI) instrumental temperature
@@ -415,9 +443,12 @@ selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
 
 #' Compile data for histogram
 #'
-#' This wrapper function compiles the NGT isotope stack data for the histogram
-#' analysis depending on a chosen stacking and merging method.
+#' This wrapper function compiles the NGT-2012 stacked data for the histogram
+#' analysis depending on the data source and chosen stacking and merging
+#' methods.
 #'
+#' @param data character string to signal the data source: one of "iso" (d18O
+#'   isotope data) or "acc" (accumulation data).
 #' @param type character string to signal the stacking method: one of "main"
 #'   (main paper analyses), "stack_old_new" or "stack_all".
 #' @param filter.window single integer giving the size of the running mean
@@ -432,14 +463,18 @@ selectNGTForSpectra <- function(timeWindow = 1979 : 1505) {
 #'   the merging and stacking in order to mimic maximum smoothing at the firn
 #'   ice transition.
 #' @param nfix non-negative integer to set a constant number of records which
-#'   are selected from the merged NGT data for stacking ("frozen" stack).
+#'   are selected from the merged NGT-2012 data for stacking ("frozen" stack).
 #' @return a data frame the running mean filtered stack data.
 #' @author Thomas Münch
 #'
-selectHistogramData <- function(type = "main", filter.window = 11,
+selectHistogramData <- function(data = "iso", type = "main", filter.window = 11,
                                 adjustMean = TRUE, mergePoint = "start",
                                 use_NEGIS_NEEM = TRUE, diffuse = FALSE,
                                 nfix = NULL) {
+
+  if (!data %in% c("iso", "acc")) {
+    stop("'data' must be one of 'iso' or 'acc'.", call. = FALSE)
+  }
 
   if (!type %in% c("main", "stack_old_new", "stack_all", "fix_N")) {
     stop("'type' must be one of 'main', 'stack_old_new', 'stack_all'",
@@ -453,6 +488,11 @@ selectHistogramData <- function(type = "main", filter.window = 11,
 
   if (!length(nfix) & type == "fix_N") {
     stop("Method 'fix_N' requires setting a fixed number of records.",
+         call. = FALSE)
+  }
+
+  if (data == "acc" & type != "stack_all") {
+    stop("Only type 'stack_all' is supported for accumulation data.",
          call. = FALSE)
   }
 
@@ -478,7 +518,11 @@ selectHistogramData <- function(type = "main", filter.window = 11,
     return(rslt)
   }
 
-  NGT <- processNGT()
+  if (data == "iso") {
+    NGT <- processNGT()
+  } else {
+    NGT <- processAccumulation()
+  }
 
   if (diffuse) {
 

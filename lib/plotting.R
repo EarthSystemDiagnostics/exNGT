@@ -1,6 +1,6 @@
 #' Plot histogram
 #'
-#' Plot a histogram of the pre-industrial isotope values or trends and compare
+#' Plot a histogram of the pre-industrial NGT-2012 values or trends and compare
 #' it to the recent observations.
 #'
 #' @param piPeriod a vector of time points to specify the pre-industrial time
@@ -10,13 +10,15 @@
 #'   defined as the time period which ends in the year specified here and covers
 #'   a total number of years corresponding to the size of the
 #'   \code{filter.window}.
-#' @param stack.method character; name of the NGT stacking method to use, see
-#'   \code{selectHistogramData()} for details.
+#' @param data.source character string to signal the data source: one of "iso"
+#'   (d18O isotope data) or "acc" (accumulation data).
+#' @param stack.method character; name of the NGT-2012 stacking method to use,
+#'   see \code{selectHistogramData()} for details.
 #' @param ... further parameters passed on to \code{selectHistogramData()} to
 #'   control the stacking and merging methods.
 #' @param filter.window single integer giving the size of the running mean
-#'   window to use for filtering the isotope data, and, if requested, the window
-#'   over which linear isotopic trends are estimated; defaults to 11 (years).
+#'   window to use for filtering the data, and, if requested, the window over
+#'   which linear trends are estimated; defaults to 11 (years).
 #' @param type single character; must be either "anomaly" to plot the anomaly
 #'   histograms, or "trend" to plot the linear trend histograms.
 #' @param breaks a vector of break points between the histogram cells.
@@ -36,13 +38,18 @@
 #' @param ymain optional main title next to y axis label.
 #' @param plot.legend logical; shall a legend be plotted which marks the
 #'   analysed time periods? Defaults to \code{TRUE}.
+#' @param plot.2xaxes logical; shall a second x axis be plotted indicating an
+#'   estimated temperature scale? Only used when isotope data is selected for
+#'   the histogram analysis.
+#' @param permil2temperature numeric; scale factor for the second x axis when
+#'   \code{plot.2xaxes} is \code{TRUE}, i.e. the isotope-to-temperature slope.
 #' @author Thomas Münch
 #'
 plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
-                          stack.method = "main", ..., filter.window = 11,
-                          type = "anomaly", breaks = seq(-2, 2, 0.2),
-                          xlim = range(breaks), ylim = c(0, 1.25),
-                          col = c("black", "firebrick4"),
+                          data.source = "iso", stack.method = "main", ...,
+                          filter.window = 11, type = "anomaly",
+                          breaks = seq(-2, 2, 0.2), xlim = range(breaks),
+                          ylim = c(0, 1.25), col = c("black", "firebrick4"),
                           plot = TRUE, plot.quantiles = TRUE,
                           quantile.probs = c(0.025, 0.5, 0.975),
                           xmain = NA, ymain = NA, plot.legend = TRUE,
@@ -67,13 +74,20 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
   # ----------------------------------------------------------------------------
   # Load data
 
-  x <- selectHistogramData(stack.method, filter.window, ...)
+  x <- selectHistogramData(data.source, stack.method, filter.window, ...)
 
   if (type == "anomaly") {
 
     var <- "stack"
     xlab <- grfxtools::LabelAxis(suffix = "anomaly")
     ylab <- grfxtools::LabelAxis("Probability density", unit.type = "freq")
+
+    if (data.source == "acc") {
+
+      xlab <- grfxtools::LabelAxis("Accumulation rate", unit = "mm w.eq.",
+                                   unit.type = "trend", time.unit = "yr")
+      ylab <- bquote("Probability density" * " (" * "mm w.eq."^{"-1"} ~ "yr)")
+    }
 
     if (plot.2xaxes) {
       xlab <- "NGT-2012 anomaly"
@@ -90,6 +104,14 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
                                  time.unit = "yr")
     ylab <- grfxtools::LabelAxis("Probability density",
                                  unit = bquote("\u2030"^{"-1"} ~ "yr"))
+
+    if (data.source == "acc") {
+
+      xlab <- bquote("Accumulation rate trend" *
+                     " (" * "mm w.eq." ~ "yr"^{"-2"} * ")")
+      ylab <- bquote("Probability density" *
+                     " (" * "mm w.eq."^{"-1"} ~ "yr"^{"2"} * ")")
+    }
 
     if (plot.2xaxes) {
       xlab <- "NGT-2012 trend"
