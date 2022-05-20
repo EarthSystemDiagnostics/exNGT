@@ -67,6 +67,34 @@ processNGT <- function(path = NULL, reference.period = 1990 : 1961) {
 
 }
 
+#' Process NGT accumulation data
+#'
+#' Process the NGT and associated accumulation rate records, which includes
+#' reading in the data and calculating anomaly time series.
+#'
+#' @param path file path of the accumulation data set relative to the 'exNGT'
+#'   repository.
+#' @param reference.period numeric vector of ages of the reference period for
+#'   calculating the anomaly time series; defaults to the standard 1961-1990
+#'   period.
+#' @return a data frame of the accumulation rate anomaly time series.
+#' @author Thomas Münch
+#'
+processAccumulation <- function(path = "data/NGT2012_Accumulation_20220520.csv",
+                                reference.period = 1990 : 1961) {
+
+  if (file.exists(path)) {
+    ngt <- read.csv(path, header = TRUE)
+  } else {
+    stop("No such file or directory; check path or permissions.")
+  }
+
+  ngt <- makeAnomalies(ngt, reference.period = reference.period)
+
+  return(ngt)
+
+}
+
 #' Read DMI instrumental temperatures
 #'
 #' Read the Danish Meteorological Insitute (DMI) instrumental temperature
@@ -495,7 +523,7 @@ selectHistogramData <- function(data = "iso", type = "main", filter.window = 11,
   if (data == "iso") {
     NGT <- processNGT()
   } else {
-    NGT <- processAccumulationNGT()
+    NGT <- processAccumulation()
   }
 
   if (diffuse) {
