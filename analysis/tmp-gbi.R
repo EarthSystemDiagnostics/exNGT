@@ -1,9 +1,15 @@
-readGBI <- function(path = "data/gbi.monthly.csv") {
+##
+## aim:
+## compare the NGT stack with Greenlandic Blocking Index data.
+## relation:
+## NGT paper supplementary; https://github.com/EarthSystemDiagnostics/exNGT
+##
 
-  read.csv(file = path, skip = 4) %>%
-    dplyr::arrange(dplyr::desc(Year))
+path <- "C:/Users/mhoerhol/Desktop/NGTRCode_GIT/exNGT" #Maria
+path <- "~/programming/R/exNGT" #Thomas
 
-}
+setwd(path)
+source("init.R")
 
 filter.window <- 11
 
