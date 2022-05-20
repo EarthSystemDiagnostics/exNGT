@@ -26,48 +26,9 @@ MAR <- readMAR() %>%
 filteredMAR <- MAR %>%
   filterData(window = filter.window)
 
-GBI <- readGBI() %>%
-  filterData(window = filter.window)
-
-annualGBI <- dplyr::select(GBI, "Year", "annual")
-summerGBI <- dplyr::select(GBI, "Year", "summer")
-
-
-estimateCorrelation(stackedNGT, filteredStackedNGT, annualGBI,
-                    filter.window = filter.window,
-                    analysis.period = 2011 : 1851)
-
-estimateCorrelation(stackedNGT, filteredStackedNGT, filteredMAR,
-                    filter.window = filter.window,
-                    analysis.period = 2011 : 1871)
-
-estimateCorrelation(stackedNGT, filteredStackedNGT, annualGBI,
-                    filter.window = filter.window,
-                    analysis.period = 2011 : 1961)
-estimateCorrelation(stackedNGT, filteredStackedNGT, annualGBI,
-                    filter.window = filter.window,
-                    analysis.period = 1960 : 1851)
-
-estimateCorrelation(Arctic2k, filteredArctic2k, annualGBI,
-                    filter.window = filter.window,
-                    analysis.period = 2011 : 1961)
-estimateCorrelation(Arctic2k, filteredArctic2k, annualGBI,
-                    filter.window = filter.window,
-                    analysis.period = 1960 : 1851)
-
-estimateCorrelation(MAR, filteredMAR, summerGBI,
-                    filter.window = filter.window,
-                    analysis.period = 2011 : 1961)
-estimateCorrelation(MAR, filteredMAR, summerGBI,
-                    filter.window = filter.window,
-                    analysis.period = 1960 : 1871)
-
-estimateCorrelation(MAR, filteredMAR, annualGBI,
-                    filter.window = filter.window,
-                    analysis.period = 2011 : 1961)
-estimateCorrelation(MAR, filteredMAR, annualGBI,
-                    filter.window = filter.window,
-                    analysis.period = 1960 : 1871)
+annualGBI <- readGBI() %>%
+  filterData(window = filter.window) %>%
+  dplyr::select("Year", "annual")
 
 # ------------------------------------------------------------------------------
 # scatter plots
