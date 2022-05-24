@@ -347,6 +347,24 @@ for melt runoff between annual mean GBI and summer GBI values.
   sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
 ```
 
+## Comparison of NGT-2012 isotope and accumulation stack
+
+We obtain the correlation between the NGT-2012 isotope stack and the NGT-2012
+accumulation stack over their common time interval, i.e. from 1500 CE to 2011
+CE:
+
+```{r}
+filteredStackedAccumulation <- processAccumulation() %>%
+  filterData(window = filter.window) %>%
+  stackAllCores()
+
+res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                           filteredStackedAccumulation,
+                           filter.window = filter.window,
+                           analysis.period = 2011 : 1500, nmc = 10000)
+sprintf("r = %1.2f (p = %1.2f)", res$r, res$p)
+```
+
 ## Temperature increase of recent 11 years relative to past
 
 We compare the mean temperature over the recent 11 years of the NGT stack with
