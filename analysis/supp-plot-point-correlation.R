@@ -89,18 +89,24 @@ extractGreenlandRegion(dat$ngt.ann)
 extractGreenlandRegion(dat$ngt.11y)
 
 # plot panel labels
-labels <- c(expression("(" * bold("a") * ") " * "NGT-2012, 11-yr r.m."),
-            expression("(" * bold("b") * ") " * "Arctic2k, 11-yr r.m."),
-            expression("(" * bold("c") * ") " * "NGT-2012, annual"),
-            expression("(" * bold("d") * ") " * "Arctic2k, annual"))
+labels <- c(expression("(" * bold("a") * ") " * "NGT-2012"),
+            expression("(" * bold("b") * ") " * "Arctic2k"))
 
 # create plots
-ggplt <- lapply(dat, plotMap, markNonsignificance = TRUE)
+ggplt1 <- lapply(dat[1 : 2], plotMap, markNonsignificance = TRUE)
+ggplt2 <- lapply(dat[3 : 4], plotMap, markNonsignificance = TRUE)
 
-grfxtools::Quartz(height = 12, width = 14)
-egg::ggarrange(plots = ggplt, nrow = 2, ncol = 2, labels = labels,
+grfxtools::Quartz(height = 6, width = 14)
+
+egg::ggarrange(plots = ggplt1, nrow = 1, ncol = 2, labels = labels,
                label.args = list(gp = grid::gpar(cex = 1.25)))
 
-filename <- "supplement_point_cor_20cr.pdf"
+filename <- "main-figure04.pdf"
+dev.copy2pdf(file = file.path("fig", filename))
+
+egg::ggarrange(plots = ggplt2, nrow = 1, ncol = 2, labels = labels,
+               label.args = list(gp = grid::gpar(cex = 1.25)))
+
+filename <- "supplement_point_cor_20cr_annual.pdf"
 dev.copy2pdf(file = file.path("fig", filename))
 
