@@ -27,18 +27,18 @@ plotMap()
 dev.off()
 
 # ------------------------------------------------------------------------------
-# Figure 02 - spectrum
+# Figure 04 - spectrum
 
-grfxtools::Quartz(file = "./fig/main-figure02.pdf",
+grfxtools::Quartz(file = "./fig/main-figure04.pdf",
                   height = 5, width = 6.7, mar = c(5, 6, 0.5, 0.5))
 
 makeFigure02()
 dev.off()
 
 # ------------------------------------------------------------------------------
-# Figure 03 - histogram
+# Figure 02 - histogram
 
-grfxtools::Quartz(file = "./fig/main-figure03.pdf",
+grfxtools::Quartz(file = "./fig/main-figure02a.pdf",
                   height = 6.2, width = 7.5)
 
 makeFigure03()
