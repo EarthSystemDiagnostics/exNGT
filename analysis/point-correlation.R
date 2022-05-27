@@ -4,7 +4,7 @@
 ## aim:
 ## analyse point correlation between 20CR reanalysis field and NGT-2012/Arctic2k
 ## relation:
-## NGT paper supplementary; https://github.com/EarthSystemDiagnostics/exNGT
+## NGT paper; https://github.com/EarthSystemDiagnostics/exNGT
 ##
 
 # make script to also run on the terminal
@@ -123,7 +123,7 @@ cat("Saving data...\n\n")
 
 list(ngt.ann = cor.ngt.ann, a2k.ann = cor.a2k.ann,
      ngt.11y = cor.ngt.11y, a2k.11y = cor.a2k.11y) %>%
-  saveRDS(file = "out/supplement-point-correlations-20CR.rds")
+  saveRDS(file = "out/point-correlations-20CR.rds")
 
 cat("Good bye.\n\n")
 

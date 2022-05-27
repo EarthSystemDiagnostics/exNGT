@@ -2,7 +2,7 @@
 ## aim:
 ## plot point correlation between 20CR reanalysis field and NGT-2012/Arctic2k
 ## relation:
-## NGT paper supplementary; https://github.com/EarthSystemDiagnostics/exNGT
+## NGT paper; https://github.com/EarthSystemDiagnostics/exNGT
 ##
 
 path <- "C:/Users/mhoerhol/Desktop/NGTRCode_GIT/exNGT" #Maria
@@ -81,7 +81,7 @@ extractGreenlandRegion <- function(x) {
 # Plot 20CR results
 
 # data
-dat <- readRDS("out/supplement-point-correlations-20CR.rds")
+dat <- readRDS("out/point-correlations-20CR.rds")
 dat <- dat[c(3, 4, 1, 2)]
 
 # summary statistics for Greenland region
