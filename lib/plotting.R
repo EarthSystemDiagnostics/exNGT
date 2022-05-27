@@ -338,17 +338,29 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   NGT <- processNGT()
 
   stackedNGT <- NGT %>%
-    stackNGT()
+    stackNGT() %>%
+    dplyr::filter(Year >= 1000)
 
   filteredStackedNGT <- NGT %>%
     filterData(window = filter.window) %>%
-    stackNGT()
+    stackNGT() %>%
+    dplyr::filter(Year >= 1000)
 
   Arctic2k <- readArctic2k() %>%
     extendWithHadCrut()
 
   filteredArctic2k <- Arctic2k %>%
-    filterData(window = filter.window)
+    filterData(window = filter.window) %>%
+    dplyr::filter(Year >= 1000)
+
+  Arctic2k <- Arctic2k %>%
+    dplyr::filter(Year >= 1000)
+
+  # Number of records contributing to NGT-2012 stack
+  nRecords <- processNGT() %>%
+    stackNGT(stack = FALSE) %>%
+    countRecords() %>%
+    dplyr::filter(Year >= 1000)
 
   # Linear regression data (annual means)
 
@@ -375,9 +387,10 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
 
   xlim <- c(1000, 2020)
   ylim.ngt <- c(-6, 2.5)
-  ylim.a2k <- c(-2, 10.75)
+  ylim.a2k <- c(-3, 9.75)
 
-  xanml <- c(800, 2020)
+  xanml1 <- c(800, 2050)
+  xanml2 <- c(1000, 2050)
   yanml <- rep(0, 2)
 
   startNew <- 1993
@@ -392,14 +405,16 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   y1 <- 0.
   y2 <- 0.5
 
-  col <- c("black", "dodgerblue4")
+  col <- c("black", "dodgerblue4", "wheat4")
 
-  op <- par(mar = c(0, 0, 0, 0), oma = c(5, 5, 0, 5))
+  op <- par(mar = c(0, 0, 0, 0), oma = c(3, 5, 0, 5))
 
   plot(stackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
        xlim = xlim, ylim = ylim.ngt)
 
-  lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
+  rect(1871, -1.7, 2015, 2.6, border = "dimgrey", lwd = 2)
+
+  lines(xanml1, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
 
   lines(stackedNGT, col = "darkgrey")
 
@@ -414,7 +429,7 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   text(x2, y2 / permil2temperature, ylab.ngt.dc, srt = -90, xpd = NA,
        cex = par()$cex.lab * par()$cex, col = col[1])
 
-  mtext("a", side = 3, adj = 0.01, line = -2.5, font = 2, cex = par()$cex.lab)
+  mtext("a", side = 3, adj = 0.01, line = -1.5, font = 2, cex = par()$cex.lab)
 
   lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
         col = col[1], lwd = 2, lty = 2)
@@ -423,17 +438,26 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
 
   par(new = TRUE)
 
+  plot(nRecords, type = "s", axes = FALSE, xlab = "", ylab = "",
+       xlim = xlim, ylim = c(-50, 85), col = col[3], lwd = 2)
+
+  axis(2, at = c(0, 10, 20), col = col[3], col.axis = col[3],
+       mgp = c(-3, -2, -1), tcl = 0.5, hadj = 0)
+  text(1000, 25, "#", cex = par()$cex.lab * par()$cex, col = col[3], adj = 0.3)
+
+  par(new = TRUE)
+
   plot(Arctic2k$Year, Arctic2k$TempAnomaly, type = "n", axes = FALSE,
        xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
 
-  axis(1)
+  axis(1, line = -2)
   axis(4, at = seq(-2, 3, 1), col = col[2], col.axis = col[2])
 
-  mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+  mtext(xlab, side = 1, line = 1.5, cex = par()$cex.lab * par()$cex)
   text(x2, y2, ylab.a2k, srt = -90, xpd = NA,
        cex = par()$cex.lab * par()$cex, col = col[2])
 
-  lines(xanml, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
+  lines(xanml2, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
 
   lines(Arctic2k$Year, Arctic2k$TempAnomaly,
         col = adjustcolor(col[2], alpha = 0.6))
@@ -447,8 +471,6 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
         col = col[2], lwd = 2, lty = 2)
   lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
         col = col[2], lwd = 2, lty = 2)
-
-  mtext("b", side = 3, adj = 0.01, line = -20, font = 2, cex = par()$cex.lab)
 
   par(op)
 
@@ -480,7 +502,8 @@ plot.NGT.MAR <- function(filter.window = 11) {
 
   filteredStackedNGT <- processNGT() %>%
     filterData(window = filter.window) %>%
-    stackNGT()
+    stackNGT() %>%
+    dplyr::filter(Year >= 1871)
 
   filteredStackedTemperatureNGT.mid <- filteredStackedNGT %>%
     dplyr::mutate(stack = permil2temperature.mid * stack)
@@ -496,27 +519,38 @@ plot.NGT.MAR <- function(filter.window = 11) {
   # Make plots
 
   xlab  <- "Year CE"
-  ylab1 <- grfxtools::LabelAxis("Temperature", unit = "celsius")
-  ylab2 <- grfxtools::LabelAxis("Melt runoff", unit = "Gt",
+  ylab1 <- grfxtools::LabelAxis("Melt runoff", unit = "Gt",
                                 unit.type = "trend", time.unit = "yr")
+  ylab2 <- grfxtools::LabelAxis("NGT-2012", unit = "celsius")
 
-  xlim <- c(1875, 2011)
-  ylim1 <- c(-2.5, 3.5)
-  ylim2 <- c(-55, 300)
+  xlim <- c(1870, 2012)
+  ylim1 <- c(-55, 300)
+  ylim2 <- c(-2.5, 3.5)
 
-  x1 <- 2034
-  y1 <- 125
+  x1 <- 2042
+  y1 <- 0.5
 
-  col <- c("black", "#d95f02", "#7570b3")
+  col <- c("black", "#d95f02")
+
+  plot(filteredMAR$Year, filteredMAR$melt, type = "l", axes = FALSE,
+       col = col[2], lwd = 2, xlim = xlim, ylim = ylim1,
+       xlab = "", ylab = "")
+
+  axis(1, at = seq(1870, 2010, 35), line = 0.5)
+  axis(2, at = seq(-50, 250, 50), col = col[2], col.axis = col[2])
+  mtext(xlab, 1, 4, cex = par()$cex.lab)
+  mtext(ylab1, 2, 3.5, col = col[2], cex = par()$cex.lab, las = 0,
+        adj = 0.35)
+
+  par(new = TRUE)
 
   plot(filteredStackedTemperatureNGT.mid, type = "n", axes = FALSE,
-       xlab = "", ylab = "", xlim = xlim, ylim = ylim1)
+       xlab = "", ylab = "", xlim = xlim, ylim = ylim2)
 
-  axis(1, at = seq(1870, 2010, 20))
-  axis(2)
-  mtext(xlab, 1, 3.5, cex = par()$cex.lab)
-  mtext(ylab1, 2, 3, cex = par()$cex.lab, las = 0)
-  mtext("c", side = 3, adj = 0.01, line = -1, font = 2, cex = par()$cex.lab)
+  rect(1870.5, -2.75, 2011.5, 3.25, border = "dimgrey", lwd = 2, xpd = NA)
+
+  axis(4)
+  text(x1, y1, ylab2, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex)
 
   lines(filteredStackedTemperatureNGT.mid, lwd = 2, col = col[1])
 
@@ -527,22 +561,7 @@ plot.NGT.MAR <- function(filter.window = 11) {
   lines(filteredStackedTemperatureNGT.low, lwd = 1, col = col[1])
   lines(filteredStackedTemperatureNGT.hig, lwd = 1, col = col[1])
 
-  lines(filteredMAR$Year, filteredMAR$t2m, lwd = 2, col = col[2])
-
-  par(new = TRUE)
-
-  plot(filteredMAR$Year, filteredMAR$melt, type = "l", axes = FALSE,
-       col = col[3], lwd = 2, xlim = xlim, ylim = ylim2,
-       xlab = "", ylab = "")
-
-  axis(4, col = col[3], col.axis = col[3])
-  text(x1, y1, ylab2, srt = -90, xpd = NA,
-       col = col[3], cex = par()$cex.lab * par()$cex)
-
-  legend("topleft",
-         c("NGT-2012 temperature", "MAR3.5 temperature", "MAR3.5 melt runoff"),
-         inset = c(0, 0.05),
-         lty = 1, lwd = 2, col = col, bty = "n")
+  mtext("b", side = 3, adj = 0.01, line = -0.5, font = 2, cex = par()$cex.lab)
 
 }
 
@@ -679,25 +698,38 @@ plotSpectrum <- function(filter.window = 11) {
 #'
 makeFigure01 <- function(filter.window = 11, permil2temperature = 1 / 0.67) {
 
-  y1 <- 0.41
-  y2 <- 0.35
+  x1 <- 0.5
+  x2 <- 0.6
+  y1 <- 0.22
+  y2 <- 0.82
 
-  par(fig = c(0, 1, y1, 1))
+  par(fig = c(0, x1, 0, 1))
   plot.NGT.Arctic2k(filter.window = filter.window,
                     permil2temperature = permil2temperature)
 
-  par(mar = c(5, 5, 0.5, 5), fig = c(0, 1, 0, y2), new = TRUE)
+  par(mar = c(5, 5, 0, 5), fig = c(x2, 1, y1, y2), new = TRUE)
   plot.NGT.MAR(filter.window = filter.window)
-  lines(x = c(2011, 2011), y = c(425, 280), col = "darkgrey",
-        lwd = 1.5, xpd = NA)
-  ## lines(x = c(1991, 1991), y = c(425, 375), col = "darkgrey",
-  ##       lwd = 1.5, xpd = NA)
-  ## lines(x = c(1991, 1871), y = c(375, 280), col = "darkgrey",
-  ##       lwd = 1.5, xpd = NA)
-  lines(x = c(1871, 1941), y = c(280, 364.5833), col = "darkgrey",
-        lwd = 1.5, xpd = NA)
-  lines(x = c(1956, 1991), y = c(382.7083, 425), col = "darkgrey",
-        lwd = 1.5, xpd = NA)
+
+  op.usr <- par(usr = c(0, 1, 0, 1), xlog = FALSE, ylog = FALSE)
+
+  x11 <- -0.905
+  x12 <- 0.041
+  x21 <- -0.691
+  x22 <- 0.959
+  y1 <- 1.341
+  y2 <- 0.924
+
+  m <- (y2 - y1) / (x12 - x11)
+  xm1 <- -0.75
+  xm2 <- -0.35
+  ym1 <- m * (xm1 - x11) + y1
+  ym2 <- m * (xm2 - x11) + y1
+
+  lines(c(x11, xm1), c(y1, ym1), lwd = 2, col = "dimgrey", xpd = NA)
+  lines(c(xm2, x12), c(ym2, y2), lwd = 2, col = "dimgrey", xpd = NA)
+  lines(c(x21, x22), c(y1, y2), lwd = 2, col = "dimgrey", xpd = NA)
+
+  par(op.usr)
 
 }
 

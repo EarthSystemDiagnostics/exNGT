@@ -15,7 +15,7 @@ source("init.R")
 # Figure 01 - time series, spectra and map
 
 grfxtools::Quartz(file = "./fig/main-figure01.pdf",
-                  height = 12, width = 9)
+                  height = 7, width = 15)
 
 makeFigure01()
 dev.off()
