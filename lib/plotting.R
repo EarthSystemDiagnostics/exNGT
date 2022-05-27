@@ -524,7 +524,7 @@ plot.NGT.MAR <- function(filter.window = 11) {
   ylab2 <- grfxtools::LabelAxis("NGT-2012", unit = "celsius")
 
   xlim <- c(1870, 2012)
-  ylim1 <- c(-55, 300)
+  ylim1 <- c(-75, 330)
   ylim2 <- c(-2.5, 3.5)
 
   x1 <- 2042
@@ -533,26 +533,26 @@ plot.NGT.MAR <- function(filter.window = 11) {
   col <- c("black", "#d95f02")
 
   plot(filteredMAR$Year, filteredMAR$melt, type = "l", axes = FALSE,
-       col = col[2], lwd = 2, xlim = xlim, ylim = ylim1,
+       col = col[2], lwd = 2.5, xlim = xlim, ylim = ylim1,
        xlab = "", ylab = "")
 
   axis(1, at = seq(1870, 2010, 35), line = 0.5)
-  axis(2, at = seq(-50, 250, 50), col = col[2], col.axis = col[2])
+  axis(2, at = seq(-50, 300, 50), col = col[2], col.axis = col[2])
   mtext(xlab, 1, 4, cex = par()$cex.lab)
   mtext(ylab1, 2, 3.5, col = col[2], cex = par()$cex.lab, las = 0,
-        adj = 0.35)
+        adj = 0.45)
 
   par(new = TRUE)
 
   plot(filteredStackedTemperatureNGT.mid, type = "n", axes = FALSE,
        xlab = "", ylab = "", xlim = xlim, ylim = ylim2)
 
-  rect(1870.5, -2.75, 2011.5, 3.25, border = "dimgrey", lwd = 2, xpd = NA)
+  rect(1870.5, -2.6, 2011.5, 3.25, border = "dimgrey", lwd = 2, xpd = NA)
 
   axis(4)
   text(x1, y1, ylab2, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex)
 
-  lines(filteredStackedTemperatureNGT.mid, lwd = 2, col = col[1])
+  lines(filteredStackedTemperatureNGT.mid, lwd = 2.5, col = col[1])
 
   grfxtools::Polyplot(filteredStackedTemperatureNGT.mid$Year,
                       filteredStackedTemperatureNGT.low$stack,
@@ -561,7 +561,7 @@ plot.NGT.MAR <- function(filter.window = 11) {
   lines(filteredStackedTemperatureNGT.low, lwd = 1, col = col[1])
   lines(filteredStackedTemperatureNGT.hig, lwd = 1, col = col[1])
 
-  mtext("b", side = 3, adj = 0.01, line = -0.5, font = 2, cex = par()$cex.lab)
+  mtext("c", side = 3, adj = 0.01, line = -0.5, font = 2, cex = par()$cex.lab)
 
 }
 
@@ -700,8 +700,8 @@ makeFigure01 <- function(filter.window = 11, permil2temperature = 1 / 0.67) {
 
   x1 <- 0.5
   x2 <- 0.6
-  y1 <- 0.22
-  y2 <- 0.82
+  y1 <- 0.015
+  y2 <- y1 + 0.53
 
   par(fig = c(0, x1, 0, 1))
   plot.NGT.Arctic2k(filter.window = filter.window,
@@ -716,7 +716,7 @@ makeFigure01 <- function(filter.window = 11, permil2temperature = 1 / 0.67) {
   x12 <- 0.041
   x21 <- -0.691
   x22 <- 0.959
-  y1 <- 1.341
+  y1 <- 2.111
   y2 <- 0.924
 
   m <- (y2 - y1) / (x12 - x11)
