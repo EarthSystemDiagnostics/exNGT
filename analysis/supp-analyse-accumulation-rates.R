@@ -30,12 +30,6 @@ filteredStackedNGT <- processNGT() %>%
   stackNGT() %>%
   dplyr::filter(Year >= 1500)
 
-res0 <- estimateCorrelation(stackedNGT, filteredStackedNGT,
-                            filteredStackedAccumulation,
-                            filter.window = filter.window,
-                            analysis.period = 2011 : 1500, nmc = 10000)
-sprintf("r = %1.2f (p = %1.2f)", res0$r, res0$p) # 0.23 (p = 0.06)
-
 # ------------------------------------------------------------------------------
 # Prepare plotting of isotope-to-accumulation stack comparison
 
@@ -45,10 +39,10 @@ ylab1 <- grfxtools::LabelAxis("Accumulation rate", unit = "mm w.eq.",
 ylab2 <- grfxtools::LabelAxis("NGT-2012")
 cols <- c("deepskyblue4", "black")
 
-grfxtools::Quartz(height = 12, width = 12,
-                  mar = c(5, 5, 5, 5),
-                  file = "./fig/supplement-ngt-2012-accumulation.pdf")
+grfxtools::Quartz(file = "./fig/supplement-ngt-2012-accumulation.pdf",
+                  height = 12, width = 12, mar = c(5, 5, 5, 5))
 layout(matrix(c(1, 2, 1, 3), 2, 2))
+par(cex = 1)
 
 # ------------------------------------------------------------------------------
 # I. Plot stacks
@@ -73,7 +67,7 @@ plot(filteredStackedNGT, type = "l", axes = FALSE, lwd = 2, col = cols[2],
      xlim = c(1500, 2020), ylim = c(-2.5, 5), xlab = "", ylab = "")
 
 axis(side = 4, at = -2 : 2)
-text(2075, 0, ylab2, srt = -90, xpd = NA,
+text(2080, 0, ylab2, srt = -90, xpd = NA,
      cex = par()$cex.lab, col = cols[2])
 
 # ------------------------------------------------------------------------------
