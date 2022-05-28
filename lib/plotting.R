@@ -32,6 +32,8 @@
 #' @param plot.quantiles logical; set to \code{TRUE} to plot vertical lines for
 #'   the quantiles of the pre-industrial histogram specified by
 #'   \code{quantile.probs}.
+#' @param q.lty line type(s) of the vertical lines marking the quantiles set by
+#'   \code{quantile.probs}; recycled to match the length of the latter.
 #' @param quantile.probs the quantile probabilities of the pre-industrial
 #'   histogram plotted when \code{plot.quantiles} is set to \code{TRUE}.
 #' @param xmain optional main title above plot along x axis.
@@ -49,11 +51,12 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
                           data.source = "iso", stack.method = "main", ...,
                           filter.window = 11, type = "anomaly",
                           breaks = seq(-2, 2, 0.2), xlim = range(breaks),
-                          ylim = c(0, 1.25), col = c("black", "firebrick4"),
+                          ylim = c(0, 1.25), col = c("black", "orange2"),
                           plot = TRUE, plot.quantiles = TRUE,
-                          quantile.probs = c(0.025, 0.5, 0.975),
-                          xmain = NA, ymain = NA, plot.legend = TRUE,
-                          plot.2xaxes = FALSE, permil2temperature = 1 / 0.67) {
+                          quantile.probs = c(0.005, 0.025, 0.975, 0.995),
+                          q.lty = c(5, 6, 6, 5), xmain = NA, ymain = NA,
+                          plot.legend = TRUE, plot.2xaxes = FALSE,
+                          permil2temperature = 1 / 0.67) {
 
   if (!type %in% c("anomaly", "trend")) {
     stop("'type' must be either 'anomaly' or 'trend'.", call. = FALSE)
@@ -187,9 +190,11 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
     ymax <- ifelse(max(hst$density) > max(gq), max(hst$density), max(gq))
 
     if (plot.quantiles) {
-      sapply(quantile(piData, quantile.probs, na.rm = TRUE), function(x) {
-        lines(rep(x, 2), c(0, ymax), col = col[1], lty = 5, lwd = 1)
-      })
+      q <- quantile(piData, quantile.probs, na.rm = TRUE)
+      q.lty <- rep(q.lty, length.out = length(q))
+      for (i in 1 : length(q)) {
+        lines(rep(q[i], 2), c(0, ymax), col = col[1], lty = q.lty[i], lwd = 1)
+      }
     }
 
     if (filter.window == 1) {
@@ -756,15 +761,18 @@ makeFigure03 <- function() {
   par(cex = 1, mar = c(11, 5, 0.5, 0.5))
 
   plotHistogram(type = "anomaly", plot.legend = FALSE, plot.2xaxes = TRUE)
+  mtext("a", side = 3, adj = -0.23, line = -0.9, font = 2, cex = par()$cex.lab)
 
   par(mar = c(0, 0, 0, 0))
   plot(1, type = "n", axes = FALSE, xlab = "", ylab = "")
 
-  lg <- c("Pre-ind. distribution\n(1000-1800 CE)", "Gaussian fit",
-          "2.5, 50, 97.5 %\nquantiles", "Recent value\n(2001-2011 CE)")
+  lg <- c("Pre-ind. distribution\n(1000-1800 CE)", "Gaussian fit\n",
+          "p = 0.95\n", "p = 0.99\n", "2001-2011 CE\naverage")
 
-  legend("topleft", legend = lg, lty = c(1, 1, 5, 1), lwd = c(10, 2, 1, 2.5),
-         col = c(adjustcolor("black", 0.2), "black", "black", "firebrick4"),
-         bty = "n", adj = c(0, 0.75), y.intersp = 1.5, seg.len = 2.5)
+  legend("topleft", legend = lg, lty = c(1, 1, 6, 5, 1),
+         lwd = c(10, 2, 1, 1, 2.5),
+         col = c(adjustcolor("black", 0.2),
+                 "black", "black", "black", "orange2"),
+         bty = "n", adj = c(0, 0.8), y.intersp = 1.5, seg.len = 2.5)
 
 }
