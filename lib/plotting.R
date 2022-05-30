@@ -567,6 +567,7 @@ plot.NGT.MAR <- function(filter.window = 11) {
   lines(filteredStackedTemperatureNGT.hig, lwd = 1, col = col[1])
 
   mtext("c", side = 3, adj = 0.01, line = -0.5, font = 2, cex = par()$cex.lab)
+  mtext("b", side = 3, adj = 0.01, line = 14.4, font = 2, cex = par()$cex.lab)
 
 }
 
