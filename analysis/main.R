@@ -20,7 +20,7 @@ grfxtools::Quartz(file = "./fig/main-figure01ac.pdf",
 makeFigure01()
 dev.off()
 
-grfxtools::Quartz(file = "./fig/supplement-map-raw.pdf",
+grfxtools::Quartz(file = "./fig/main-figure01b-raw.pdf",
                   height = 6, width = 6)
 
 plotMap()
