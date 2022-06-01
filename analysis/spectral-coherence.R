@@ -43,6 +43,12 @@ nmc <- 1000
 ngt2a2k <- coherence(ngt1, a2k1, spans = 61, nmc = nmc)
 ngt2tcr <- coherence(ngt2, tcr2, spans = 11, nmc = nmc)
 
+# remove the lowest frequencies since they are biased from detrending etc.
+ngt2a2k$freq <- ngt2a2k$freq[- c(1, 2)]
+ngt2a2k$coh  <- ngt2a2k$coh[- c(1, 2)]
+ngt2tcr$freq <- ngt2tcr$freq[- c(1, 2)]
+ngt2tcr$coh  <- ngt2tcr$coh[- c(1, 2)]
+
 # ------------------------------------------------------------------------------
 # Save for use in main plot
 
