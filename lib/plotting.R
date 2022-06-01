@@ -571,22 +571,11 @@ plot.NGT.MAR <- function(filter.window = 11) {
 
 }
 
-#' Produce spectrum plot of NGT-2012 versus Arctic2k
+#' Produce spectrum and coherence plots of NGT-2012 versus Arctic2k
 #'
-#' @param filter.window single integer giving the size of the running mean
-#'   window to use for filtering the isotope and Arctic2k data; defaults to 11
-#'   (years).
 #' @author Thomas Münch
 #'
-plotSpectrum <- function(filter.window = 11) {
-
-  if (filter.window < 1) {
-    stop("Running mean filter window needs to be >= 1.", call. = FALSE)
-  }
-
-  if ((filter.window %% 2) == 0) {
-    warning("Running mean filter window should be odd.", call. = FALSE)
-  }
+plotSpectrum <- function() {
 
   # ----------------------------------------------------------------------------
   # Load data
@@ -619,10 +608,14 @@ plotSpectrum <- function(filter.window = 11) {
   spectraNGT$low$spec <- spectraNGT$low$spec * (permil2temperature.low^2)
   spectraNGT$hig$spec <- spectraNGT$hig$spec * (permil2temperature.hig^2)
 
+  # Coherence
+
+  coherence <- readRDS("out/coherence.rds")
+
   # ----------------------------------------------------------------------------
   # Plot
 
-  col <- c("black", "dodgerblue4")
+  col <- c("black", "dodgerblue4", "firebrick4")
 
   xlab  <- "Time period (yr)"
   ylab <- grfxtools::LabelAxis("Power spectral density", unit = "celsius",
@@ -632,14 +625,14 @@ plotSpectrum <- function(filter.window = 11) {
   n.crit.lower <- 1
 
   proxysnr:::LPlot(spectraNGT$mid, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
-                   xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.05, 10),
+                   xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.002, 10),
                    xaxs = "i")
 
   axis(1)
   axis(2, at = c(0.1, 1, 10), labels = tcklab)
 
   mtext(xlab, 1, 3.5, cex = par()$cex.lab)
-  mtext(ylab, 2, 3.5, cex = par()$cex.lab, las = 0, adj = 0.925)
+  mtext(ylab, 2, 3.5, cex = par()$cex.lab, las = 0, adj = 1)
 
   n.crit.upper <- length(which(spectraNGT$mid$freq > 1 / 5))
   proxysnr:::LLines(spectraNGT$mid, bPeriod = TRUE, lwd = 3, col = col[1],
@@ -661,8 +654,36 @@ plotSpectrum <- function(filter.window = 11) {
                     removeFirst = n.crit.lower, removeLast = n.crit.upper,
                     col = col[2])
 
-  legend("bottomleft", c("NGT-2012", "Arctic 2k"),
+  legend("bottomleft", c("NGT-2012", "Arctic 2k"), inset = c(0, 0.45),
          lty = 1, lwd = 3, col = col, bty = "n")
+
+  par(new = TRUE)
+
+  ylab <- "Coherence"
+  n1 <- length(coherence$ngt2a2k$freq)
+  n2 <- length(coherence$ngt2tcr$freq)
+
+  plot(1 / coherence$ngt2a2k$freq, coherence$ngt2a2k$coh, type = "n",
+       axes = FALSE, log = "x", xaxs = "i",
+       xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0, 1.75))
+
+  axis(4, at = seq(0, 0.6, 0.2))
+  text(x = 2.8, y = 0.3, labels = ylab, cex = par()$cex.lab, srt = -90, xpd = NA)
+
+  lines(1 / coherence$ngt2a2k$freq, coherence$ngt2a2k$coh,
+        col = col[1], lwd = 3)
+  lines(1 / coherence$ngt2tcr$freq, coherence$ngt2tcr$coh,
+        col = col[3], lwd = 3)
+
+  proxysnr:::Polyplot(x = 1 / coherence$ngt2a2k$freq,
+                      y1 = rep(0, n1), y2 = rep(coherence$ngt2a2k$confLevel, n1),
+                      col = col[1], alpha = 0.2)
+  proxysnr:::Polyplot(x = 1 / coherence$ngt2tcr$freq,
+                      y1 = rep(0, n2), y2 = rep(coherence$ngt2tcr$confLevel, n2),
+                      col = col[3], alpha = 0.2)
+
+  legend("bottomleft", c("NGT-2012 vs. Arctic 2k", "NGT-2012 vs. 20CR"),
+         inset = c(0, 0.3), lty = 1, lwd = 3, col = col[c(1, 3)], bty = "n")
 
   # ----------------------------------------------------------------------------
   # How much higher is NGT variability?
@@ -741,14 +762,11 @@ makeFigure01 <- function(filter.window = 11, permil2temperature = 1 / 0.67) {
 
 #' Produce paper figure 02
 #'
-#' @param filter.window single integer giving the size of the running mean
-#'   window to use for filtering the isotope and Arctic2k data; defaults to 11
-#'   (years).
 #' @author Thomas Münch
 #'
-makeFigure02 <- function(filter.window = 11) {
+makeFigure02 <- function() {
 
-  plotSpectrum(filter.window = filter.window)
+  plotSpectrum()
 
 }
 
