@@ -208,6 +208,23 @@ readGBI <- function(path = "data/gbi.monthly.csv") {
 
 }
 
+#' Read 20CR Greenland data
+#'
+#' Read the annual mean, area-weighted mean NOAA-CIRES-DOE 20CR v3 reanalysis
+#' temperature data set from 1836 to 2015 CE for the Greenland region of the NGT
+#' ice cores (72 to 80 degree latitude, -51 to -36 longitude).
+#'
+#' @param path file path (relative to working directory) of the 20CR data set.
+#' @return a data frame of two columns and 180 rows with the read 20CRv3
+#'   Greenland temperature time series from 1836 to 2015 CE.
+#' @author Thomas Münch
+readTwenCR <- function(path = "data/NOAA_CIRES_DOE_20CR_v3_annual_ngtregion_areamean.csv") {
+
+  read.csv(file = path, header = TRUE) %>%
+    dplyr::arrange(dplyr::desc(Year))
+
+}
+
 #' Site climatological parameters
 #'
 #' This function provides the relevant climatological parameters at the firn
