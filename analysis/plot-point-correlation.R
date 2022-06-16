@@ -88,6 +88,21 @@ dat <- dat[c(3, 4, 1, 2)]
 extractGreenlandRegion(dat$ngt.ann)
 extractGreenlandRegion(dat$ngt.11y)
 
+# correlation with area-weighted mean reanalysis time series
+filter.window <- 11
+stackedNGT <- processNGT() %>%
+  stackNGT()
+filteredStackedNGT <- processNGT() %>%
+  filterData(window = filter.window) %>%
+  stackNGT()
+tcr <- readTwenCR() %>%
+  filterData(window = filter.window)
+
+res <- estimateCorrelation(stackedNGT, filteredStackedNGT, tcr,
+                           filter.window = filter.window,
+                           analysis.period = 2011 : 1836, nmc = 10000)
+sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
+
 # plot panel labels
 labels <- c(expression("(" * bold("a") * ") " * "NGT-2012"),
             expression("(" * bold("b") * ") " * "Arctic2k"))
