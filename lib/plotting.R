@@ -615,7 +615,7 @@ plotSpectrum <- function() {
   # ----------------------------------------------------------------------------
   # Plot
 
-  col <- c("black", "dodgerblue4", "firebrick4")
+  col <- c("black", "dodgerblue4", "#1f78b4", "#33a02c")
 
   xlab  <- "Time period (yr)"
   ylab <- grfxtools::LabelAxis("Power spectral density", unit = "celsius",
@@ -671,19 +671,19 @@ plotSpectrum <- function() {
   text(x = 2.8, y = 0.3, labels = ylab, cex = par()$cex.lab, srt = -90, xpd = NA)
 
   lines(1 / coherence$ngt2a2k$freq, coherence$ngt2a2k$coh,
-        col = col[1], lwd = 3)
-  lines(1 / coherence$ngt2tcr$freq, coherence$ngt2tcr$coh,
         col = col[3], lwd = 3)
+  lines(1 / coherence$ngt2tcr$freq, coherence$ngt2tcr$coh,
+        col = col[4], lwd = 3)
 
   proxysnr:::Polyplot(x = 1 / coherence$ngt2a2k$freq,
                       y1 = rep(0, n1), y2 = rep(coherence$ngt2a2k$confLevel, n1),
-                      col = col[1], alpha = 0.2)
+                      col = col[3], alpha = 0.2)
   proxysnr:::Polyplot(x = 1 / coherence$ngt2tcr$freq,
                       y1 = rep(0, n2), y2 = rep(coherence$ngt2tcr$confLevel, n2),
-                      col = col[3], alpha = 0.2)
+                      col = col[4], alpha = 0.2)
 
   legend("bottomleft", c("NGT-2012 vs. Arctic 2k", "NGT-2012 vs. 20CR"),
-         inset = c(0, 0.3), lty = 1, lwd = 3, col = col[c(1, 3)], bty = "n")
+         inset = c(0, 0.3), lty = 1, lwd = 3, col = col[c(3, 4)], bty = "n")
 
   # ----------------------------------------------------------------------------
   # How much higher is NGT variability?
