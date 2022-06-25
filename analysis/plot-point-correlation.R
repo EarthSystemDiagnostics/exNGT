@@ -116,7 +116,7 @@ grfxtools::Quartz(height = 6, width = 14)
 egg::ggarrange(plots = ggplt1, nrow = 1, ncol = 2, labels = labels,
                label.args = list(gp = grid::gpar(cex = 1.25)))
 
-filename <- "main-figure03.pdf"
+filename <- "main-figure02.pdf"
 dev.copy2pdf(file = file.path("fig", filename))
 
 egg::ggarrange(plots = ggplt2, nrow = 1, ncol = 2, labels = labels,

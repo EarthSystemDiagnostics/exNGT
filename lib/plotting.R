@@ -760,21 +760,21 @@ makeFigure01 <- function(filter.window = 11, permil2temperature = 1 / 0.67) {
 
 }
 
-#' Produce paper figure 02
-#'
-#' @author Thomas Münch
-#'
-makeFigure02 <- function() {
-
-  plotSpectrum()
-
-}
-
 #' Produce paper figure 03
 #'
 #' @author Thomas Münch
 #'
 makeFigure03 <- function() {
+
+  plotSpectrum()
+
+}
+
+#' Produce paper figure 04a
+#'
+#' @author Thomas Münch
+#'
+makeFigure04 <- function() {
 
   layout(matrix(1 : 2, 1, 2), widths = c(0.7, 0.3))
   par(cex = 1, mar = c(11, 5, 0.5, 0.5))
