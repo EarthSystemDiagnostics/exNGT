@@ -39,35 +39,36 @@ ylab1 <- grfxtools::LabelAxis("Accumulation rate", unit = "mm w.eq.",
 ylab2 <- grfxtools::LabelAxis("NGT-2012")
 cols <- c("deepskyblue4", "black")
 
-grfxtools::Quartz(file = "./fig/supplement-ngt-2012-accumulation.pdf",
-                  height = 12, width = 12, mar = c(5, 5, 5, 5))
+asp <- 1
+w <- 13.6
+natfig(file = "./fig/supplement-ngt-2012-accumulation.pdf",
+       height = asp * w, width = w, mar = c(5, 5, 5, 5))
 layout(matrix(c(1, 2, 1, 3), 2, 2))
 par(cex = 1)
 
 # ------------------------------------------------------------------------------
 # I. Plot stacks
 
-plot(filteredStackedAccumulation, type = "l", axes = FALSE, lwd = 2,
+plot(filteredStackedAccumulation, type = "l", axes = FALSE, lwd = Lwd(2),
      col = cols[1], xlim = c(1500, 2020), ylim = c(-50, 30),
      xlab = "", ylab = "")
 
-axis(1)
-axis(2, at = seq(-10, 30, 10), col = cols[1], col.axis = cols[1])
+axisLwd(1)
+axisLwd(2, at = seq(-10, 30, 10), col = cols[1], col.axis = cols[1])
 
 mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-mtext(ylab1, side = 2, line = 3.25, col = cols[1],
+mtext(ylab1, side = 2, line = 3, col = cols[1],
       at = 10, cex = par()$cex.lab * par()$cex, las = 0)
 
-mtext("a", side = 3, adj = 0.01, padj = 0.5,
-      line = 2, font = 2, cex = par()$cex.lab)
+mtext("a", side = 3, adj = 0.01, padj = 0.5, line = 2, font = 2, cex = 4 / 3)
 
 par(new = TRUE)
 
-plot(filteredStackedNGT, type = "l", axes = FALSE, lwd = 2, col = cols[2],
+plot(filteredStackedNGT, type = "l", axes = FALSE, lwd = Lwd(2), col = cols[2],
      xlim = c(1500, 2020), ylim = c(-2.5, 5), xlab = "", ylab = "")
 
-axis(side = 4, at = -2 : 2)
-text(2080, 0, ylab2, srt = -90, xpd = NA,
+axisLwd(side = 4, at = -2 : 2)
+text(2085, 0, ylab2, srt = -90, xpd = NA,
      cex = par()$cex.lab, col = cols[2])
 
 # ------------------------------------------------------------------------------
@@ -77,13 +78,12 @@ plot(filteredStackedNGT$stack, filteredStackedAccumulation$stack,
      type = "p", pch = 19, axes = FALSE, xlab = "", ylab = "",
      xlim = c(-2, 2), ylim = c(-10, 30))
 
-axis(1)
-axis(2)
+axisLwd(1)
+axisLwd(2)
 mtext(ylab2, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-mtext(ylab1, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
+mtext(ylab1, side = 2, line = 3, cex = par()$cex.lab * par()$cex, las = 0)
 
-mtext("b", side = 3, adj = 0.01, padj = 0.5,
-      line = 2, font = 2, cex = par()$cex.lab)
+mtext("b", side = 3, adj = 0.01, padj = 0.5, line = 2, font = 2, cex = 4 / 3)
 
 # ------------------------------------------------------------------------------
 # III. Plot histogram
@@ -91,8 +91,7 @@ mtext("b", side = 3, adj = 0.01, padj = 0.5,
 plotHistogram(piPeriod = 1500 : 1800, type = "anomaly", data.source = "acc",
               stack.method = "stack_all", plot.legend = FALSE,
               breaks = seq(-20, 40, 2.5), ylim = c(0, 0.1))
-mtext("c", side = 3, adj = 0.01, padj = 0.5,
-      line = 2, font = 2, cex = par()$cex.lab)
+mtext("c", side = 3, adj = 0.01, padj = 0.5, line = 2, font = 2, cex = 4 / 3)
 
 dev.off()
 

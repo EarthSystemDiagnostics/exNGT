@@ -179,7 +179,6 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
 
     } else {
 
-      axisLwd(1)
       mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 
     }
@@ -249,11 +248,11 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
 
     if (!is.na(xmain)) {
       mtext(xmain, side = 3, line = 2.5, adj = 0,
-            cex = par()$cex.lab * par()$cex, font = 2)
+            cex = 4 / 3 * par()$cex, font = 2)
     }
     if (!is.na(ymain)) {
       mtext(ymain, side = 2, line = 6, las = 0,
-            cex = par()$cex.lab * par()$cex, font = 2)
+            cex = 4 / 3 * par()$cex, font = 2)
     }
   }
 

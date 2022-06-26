@@ -50,14 +50,14 @@ filteredAnnualGBI <- readGBI() %>%
 # ------------------------------------------------------------------------------
 # Plot
 
-grfxtools::Quartz(file = "./fig/supplement-instrumental-model-comparison.pdf",
-                  height = 10.5 , width = 9, mar = c(5, 5, 0.5, 5))
+asp <- 10.5 / 9
+w <- 13.6
+natfig(file = "./fig/supplement-instrumental-model-comparison.pdf",
+       height = asp * w, width = w, mar = c(5, 5, 0.5, 5))
 
-## layout(matrix(c(1, 1, 1, 2 : 7), 3, 3, byrow = TRUE),
-##        widths = c(1, 1, 1), heights = c(1.2, 0.9, 0.9))
 layout(matrix(c(rep(1, 3), rep(2, 3), rep(3, 3), rep(4, 3), 5, 5, 6, 6, 7, 7),
               3, 6, byrow = TRUE), widths = rep(1, 6), heights = rep(1, 3))
-par(cex = 0.8)
+par(cex = 1)
 
 # ------------------------------------------------------------------------------
 # Part 1
@@ -81,30 +81,32 @@ y <- mean(ylim2)
 plot(filteredStackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
      xlim = xlim, ylim = ylim1)
 
-axis(1)
-axis(2)
+axisLwd(1)
+axisLwd(2)
 
-mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+mtext(xlab, side = 1, line = 3, cex = par()$cex.lab * par()$cex)
 mtext(ylab1, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
 
 mtext("a", side = 3, adj = 0.02, padj = 0.5,
-      line = -1, font = 2, cex = par()$cex.lab * par()$cex)
+      line = -1.1, font = 2, cex = 4 / 3)
 
-lines(filteredStackedNGT, col = col[1], lwd = 2.5)
+lines(filteredStackedNGT, col = col[1], lwd = Lwd(2.5))
 
 par(new = TRUE)
 
 plot(filteredStackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
      xlim = xlim, ylim = ylim2)
 
-axis(4)
+axisLwd(4)
 
 text(x, y, ylab2, srt = -90, xpd = NA, cex = par()$cex.lab)
 
-for (i in 2 : 4) lines(filteredDMI$Year, filteredDMI[, i], col = col[i], lwd = 2.5)
+for (i in 2 : 4) {
+  lines(filteredDMI$Year, filteredDMI[, i], col = col[i], lwd = Lwd(2.5))
+}
 
-legend("bottom", c("NGT-2012", colnames(filteredDMI)[-1]),
-       cex = 0.95, col = col, lwd = 2.5, bty = "n", inset = c(0, -0.01))
+legend("bottom", c("NGT-2012", colnames(filteredDMI)[-1]), cex = 0.9,
+       col = col, lwd = Lwd(2.5), bty = "n", inset = c(0, -0.01))
 
 # ------------------------------------------------------------------------------
 # Part 2
@@ -121,7 +123,7 @@ ylim1 <- c(-2.5, 3.5)
 ylim2 <- c(-75, 330)
 ylim3 <- c(-0.5, 3)
 
-x1 <- 2052.5
+x1 <- 2050
 x2 <- 2055
 y1 <- 125
 y2 <- 0.25
@@ -132,83 +134,81 @@ col <- c("black", "#7570b3", "#d95f02", "#1b9e77")
 plot(filteredStackedTemperatureNGT.mid, type = "n", axes = FALSE,
      xlab = "", ylab = "", xlim = xlim1, ylim = ylim1)
 
-axis(1)
-axis(2)
-mtext(xlab, side = 1, line = 3.25, cex = par()$cex.lab * par()$cex)
+axisLwd(1)
+axisLwd(2)
+mtext(xlab, side = 1, line = 3, cex = par()$cex.lab * par()$cex)
 mtext(ylab0, side = 2, line = 2.75, cex = par()$cex.lab * par()$cex, las = 0)
 mtext("b", side = 3, adj = 0.02, padj = 0.5,
-      line = -1, font = 2, cex = par()$cex.lab * par()$cex)
+      line = -1.1, font = 2, cex = 4 / 3)
 
-lines(filteredStackedTemperatureNGT.mid, lwd = 2, col = col[1])
+lines(filteredStackedTemperatureNGT.mid, lwd = Lwd(2.5), col = col[1])
 
 grfxtools::Polyplot(filteredStackedTemperatureNGT.mid$Year,
                     filteredStackedTemperatureNGT.low$stack,
                     filteredStackedTemperatureNGT.hig$stack,
                     col = col[1], alpha = 0.2)
-lines(filteredStackedTemperatureNGT.low, lwd = 1, col = col[1])
-lines(filteredStackedTemperatureNGT.hig, lwd = 1, col = col[1])
+lines(filteredStackedTemperatureNGT.low, lwd = Lwd(1), col = col[1])
+lines(filteredStackedTemperatureNGT.hig, lwd = Lwd(1), col = col[1])
 
-lines(filteredMAR$Year, filteredMAR$t2m, col = col[2], lwd = 2)
+lines(filteredMAR$Year, filteredMAR$t2m, col = col[2], lwd = Lwd(2.5))
 
-legend("bottom", c("NGT-2012", "MAR3.5.2"), lty = 1,
-       lwd = 2, col = col[1 : 2], bty = "n", inset = c(0, -0.01))
+legend("bottom", c("NGT-2012", "MAR3.5.2"), lty = 1, cex = 0.9,
+       lwd = Lwd(2), col = col[1 : 2], bty = "n", inset = c(0, -0.01))
 
 # plot 2 -----
 plot(filteredStackedTemperatureNGT.mid, type = "n", axes = FALSE,
      xlab = "", ylab = "", xlim = xlim1, ylim = ylim1)
 
-axis(1)
-axis(2)
-mtext(xlab, side = 1, line = 3.25, cex = par()$cex.lab * par()$cex)
+axisLwd(1)
+axisLwd(2)
+mtext(xlab, side = 1, line = 3, cex = par()$cex.lab * par()$cex)
 mtext(ylab1, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
-mtext("c", side = 3, adj = 0.02, padj = 0.5,
-      line = -2, font = 2, cex = par()$cex.lab * par()$cex)
+mtext("c", side = 3, adj = 0.02, padj = 0.5, line = -2.3, font = 2, cex = 4 / 3)
 
-lines(filteredStackedTemperatureNGT.mid, lwd = 2, col = col[1])
+lines(filteredStackedTemperatureNGT.mid, lwd = Lwd(2.5), col = col[1])
 
 grfxtools::Polyplot(filteredStackedTemperatureNGT.mid$Year,
                     filteredStackedTemperatureNGT.low$stack,
                     filteredStackedTemperatureNGT.hig$stack,
                     col = col[1], alpha = 0.2)
-lines(filteredStackedTemperatureNGT.low, lwd = 1, col = col[1])
-lines(filteredStackedTemperatureNGT.hig, lwd = 1, col = col[1])
+lines(filteredStackedTemperatureNGT.low, lwd = Lwd(1), col = col[1])
+lines(filteredStackedTemperatureNGT.hig, lwd = Lwd(1), col = col[1])
 
 par(new = TRUE)
 
 plot(filteredMAR$Year, filteredMAR$melt, type = "l", axes = FALSE,
-     col = col[3], lwd = 2, xlim = xlim1, ylim = ylim2,
+     col = col[3], lwd = Lwd(2.5), xlim = xlim1, ylim = ylim2,
      xlab = "", ylab = "")
 
-axis(4, at = seq(-50, 300, 50), col = col[3], col.axis = col[3])
+axisLwd(4, at = seq(-50, 300, 50), col = col[3], col.axis = col[3])
 text(x1, y1, ylab2, srt = -90, xpd = NA, col = col[3], cex = par()$cex.lab)
 
 # plot 3 -----
 plot(filteredStackedTemperatureNGT.mid, type = "n", axes = FALSE,
      xlab = "", ylab = "", xlim = xlim2, ylim = ylim1)
 
-axis(1)
-axis(2)
-mtext(xlab, side = 1, line = 3.25, cex = par()$cex.lab * par()$cex)
+axisLwd(1)
+axisLwd(2)
+mtext(xlab, side = 1, line = 3, cex = par()$cex.lab * par()$cex)
 mtext(ylab1, side = 2, line = 2.75, cex = par()$cex.lab * par()$cex, las = 0)
-mtext("d", side = 3, adj = 0.02, padj = 0.5,
-      line = -2, font = 2, cex = par()$cex.lab * par()$cex)
+mtext("d", side = 3, adj = 0.02, padj = 0.5, line = -2.3, font = 2, cex = 4 / 3)
 
-lines(filteredStackedTemperatureNGT.mid, lwd = 2, col = col[1])
+lines(filteredStackedTemperatureNGT.mid, lwd = Lwd(2.5), col = col[1])
 
 grfxtools::Polyplot(filteredStackedTemperatureNGT.mid$Year,
                     filteredStackedTemperatureNGT.low$stack,
                     filteredStackedTemperatureNGT.hig$stack,
                     col = col[1], alpha = 0.2)
-lines(filteredStackedTemperatureNGT.low, lwd = 1, col = col[1])
-lines(filteredStackedTemperatureNGT.hig, lwd = 1, col = col[1])
+lines(filteredStackedTemperatureNGT.low, lwd = Lwd(1), col = col[1])
+lines(filteredStackedTemperatureNGT.hig, lwd = Lwd(1), col = col[1])
 
 par(new = TRUE)
 
 plot(filteredAnnualGBI, type = "l", axes = FALSE,
-     col = col[4], lwd = 2, xlim = xlim2, ylim = ylim3,
+     col = col[4], lwd = Lwd(2.5), xlim = xlim2, ylim = ylim3,
      xlab = "", ylab = "")
 
-axis(4, at = seq(-0.5, 1, 0.5), col = col[4], col.axis = col[4])
+axisLwd(4, at = seq(-0.5, 1, 0.5), col = col[4], col.axis = col[4])
 text(x2, y2, ylab3, srt = -90, xpd = NA, col = col[4], cex = par()$cex.lab)
 
 # ------------------------------------------------------------------------------
@@ -229,12 +229,11 @@ y3 <- subsetData(filteredMAR, 2011 : 1871, "melt")
 plot(x1, y1, type = "n", axes = FALSE,
      xlab = "", ylab = "", xlim = c(-0.5, 1), ylim = c(-1.5, 3))
 
-axis(1)
-axis(2)
-mtext(ylab3, side = 1, line = 3.25, cex = par()$cex.lab * par()$cex)
+axisLwd(1)
+axisLwd(2)
+mtext(ylab3, side = 1, line = 3, cex = par()$cex.lab * par()$cex)
 mtext(ylab1, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
-mtext("e", side = 3, adj = 0.05, padj = 0.5,
-      line = -1, font = 2, cex = par()$cex.lab * par()$cex)
+mtext("e", side = 3, adj = 0.05, padj = 0.5, line = -1, font = 2, cex = 4 / 3)
 
 points(x1, y1, pch = 19)
 
@@ -242,12 +241,11 @@ points(x1, y1, pch = 19)
 plot(x2, y2, type = "n", axes = FALSE,
      xlab = "", ylab = "", xlim = c(-0.5, 1), ylim = c(-100, 150))
 
-axis(1)
-axis(2)
-mtext(ylab3, side = 1, line = 3.25, cex = par()$cex.lab * par()$cex)
+axisLwd(1)
+axisLwd(2)
+mtext(ylab3, side = 1, line = 3, cex = par()$cex.lab * par()$cex)
 mtext(ylab2, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
-mtext("f", side = 3, adj = 0.05, padj = 0.5,
-      line = -1, font = 2, cex = par()$cex.lab * par()$cex)
+mtext("f", side = 3, adj = 0.05, padj = 0.5, line = -1, font = 2, cex = 4 / 3)
 
 points(x2, y2, pch = 19)
 
@@ -255,16 +253,15 @@ points(x2, y2, pch = 19)
 plot(x3, y3, type = "n", axes = FALSE,
      xlab = "", ylab = "", xlim = c(-1.5, 3), ylim = c(-100, 150))
 
-axis(1)
-axis(2)
-mtext(ylab1, side = 1, line = 3.25, cex = par()$cex.lab * par()$cex)
+axisLwd(1)
+axisLwd(2)
+mtext(ylab1, side = 1, line = 3, cex = par()$cex.lab * par()$cex)
 mtext(ylab2, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
-mtext("g", side = 3, adj = 0.05, padj = 0.5,
-      line = -1, font = 2, cex = par()$cex.lab * par()$cex)
+mtext("g", side = 3, adj = 0.05, padj = 0.5, line = -1, font = 2, cex = 4 / 3)
 
 points(x3, y3, pch = 19)
 lines(x <- seq(-1, 3, 0.1), coef(lm(y3 ~ x3 + 0)) * x,
-      col = "dodgerblue4", lwd = 2)
+      col = "dodgerblue4", lwd = Lwd(2))
 
 # ------------------------------------------------------------------------------
 dev.off()
