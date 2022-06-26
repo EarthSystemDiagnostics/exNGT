@@ -14,14 +14,18 @@ source("init.R")
 # ------------------------------------------------------------------------------
 # Figure 01 - time series, spectra and map
 
-grfxtools::Quartz(file = "./fig/main-figure01ac.pdf",
-                  height = 7, width = 15)
+asp <- 7 / 15
+w <- 18.3
+natfig(file = "./fig/main-figure01ac.pdf",
+       height = asp * w, width = w)
 
 makeFigure01()
 dev.off()
 
-grfxtools::Quartz(file = "./fig/main-figure01b-raw.pdf",
-                  height = 6, width = 6)
+asp <- 1
+w <- 0.3 * 18.3
+natfig(file = "./fig/main-figure01b-raw.pdf",
+       height = asp * w, width = w)
 
 plotMap()
 dev.off()
@@ -29,8 +33,10 @@ dev.off()
 # ------------------------------------------------------------------------------
 # Figure 03 - spectrum and coherence
 
-grfxtools::Quartz(file = "./fig/main-figure03.pdf",
-                  height = 7, width = 8, mar = c(5, 6, 0.5, 6))
+asp <- 7 / 8
+w <- 8.9
+natfig(file = "./fig/main-figure03.pdf",
+       height = asp * w, width = w, mar = c(5, 5, 0.5, 5))
 
 makeFigure03()
 dev.off()
@@ -38,8 +44,10 @@ dev.off()
 # ------------------------------------------------------------------------------
 # Figure 04a - histogram
 
-grfxtools::Quartz(file = "./fig/main-figure04a.pdf",
-                  height = 6.2, width = 7.5)
+asp <- 6.2 / 7.5
+w <- 8.6
+natfig(file = "./fig/main-figure04a.pdf",
+       height = asp * w, width = w)
 
 makeFigure04()
 dev.off()

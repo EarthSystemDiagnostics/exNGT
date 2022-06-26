@@ -42,18 +42,17 @@ plotMap <- function(map, MAX = 1, MIN = -MAX, markNonsignificance = FALSE,
                          limits = c(cor.min, cor.max),
                          name = "Correlation") +
 
-    theme(legend.key.height = unit(0.75, units = "inches"),
-          legend.text = element_text(size = 18),
-          legend.title = element_text(size = 18),
-          text = element_text(size = 18))
+    theme(legend.key.height = unit(0.4, units = "inches"),
+          legend.text = element_text(size = 6),
+          legend.title = element_text(size = 7))
 
-  p <- grfxtools::ggpolar(pole = "N", max.lat = 90, min.lat = 50,
-                          n.lat.labels = 4,
+  p <- grfxtools::ggpolar(pole = "N", max.lat = 90, min.lat = 49.5,
+                          lat.ax.vals = c(60, 70, 80),
                           longitude.spacing = 45,
                           land.fill.colour = "transparent",
-                          size.outer = 0.5,
-                          lat.ax.labs.pos = 180, ax.labs.size = 4.5,
-                          data.layer = p)
+                          size = pt2mm(0.495), ax.labs.size = pt2mm(6),
+                          size.outer = pt2mm(0.495), size.axes = pt2mm(0.33),
+                          lat.ax.labs.pos = 180, data.layer = p)
 
   return(p)
 
@@ -104,24 +103,24 @@ res <- estimateCorrelation(stackedNGT, filteredStackedNGT, tcr,
 sprintf("r = %1.2f (p = %1.4f)", res$r, res$p)
 
 # plot panel labels
-labels <- c(expression("(" * bold("a") * ") " * "NGT-2012"),
-            expression("(" * bold("b") * ") " * "Arctic2k"))
+labels <- c(expression(bold("a")), expression(bold("b")))
 
 # create plots
 ggplt1 <- lapply(dat[1 : 2], plotMap, markNonsignificance = TRUE)
 ggplt2 <- lapply(dat[3 : 4], plotMap, markNonsignificance = TRUE)
 
-grfxtools::Quartz(height = 6, width = 14)
+asp <- 6 / 14
+w <- 18.3
+natfig(height = asp * w, width = w)
 
 egg::ggarrange(plots = ggplt1, nrow = 1, ncol = 2, labels = labels,
-               label.args = list(gp = grid::gpar(cex = 1.25)))
+               label.args = list(gp = grid::gpar(fontsize = 8)))
 
 filename <- "main-figure02.pdf"
 dev.copy2pdf(file = file.path("fig", filename))
 
 egg::ggarrange(plots = ggplt2, nrow = 1, ncol = 2, labels = labels,
-               label.args = list(gp = grid::gpar(cex = 1.25)))
+               label.args = list(gp = grid::gpar(fontsize = 8)))
 
 filename <- "supplement_point_cor_20cr_annual.pdf"
 dev.copy2pdf(file = file.path("fig", filename))
-
