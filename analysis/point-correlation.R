@@ -59,6 +59,9 @@ filteredTwenCR$dat <- apply(filteredTwenCR$dat, 2, filterData,
                             window = filter.window,
                             hasAgeColumn = FALSE)
 
+GreenlandTwenCR <- readTwenCR()
+ArcticTwenCR <- readArcticTwenCR()
+
 # ------------------------------------------------------------------------------
 # Wrapper function
 
@@ -95,7 +98,7 @@ getPointCorrelation <- function(data, filteredData, fieldData, filter.window,
 }
 
 # ------------------------------------------------------------------------------
-# Run analyses for 20CR
+# Run analyses for 20CR field with NGT-2012 and Arctic2k time series
 
 cat("\n")
 
@@ -124,6 +127,28 @@ cat("Saving data...\n\n")
 list(ngt.ann = cor.ngt.ann, a2k.ann = cor.a2k.ann,
      ngt.11y = cor.ngt.11y, a2k.11y = cor.a2k.11y) %>%
   saveRDS(file = "out/point-correlations-20CR.rds")
+
+# ------------------------------------------------------------------------------
+# Run analyses for 20CR field with 20CR Greenland and Arctic aremean time series
+
+cat("\n")
+
+cat(as.character(Sys.time()), "Running Greenland correlation with field...\n")
+cor.greenland <- getPointCorrelation(GreenlandTwenCR, GreenlandTwenCR, TwenCR,
+                                     filter.window = 1, nmc = nmc,
+                                     analysis.period = 1836 : 2015)
+cat(as.character(Sys.time()), "Running Arctic correlation with field...\n")
+cor.arctic <- getPointCorrelation(ArcticTwenCR, ArcticTwenCR, TwenCR,
+                                  filter.window = 1, nmc = nmc,
+                                  analysis.period = 1836 : 2015)
+
+cat("\n")
+cat(as.character(Sys.time()), "...done.", "\n\n")
+
+cat("Saving data...\n\n")
+
+list(greenland = cor.greenland, arctic = cor.arctic) %>%
+  saveRDS(file = "out/point-correlations-20CR-with-20CR.rds")
 
 cat("Good bye.\n\n")
 
