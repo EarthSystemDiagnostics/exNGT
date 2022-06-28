@@ -77,7 +77,7 @@ extractGreenlandRegion <- function(x) {
 }
 
 # ------------------------------------------------------------------------------
-# Plot 20CR results
+# Plot 20CR main results with filtered data
 
 # data
 dat <- readRDS("out/point-correlations-20CR.rds")
@@ -119,7 +119,22 @@ egg::ggarrange(plots = ggplt1, nrow = 1, ncol = 2, labels = labels,
 filename <- "main-figure02.pdf"
 dev.copy2pdf(file = file.path("fig", filename))
 
-egg::ggarrange(plots = ggplt2, nrow = 1, ncol = 2, labels = labels,
+# ------------------------------------------------------------------------------
+# Plot 20CR supplementary results with annual data
+
+dat <- readRDS("out/point-correlations-20CR-with-20CR.rds")
+
+labels <- c(expression(bold("a")), expression(bold("b")),
+            expression(bold("c")), expression(bold("d")))
+
+# create plots
+ggplt3 <- lapply(dat, plotMap, markNonsignificance = TRUE)
+
+asp <- 12 / 14
+w <- 18.3
+natfig(height = asp * w, width = w)
+
+egg::ggarrange(plots = c(ggplt2, ggplt3), nrow = 2, ncol = 2, labels = labels,
                label.args = list(gp = grid::gpar(fontsize = 8)))
 
 filename <- "supplement_point_cor_20cr_annual.pdf"
