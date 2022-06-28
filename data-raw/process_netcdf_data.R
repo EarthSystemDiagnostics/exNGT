@@ -110,3 +110,35 @@ processNGT20CR <- function(path) {
   readr::write_csv(TwenCR, file = outfile, na = "")
 
 }
+
+#' Read 20CRv3 netcdf reanalysis data of area-weighted mean near-surface
+#' temperature time series for the Arctic region and save as csv file.
+#'
+#' @param path path to your copy of the 'exNGT' repository.
+#' @author Thomas Münch
+processArctic20CR <- function(path) {
+
+  require(ncdf4)
+  require(readr)
+
+  infile <- "noaa.cires.doe.20crv3.air.2m.annual.arctic.areamean.nc"
+  infile <- file.path(path, "data-raw", "in-other", infile)
+
+  if (!file.exists(infile)) {
+    stop(sprintf("%s: Invalid file name.", infile), call. = FALSE)
+  }
+
+  nc <- ncdf4::nc_open(infile, readunlim = FALSE, suppress_dimvals = TRUE)
+
+  time <- ncdf4::ncvar_get(nc, varid = "time")
+  dat  <- ncdf4::ncvar_get(nc, varid = "air")
+  ncdf4::nc_close(nc)
+
+  TwenCR <- data.frame(Year = seq(1836, length.out = length(time)), t2m = dat)
+
+  outfile <- file.path(path, "data",
+                       "NOAA_CIRES_DOE_20CR_v3_annual_arctic_areamean.csv")
+
+  readr::write_csv(TwenCR, file = outfile, na = "")
+
+}
