@@ -225,6 +225,23 @@ readTwenCR <- function(path = "data/NOAA_CIRES_DOE_20CR_v3_annual_ngtregion_area
 
 }
 
+#' Read 20CR Arctic data
+#'
+#' Read the annual mean, area-weighted mean NOAA-CIRES-DOE 20CR v3 reanalysis
+#' temperature data set from 1836 to 2015 CE for the Arctic region (60 to 90
+#' degree latitude).
+#'
+#' @param path file path (relative to working directory) of the 20CR data set.
+#' @return a data frame of two columns and 180 rows with the read 20CRv3
+#'   Arctic temperature time series from 1836 to 2015 CE.
+#' @author Thomas Münch
+readArcticTwenCR <- function(path = "data/NOAA_CIRES_DOE_20CR_v3_annual_arctic_areamean.csv") {
+
+  read.csv(file = path, header = TRUE) %>%
+    dplyr::arrange(dplyr::desc(Year))
+
+}
+
 #' Site climatological parameters
 #'
 #' This function provides the relevant climatological parameters at the firn
