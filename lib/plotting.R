@@ -524,7 +524,7 @@ plot.NGT.MAR <- function(filter.window = 11) {
   # Make plots
 
   xlab  <- "Year CE"
-  ylab1 <- grfxtools::LabelAxis("Melt runoff", unit = "Gt",
+  ylab1 <- grfxtools::LabelAxis("Meltwater runoff", unit = "Gt",
                                 unit.type = "trend", time.unit = "yr")
   ylab2 <- grfxtools::LabelAxis("NGT-2012", unit = "celsius")
 
@@ -535,23 +535,29 @@ plot.NGT.MAR <- function(filter.window = 11) {
   x1 <- 2045
   y1 <- 0.5
 
+  xanml <- c(1870.5,  2011.5)
+  yanml <- c(0, 0)
+
   col <- c("black", "#d95f02")
 
   plot(filteredMAR$Year, filteredMAR$melt, type = "l", axes = FALSE,
-       col = col[2], lwd = Lwd(3), xlim = xlim, ylim = ylim1,
-       xlab = "", ylab = "")
+       xlim = xlim, ylim = ylim1, xlab = "", ylab = "")
+
+  lines(xanml, yanml, lty = 2, lwd = Lwd(1.5), col = col[2])
+  lines(filteredMAR$Year, filteredMAR$melt, lwd = Lwd(3), col = col[2])
 
   axisLwd(1, at = seq(1870, 2010, 35), line = 0.5)
   axisLwd(2, at = seq(-50, 300, 50), col = col[2], col.axis = col[2])
   mtext(xlab, 1, 4, cex = par()$cex.lab)
   mtext(ylab1, 2, 3.6, col = col[2], cex = par()$cex.lab, las = 0,
-        adj = 0.5)
+        adj = 0.475)
 
   par(new = TRUE)
 
   plot(filteredStackedTemperatureNGT.mid, type = "n", axes = FALSE,
        xlab = "", ylab = "", xlim = xlim, ylim = ylim2)
 
+  lines(xanml, yanml, lty = 2, lwd = Lwd(1.5), col = "darkgrey")
   rect(1870.5, -2.6, 2011.5, 3.25, border = "dimgrey", lwd = Lwd(2), xpd = NA)
 
   axisLwd(4)
