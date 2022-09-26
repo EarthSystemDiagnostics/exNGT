@@ -12,12 +12,14 @@ setwd(path)
 source("init.R")
 
 # ------------------------------------------------------------------------------
-# Get data and estimate overall correlation
+# Get data
 
 filter.window <- 11
 
-filteredStackedAccumulation <- processAccumulation() %>%
-  filterData(window = filter.window) %>%
+filteredAccumulation <- processAccumulation() %>%
+  filterData(window = filter.window)
+
+filteredStackedAccumulation <- filteredAccumulation %>%
   stackAllCores() %>%
   dplyr::filter(Year >= 1500)
 
@@ -29,6 +31,33 @@ filteredStackedNGT <- processNGT() %>%
   filterData(window = filter.window) %>%
   stackNGT() %>%
   dplyr::filter(Year >= 1500)
+
+# ------------------------------------------------------------------------------
+# Run spectral SNR analysis
+
+noMissingVal <- function(x) {!any(is.na(x))}
+spectraNGT <- filteredAccumulation %>%
+  dplyr::slice(match(1992 : 1502, Year)) %>%
+  dplyr::select(where(noMissingVal)) %>%
+  dplyr::select(-Year) %>%
+  proxysnr::ArraySpectra(df.log = 0.1) %>%
+  proxysnr::SeparateSpectra()
+
+# min, max and mean number of records contributing to stack
+N <- filteredAccumulation %>%
+  countRecords() %>%
+  dplyr::filter(Year >= 1502) %>%
+  dplyr::summarise(min = min(n), max = max(n), mean = round(mean(n)))
+
+# obtain signal-to-noise ratio spectrum between 1/200 and 1/5 yr^-1
+f1 <- 1 / 200
+f2 <- 1 / 5
+snrNGT.min <- spectraNGT %>%
+  proxysnr::IntegratedSNR(N = N$min, freq.cut.lower = f1, freq.cut.upper = f2)
+snrNGT.max <- spectraNGT %>%
+  proxysnr::IntegratedSNR(N = N$max, freq.cut.lower = f1, freq.cut.upper = f2)
+snrNGT.mean <- spectraNGT %>%
+  proxysnr::IntegratedSNR(N = N$mean, freq.cut.lower = f1, freq.cut.upper = f2)
 
 # ------------------------------------------------------------------------------
 # Prepare plotting of isotope-to-accumulation stack comparison
@@ -72,16 +101,25 @@ text(2085, 0, ylab2, srt = -90, xpd = NA,
      cex = par()$cex.lab, col = cols[2])
 
 # ------------------------------------------------------------------------------
-# II. Plot scatter plot
+# II. Plot accumulation SNR
 
-plot(filteredStackedNGT$stack, filteredStackedAccumulation$stack,
-     type = "p", pch = 19, axes = FALSE, xlab = "", ylab = "",
-     xlim = c(-2, 2), ylim = c(-10, 30))
+yat.snr <- c(0.5, 1, 2, 5, 10, 20)
+
+xlab <- "Time period (yr)"
+ylab <- "Signal-to-Noise Ratio"
+
+proxysnr:::LPlot(snrNGT.mean, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
+                 xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.5, 20))
 
 axisLwd(1)
-axisLwd(2)
-mtext(ylab2, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
-mtext(ylab1, side = 2, line = 3, cex = par()$cex.lab * par()$cex, las = 0)
+axisLwd(2, at = yat.snr)
+mtext(xlab, side = 1, line = 3.4, cex = par()$cex.lab * par()$cex)
+mtext(ylab, side = 2, line = 3.2, cex = par()$cex.lab * par()$cex, las = 0)
+
+grfxtools::Polyplot(1 / snrNGT.min$freq, snrNGT.min$spec, snrNGT.max$spec)
+proxysnr:::LLines(snrNGT.min, bPeriod = TRUE, lwd = Lwd(1))
+proxysnr:::LLines(snrNGT.max, bPeriod = TRUE, lwd = Lwd(1))
+proxysnr:::LLines(snrNGT.mean, bPeriod = TRUE, lwd = Lwd(2))
 
 mtext("b", side = 3, adj = 0.01, padj = 0.5, line = 2, font = 2, cex = 4 / 3)
 
@@ -167,12 +205,22 @@ text(x = 1525, y = 10 * yoff + yoff2, "B29", col = cols[2], cex = 1.25)
 
 dev.off()
 
+# ------------------------------------------------------------------------------
+# isotope-accumulation scatter plot
+
+grfxtools::Quartz()
+
+plot(filteredStackedNGT$stack, filteredStackedAccumulation$stack,
+     type = "p", pch = 19, axes = FALSE, xlab = "", ylab = "",
+     xlim = c(-2, 2), ylim = c(-10, 30))
+
+axis(1)
+axis(2)
+mtext(ylab2, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
+mtext(ylab1, side = 2, line = 3, cex = par()$cex.lab * par()$cex, las = 0)
 
 # ------------------------------------------------------------------------------
-# spectrum/SNR analysis similar to d18O data
-
-filteredAccumulation <- processAccumulation() %>%
-  filterData(window = filter.window)
+# accumulation record occurrences
 
 recordOccurrence <- data.frame(
   Year = filteredAccumulation$Year,
@@ -195,57 +243,6 @@ mtext("Year CE", 1, 3.5, cex = par()$cex.lab)
 for (i in 2 : 12) {
   lines(recordOccurrence$Year, recordOccurrence[, i], lwd = 1.5, col = "black")
 }
-
-noMissingVal <- function(x) {!any(is.na(x))}
-spectraNGT <- filteredAccumulation %>%
-  dplyr::slice(match(1992 : 1502, Year)) %>%
-  dplyr::select(where(noMissingVal)) %>%
-  dplyr::select(-Year) %>%
-  proxysnr::ArraySpectra(df.log = 0.1) %>%
-  proxysnr::SeparateSpectra()
-
-# min, max and mean number of records contributing to stack
-N <- filteredAccumulation %>%
-  countRecords() %>%
-  dplyr::filter(Year >= 1502) %>%
-  dplyr::summarise(min = min(n), max = max(n), mean = round(mean(n)))
-
-# obtain signal-to-noise ratio spectrum between 1/200 and 1/5 yr^-1
-f1 <- 1 / 200
-f2 <- 1 / 5
-snrNGT.min <- spectraNGT %>%
-  proxysnr::IntegratedSNR(N = N$min, freq.cut.lower = f1, freq.cut.upper = f2)
-snrNGT.max <- spectraNGT %>%
-  proxysnr::IntegratedSNR(N = N$max, freq.cut.lower = f1, freq.cut.upper = f2)
-snrNGT.mean <- spectraNGT %>%
-  proxysnr::IntegratedSNR(N = N$mean, freq.cut.lower = f1, freq.cut.upper = f2)
-
-yat.snr <- c(0.5, 1, 2, 5, 10, 20)
-
-xlab  <- "Time period (yr)"
-ylab1 <- grfxtools::LabelAxis("Signal PSD", time.unit = "yr", unit.type = "psd")
-ylab2 <- "Signal-to-Noise Ratio"
-
-xlim <- c(225, 5)
-ylim <- c(0.5, 20)
-
-grfxtools::Quartz(height = 4.5, width = 6, mar = c(5, 5.5, 0.5, 0.5),
-                  file = "./zzz/ngt_accumulation_snr.pdf")
-
-proxysnr:::LPlot(snrNGT.mean, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
-                 xlab = "", ylab = "", xlim = xlim, ylim = ylim)
-
-axis(1)
-axis(2, at = yat.snr)
-mtext(xlab, 1, 3.5, cex = par()$cex.lab)
-mtext(ylab2, 2, 3.5, cex = par()$cex.lab, las = 0)
-
-grfxtools::Polyplot(1 / snrNGT.min$freq, snrNGT.min$spec, snrNGT.max$spec)
-proxysnr:::LLines(snrNGT.min, bPeriod = TRUE, lwd = 1)
-proxysnr:::LLines(snrNGT.max, bPeriod = TRUE, lwd = 1)
-proxysnr:::LLines(snrNGT.mean, bPeriod = TRUE, lwd = 2)
-
-dev.off()
 
 # ------------------------------------------------------------------------------
 # scatter plot with non-anomaly data
