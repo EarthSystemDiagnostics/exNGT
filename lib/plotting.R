@@ -289,8 +289,9 @@ plotMap <- function() {
                           lat.ax.vals = lat.pos, long.ax.vals = lon.pos,
                           f.long.label.ticks = Inf, f.long.label.pos = 15,
                           rotate = TRUE, land.fill.colour = "transparent",
-                          size = pt2mm(0.495), ax.labs.size = pt2mm(5),
-                          size.outer = pt2mm(0.495), size.axes = pt2mm(0.33),
+                          size = pt2mm((4/3) * 0.495), ax.labs.size = pt2mm(6),
+                          size.outer = pt2mm((4/3) * 0.495),
+                          size.axes = pt2mm((4/3) * 0.33),
                           lat.ax.labs.pos = min.lon - lat.pos.offset,
                           land.outline.colour = "burlywood4", clip = "off") +
 
@@ -306,7 +307,7 @@ plotMap <- function() {
   ggplot2::geom_point(data = cores,
                       ggplot2::aes(x = Longitude, y = Latitude),
                       col = "black", bg = "grey", size = 0.75,
-                      pch = 21, stroke = pt2mm(0.33)) +
+                      pch = 21, stroke = pt2mm(2 * 0.33)) +
 
   ggplot2::geom_point(data = stations,
                       ggplot2::aes(x = Longitude, y = Latitude),
