@@ -50,8 +50,9 @@ plotMap <- function(map, MAX = 1, MIN = -MAX, markNonsignificance = FALSE,
                           lat.ax.vals = c(60, 70, 80),
                           longitude.spacing = 45,
                           land.fill.colour = "transparent",
-                          size = pt2mm(0.495), ax.labs.size = pt2mm(6),
-                          size.outer = pt2mm(0.495), size.axes = pt2mm(0.33),
+                          size = pt2mm(1.338 * 0.495), ax.labs.size = pt2mm(6),
+                          size.outer = pt2mm(1.338 * 0.495),
+                          size.axes = pt2mm(1.32 * 0.33),
                           lat.ax.labs.pos = 180, data.layer = p)
 
   return(p)
