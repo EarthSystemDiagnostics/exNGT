@@ -23,7 +23,7 @@ makeFigure01()
 dev.off()
 
 asp <- 1
-w <- 0.3 * 18.3
+w <- 6
 natfig(file = "./fig/main-figure01b-raw.pdf",
        height = asp * w, width = w)
 
