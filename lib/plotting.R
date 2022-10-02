@@ -54,7 +54,7 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
                           ylim = c(0, 1.25), col = c("black", "orange2"),
                           plot = TRUE, plot.quantiles = TRUE,
                           quantile.probs = c(0.005, 0.025, 0.975, 0.995),
-                          q.lty = c(5, 6, 6, 5), xmain = NA, ymain = NA,
+                          q.lty = c(2, 4, 4, 2), xmain = NA, ymain = NA,
                           plot.legend = TRUE, plot.2xaxes = FALSE,
                           permil2temperature = 1 / 0.67) {
 
@@ -160,32 +160,31 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
                 main = "", xlab = "", ylab = "", axes = FALSE,
                 col = adjustcolor(col[1], alpha = 0.2), yaxs = "i")
 
-    axx <- axis(1)
-    axy <- axis(2)
+    axx <- axisLwd(1)
+    axy <- axisLwd(2)
 
     mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0)
 
     if (plot.2xaxes) {
 
       at <- pretty(range(axx) * permil2temperature, length(axx))
-      axis(1, line = 5, labels = FALSE, lwd.ticks = 0)
+      axis(1, line = 4.5, labels = FALSE, lwd = Lwd(1), lwd.ticks = 0)
       axis(1, at = at / permil2temperature, labels = at,
-           line = 5, lwd = 0, lwd.ticks = 1)
-      mtext(xlab, side = 1, line = 9.25, cex = par()$cex.lab * par()$cex)
-      mtext(pm.unit, side = 1, line = 2.75,
+           line = 4.5, lwd = 0, lwd.ticks = Lwd(1))
+      mtext(xlab, side = 1, line = 8.25, cex = par()$cex.lab * par()$cex)
+      mtext(pm.unit, side = 1, line = 2.5,
             cex = par()$cex.lab * par()$cex, adj = 0.975)
-      mtext(dc.unit, side = 1, line = 7.75,
+      mtext(dc.unit, side = 1, line = 7,
             cex = par()$cex.lab * par()$cex, adj = 0.975)
 
     } else {
 
-      axis(1)
       mtext(xlab, side = 1, line = 3.5, cex = par()$cex.lab * par()$cex)
 
     }
 
     lines(q, gq <- dnorm(q, mean = mean(piData), sd = sd(piData)),
-          col = col[1], lwd = 2)
+          col = col[1], lwd = Lwd(2))
 
     ymax <- ifelse(max(hst$density) > max(gq), max(hst$density), max(gq))
 
@@ -193,7 +192,8 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
       q <- quantile(piData, quantile.probs, na.rm = TRUE)
       q.lty <- rep(q.lty, length.out = length(q))
       for (i in 1 : length(q)) {
-        lines(rep(q[i], 2), c(0, ymax), col = col[1], lty = q.lty[i], lwd = 1)
+        lines(rep(q[i], 2), c(0, ymax), col = col[1],
+              lty = q.lty[i], lwd = Lwd(1))
       }
     }
 
@@ -204,13 +204,13 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
            axes = FALSE, main = "", xlab = "", ylab = "",
            col = adjustcolor(col[2], alpha = 0.2), yaxs = "i")
 
-      ax <- axis(4, col = col[2], col.axis = col[2])
+      ax <- axisLwd(4, col = col[2], col.axis = col[2])
       text(1.375 * xlim[2], y = mean(ax), "Probability density", srt = -90,
            xpd = NA, cex = par()$cex.lab * par()$cex, col = col[2])
 
     } else {
 
-      lines(rep(recentData, 2), c(0, ymax), col = col[2], lwd = 2.5)
+      lines(rep(recentData, 2), c(0, ymax), col = col[2], lwd = Lwd(3))
 
     }
 
@@ -226,7 +226,7 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
               sprintf("%s\n(%s-%s CE)", recentString,
                       min(recentPeriod), max(recentPeriod)))
       lg.lty <- c(1, 5, 1)
-      lg.lwd <- c(10, 1, 2.5)
+      lg.lwd <- Lwd(c(10, 1, 2.5))
       lg.col <- c(adjustcolor(col[1], 0.2), col[1], col[2])
 
       if (type == "anomaly" & filter.window == 1) {
@@ -248,11 +248,11 @@ plotHistogram <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
 
     if (!is.na(xmain)) {
       mtext(xmain, side = 3, line = 2.5, adj = 0,
-            cex = par()$cex.lab * par()$cex, font = 2)
+            cex = 4 / 3 * par()$cex, font = 2)
     }
     if (!is.na(ymain)) {
       mtext(ymain, side = 2, line = 6, las = 0,
-            cex = par()$cex.lab * par()$cex, font = 2)
+            cex = 4 / 3 * par()$cex, font = 2)
     }
   }
 
@@ -281,7 +281,7 @@ plotMap <- function() {
   lat.pos <- c(60, 70, 80)
   lon.pos <- -c(20, 40, 60)
 
-  lat.pos.offset <- c(3.5, 5, 10)
+  lat.pos.offset <- c(4, 5.75, 11.5)
 
   p <- grfxtools::ggpolar(pole = "N",
                           max.lat = max.lat, min.lat = min.lat,
@@ -289,28 +289,29 @@ plotMap <- function() {
                           lat.ax.vals = lat.pos, long.ax.vals = lon.pos,
                           f.long.label.ticks = Inf, f.long.label.pos = 15,
                           rotate = TRUE, land.fill.colour = "transparent",
-                          size.outer = 0.5,
+                          size = pt2mm((4/3) * 0.495), ax.labs.size = pt2mm(6),
+                          size.outer = pt2mm((4/3) * 0.495),
+                          size.axes = pt2mm((4/3) * 0.33),
                           lat.ax.labs.pos = min.lon - lat.pos.offset,
-                          ax.labs.size = 4.75,
                           land.outline.colour = "burlywood4", clip = "off") +
 
-  ggplot2::geom_text(data = cores, size = 2.5,
+  ggplot2::geom_text(data = cores, size = pt2mm(5),
                      ggplot2::aes(x = Longitude, y = Latitude,
-                                  label = Site)) +
+                                  label = Line)) +
 
   ggplot2::geom_label(data = stations,
                       ggplot2::aes(x = Longitude, y = Latitude,
                                    label = Site),
-                      size = 2.5, alpha = 0.75, label.size = 0) +
+                      size = pt2mm(5), alpha = 0.75, label.size = 0) +
 
   ggplot2::geom_point(data = cores,
                       ggplot2::aes(x = Longitude, y = Latitude),
-                      col = "black", bg = "grey", size = 1.5,
-                      pch = 21, stroke = 0.8) +
+                      col = "black", bg = "grey", size = 0.75,
+                      pch = 21, stroke = pt2mm(2 * 0.33)) +
 
   ggplot2::geom_point(data = stations,
                       ggplot2::aes(x = Longitude, y = Latitude),
-                      col = "black", size = 2.5, pch = 17)
+                      col = "black", size = 0.75, pch = 17)
 
   p
 
@@ -406,7 +407,7 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   m <- nrow(Arctic2k)
 
   x1 <- 845
-  x2 <- 2185
+  x2 <- 2180
   y1 <- 0.
   y2 <- 0.5
 
@@ -417,65 +418,65 @@ plot.NGT.Arctic2k <- function(filter.window = 11,
   plot(stackedNGT, type = "n", axes = FALSE, xlab = "", ylab = "",
        xlim = xlim, ylim = ylim.ngt)
 
-  rect(1871, -1.7, 2015, 2.6, border = "dimgrey", lwd = 2)
+  rect(1871, -1.7, 2015, 2.6, border = "dimgrey", lwd = Lwd(2))
 
-  lines(xanml1, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
+  lines(xanml1, yanml, lty = 2, lwd = Lwd(1.5), col = "darkgrey")
 
   lines(stackedNGT, col = "darkgrey")
 
-  lines(filteredStackedNGT[i : n, ], col = col[1], lwd = 2.5)
-  lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = 2.5)
+  lines(filteredStackedNGT[i : n, ], col = col[1], lwd = Lwd(2.5))
+  lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = Lwd(2.5))
 
-  axis(2, at = seq(-2, 2, 1))
-  axis(4, labels = seq(-2, 3, 1), at = seq(-2, 3, 1) / permil2temperature)
+  axisLwd(2, at = seq(-2, 2, 1))
+  axisLwd(4, labels = seq(-2, 3, 1), at = seq(-2, 3, 1) / permil2temperature)
 
   text(x1, y1, ylab.ngt.pm, srt = +90, xpd = NA,
        cex = par()$cex.lab * par()$cex, col = col[1])
   text(x2, y2 / permil2temperature, ylab.ngt.dc, srt = -90, xpd = NA,
        cex = par()$cex.lab * par()$cex, col = col[1])
 
-  mtext("a", side = 3, adj = 0.01, line = -1.5, font = 2, cex = par()$cex.lab)
+  mtext("a", side = 3, adj = 0.01, line = -1.5, font = 2, cex = 4 / 3)
 
   lines(t1, regressionModels[[1]][1] + regressionModels[[1]][2] * t1,
-        col = col[1], lwd = 2, lty = 2)
+        col = col[1], lwd = Lwd(2), lty = 2)
   lines(t2, regressionModels[[2]][1] + regressionModels[[2]][2] * t2,
-        col = col[1], lwd = 2, lty = 2)
+        col = col[1], lwd = Lwd(2), lty = 2)
 
   par(new = TRUE)
 
   plot(nRecords, type = "s", axes = FALSE, xlab = "", ylab = "",
-       xlim = xlim, ylim = c(-50, 85), col = col[3], lwd = 2)
+       xlim = xlim, ylim = c(-50, 85), col = col[3], lwd = Lwd(2))
 
-  axis(2, at = c(0, 10, 20), col = col[3], col.axis = col[3],
+  axisLwd(2, at = c(0, 10, 20), col = col[3], col.axis = col[3],
        mgp = c(-3, -2, -1), tcl = 0.5, hadj = 0)
-  text(1000, 25, "#", cex = par()$cex.lab * par()$cex, col = col[3], adj = 0.3)
+  text(1005, 24, "#", cex = par()$cex.lab * par()$cex, col = col[3], adj = 0.3)
 
   par(new = TRUE)
 
   plot(Arctic2k$Year, Arctic2k$TempAnomaly, type = "n", axes = FALSE,
        xlab = "", ylab = "", xlim = xlim, ylim = ylim.a2k)
 
-  axis(1, line = -2)
-  axis(4, at = seq(-2, 3, 1), col = col[2], col.axis = col[2])
+  axisLwd(1, line = -2)
+  axisLwd(4, at = seq(-2, 3, 1), col = col[2], col.axis = col[2])
 
   mtext(xlab, side = 1, line = 1.5, cex = par()$cex.lab * par()$cex)
   text(x2, y2, ylab.a2k, srt = -90, xpd = NA,
        cex = par()$cex.lab * par()$cex, col = col[2])
 
-  lines(xanml2, yanml, lty = 2, lwd = 1.5, col = "darkgrey")
+  lines(xanml2, yanml, lty = 2, lwd = Lwd(1.5), col = "darkgrey")
 
   lines(Arctic2k$Year, Arctic2k$TempAnomaly,
         col = adjustcolor(col[2], alpha = 0.6))
 
   lines(filteredArctic2k$Year[1 : j], filteredArctic2k$TempAnomaly[1 : j],
-        col = "deepskyblue1", lwd = 2.5)
+        col = "deepskyblue1", lwd = Lwd(2.5))
   lines(filteredArctic2k$Year[j : m], filteredArctic2k$TempAnomaly[j : m],
-        col = col[2], lwd = 2.5)
+        col = col[2], lwd = Lwd(2.5))
 
   lines(t1, regressionModels[[3]][1] + regressionModels[[3]][2] * t1,
-        col = col[2], lwd = 2, lty = 2)
+        col = col[2], lwd = Lwd(2), lty = 2)
   lines(t2, regressionModels[[4]][1] + regressionModels[[4]][2] * t2,
-        col = col[2], lwd = 2, lty = 2)
+        col = col[2], lwd = Lwd(2), lty = 2)
 
   par(op)
 
@@ -524,7 +525,7 @@ plot.NGT.MAR <- function(filter.window = 11) {
   # Make plots
 
   xlab  <- "Year CE"
-  ylab1 <- grfxtools::LabelAxis("Melt runoff", unit = "Gt",
+  ylab1 <- grfxtools::LabelAxis("Meltwater runoff", unit = "Gt",
                                 unit.type = "trend", time.unit = "yr")
   ylab2 <- grfxtools::LabelAxis("NGT-2012", unit = "celsius")
 
@@ -532,42 +533,48 @@ plot.NGT.MAR <- function(filter.window = 11) {
   ylim1 <- c(-75, 330)
   ylim2 <- c(-2.5, 3.5)
 
-  x1 <- 2042
+  x1 <- 2045
   y1 <- 0.5
+
+  xanml <- c(1870.5,  2011.5)
+  yanml <- c(0, 0)
 
   col <- c("black", "#d95f02")
 
   plot(filteredMAR$Year, filteredMAR$melt, type = "l", axes = FALSE,
-       col = col[2], lwd = 2.5, xlim = xlim, ylim = ylim1,
-       xlab = "", ylab = "")
+       xlim = xlim, ylim = ylim1, xlab = "", ylab = "")
 
-  axis(1, at = seq(1870, 2010, 35), line = 0.5)
-  axis(2, at = seq(-50, 300, 50), col = col[2], col.axis = col[2])
+  lines(xanml, yanml, lty = 2, lwd = Lwd(1.5), col = col[2])
+  lines(filteredMAR$Year, filteredMAR$melt, lwd = Lwd(3), col = col[2])
+
+  axisLwd(1, at = seq(1870, 2010, 35), line = 0.5)
+  axisLwd(2, at = seq(-50, 300, 50), col = col[2], col.axis = col[2])
   mtext(xlab, 1, 4, cex = par()$cex.lab)
-  mtext(ylab1, 2, 3.5, col = col[2], cex = par()$cex.lab, las = 0,
-        adj = 0.45)
+  mtext(ylab1, 2, 3.6, col = col[2], cex = par()$cex.lab, las = 0,
+        adj = 0.475)
 
   par(new = TRUE)
 
   plot(filteredStackedTemperatureNGT.mid, type = "n", axes = FALSE,
        xlab = "", ylab = "", xlim = xlim, ylim = ylim2)
 
-  rect(1870.5, -2.6, 2011.5, 3.25, border = "dimgrey", lwd = 2, xpd = NA)
+  lines(xanml, yanml, lty = 2, lwd = Lwd(1.5), col = "darkgrey")
+  rect(1870.5, -2.6, 2011.5, 3.25, border = "dimgrey", lwd = Lwd(2), xpd = NA)
 
-  axis(4)
+  axisLwd(4)
   text(x1, y1, ylab2, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex)
 
-  lines(filteredStackedTemperatureNGT.mid, lwd = 2.5, col = col[1])
+  lines(filteredStackedTemperatureNGT.mid, lwd = Lwd(3), col = col[1])
 
   grfxtools::Polyplot(filteredStackedTemperatureNGT.mid$Year,
                       filteredStackedTemperatureNGT.low$stack,
                       filteredStackedTemperatureNGT.hig$stack,
                       col = col[1], alpha = 0.2)
-  lines(filteredStackedTemperatureNGT.low, lwd = 1, col = col[1])
-  lines(filteredStackedTemperatureNGT.hig, lwd = 1, col = col[1])
+  lines(filteredStackedTemperatureNGT.low, lwd = Lwd(1), col = col[1])
+  lines(filteredStackedTemperatureNGT.hig, lwd = Lwd(1), col = col[1])
 
-  mtext("c", side = 3, adj = 0.01, line = -0.5, font = 2, cex = par()$cex.lab)
-  mtext("b", side = 3, adj = 0.01, line = 14.4, font = 2, cex = par()$cex.lab)
+  mtext("c", side = 3, adj = 0.01, line = -0.5, font = 2, cex = 4 / 3)
+  mtext("b", side = 3, adj = 0.01, line = 13.8, font = 2, cex = 4 / 3)
 
 }
 
@@ -628,34 +635,34 @@ plotSpectrum <- function() {
                    xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0.002, 10),
                    xaxs = "i")
 
-  axis(1)
-  axis(2, at = c(0.1, 1, 10), labels = tcklab)
+  axisLwd(1)
+  axisLwd(2, at = c(0.1, 1, 10), labels = tcklab)
 
-  mtext(xlab, 1, 3.5, cex = par()$cex.lab)
-  mtext(ylab, 2, 3.5, cex = par()$cex.lab, las = 0, adj = 1)
+  mtext(xlab, 1, 3, cex = par()$cex.lab)
+  mtext(ylab, 2, 3.25, cex = par()$cex.lab, las = 0, adj = 0.95)
 
   n.crit.upper <- length(which(spectraNGT$mid$freq > 1 / 5))
-  proxysnr:::LLines(spectraNGT$mid, bPeriod = TRUE, lwd = 3, col = col[1],
+  proxysnr:::LLines(spectraNGT$mid, bPeriod = TRUE, lwd = Lwd(3), col = col[1],
                     removeFirst = n.crit.lower, removeLast = n.crit.upper)
 
   i.keep <- (n.crit.lower + 1) : (length(spectraNGT$mid$freq) - n.crit.upper)
   proxysnr:::Polyplot(1 / spectraNGT$mid$freq[i.keep],
                       spectraNGT$hig$spec[i.keep], spectraNGT$low$spec[i.keep],
                       col = col[1], alpha = 0.2)
-  proxysnr:::LLines(spectraNGT$low, bPeriod = TRUE, lwd = 1, lty = 1,
+  proxysnr:::LLines(spectraNGT$low, bPeriod = TRUE, lwd = Lwd(1), lty = 1,
                     removeFirst = n.crit.lower, removeLast = n.crit.upper,
                     col = col[1])
-  proxysnr:::LLines(spectraNGT$hig, bPeriod = TRUE, lwd = 1, lty = 1,
+  proxysnr:::LLines(spectraNGT$hig, bPeriod = TRUE, lwd = Lwd(1), lty = 1,
                     removeFirst = n.crit.lower, removeLast = n.crit.upper,
                     col = col[1])
 
   n.crit.upper <- length(which(spectrumA2k$freq > 1 / 5))
-  proxysnr:::LLines(spectrumA2k, bPeriod = TRUE, conf = FALSE, lwd = 3,
+  proxysnr:::LLines(spectrumA2k, bPeriod = TRUE, conf = FALSE, lwd = Lwd(3),
                     removeFirst = n.crit.lower, removeLast = n.crit.upper,
                     col = col[2])
 
   legend("bottomleft", c("NGT-2012", "Arctic 2k"), inset = c(0, 0.45),
-         lty = 1, lwd = 3, col = col, bty = "n")
+         lty = 1, lwd = Lwd(3), col = col, bty = "n")
 
   par(new = TRUE)
 
@@ -667,13 +674,13 @@ plotSpectrum <- function() {
        axes = FALSE, log = "x", xaxs = "i",
        xlab = "", ylab = "", xlim = c(225, 5), ylim = c(0, 1.75))
 
-  axis(4, at = seq(0, 0.6, 0.2))
+  axisLwd(4, at = seq(0, 0.6, 0.2))
   text(x = 2.8, y = 0.3, labels = ylab, cex = par()$cex.lab, srt = -90, xpd = NA)
 
   lines(1 / coherence$ngt2a2k$freq, coherence$ngt2a2k$coh,
-        col = col[3], lwd = 3)
+        col = col[3], lwd = Lwd(3))
   lines(1 / coherence$ngt2tcr$freq, coherence$ngt2tcr$coh,
-        col = col[4], lwd = 3)
+        col = col[4], lwd = Lwd(3))
 
   proxysnr:::Polyplot(x = 1 / coherence$ngt2a2k$freq,
                       y1 = rep(0, n1), y2 = rep(coherence$ngt2a2k$confLevel, n1),
@@ -683,7 +690,8 @@ plotSpectrum <- function() {
                       col = col[4], alpha = 0.2)
 
   legend("bottomleft", c("NGT-2012 vs. Arctic 2k", "NGT-2012 vs. 20CR"),
-         inset = c(0, 0.3), lty = 1, lwd = 3, col = col[c(3, 4)], bty = "n")
+         inset = c(0, 0.3), lty = 1, lwd = Lwd(3), col = col[c(3, 4)],
+         bty = "n")
 
   # ----------------------------------------------------------------------------
   # How much higher is NGT variability?
@@ -739,22 +747,22 @@ makeFigure01 <- function(filter.window = 11, permil2temperature = 1 / 0.67) {
 
   op.usr <- par(usr = c(0, 1, 0, 1), xlog = FALSE, ylog = FALSE)
 
-  x11 <- -0.905
+  x11 <- -0.930
   x12 <- 0.041
-  x21 <- -0.691
+  x21 <- -0.716
   x22 <- 0.959
-  y1 <- 2.111
+  y1 <- 2.130
   y2 <- 0.924
 
   m <- (y2 - y1) / (x12 - x11)
-  xm1 <- -0.75
-  xm2 <- -0.35
+  xm1 <- -0.77
+  xm2 <- -0.38
   ym1 <- m * (xm1 - x11) + y1
   ym2 <- m * (xm2 - x11) + y1
 
-  lines(c(x11, xm1), c(y1, ym1), lwd = 2, col = "dimgrey", xpd = NA)
-  lines(c(xm2, x12), c(ym2, y2), lwd = 2, col = "dimgrey", xpd = NA)
-  lines(c(x21, x22), c(y1, y2), lwd = 2, col = "dimgrey", xpd = NA)
+  lines(c(x11, xm1), c(y1, ym1), lwd = Lwd(2), col = "dimgrey", xpd = NA)
+  lines(c(xm2, x12), c(ym2, y2), lwd = Lwd(2), col = "dimgrey", xpd = NA)
+  lines(c(x21, x22), c(y1, y2), lwd = Lwd(2), col = "dimgrey", xpd = NA)
 
   par(op.usr)
 
@@ -777,10 +785,10 @@ makeFigure03 <- function() {
 makeFigure04 <- function() {
 
   layout(matrix(1 : 2, 1, 2), widths = c(0.7, 0.3))
-  par(cex = 1, mar = c(11, 5, 0.5, 0.5))
+  par(cex = 1, mar = c(10.25, 5, 0.5, 0.5))
 
   plotHistogram(type = "anomaly", plot.legend = FALSE, plot.2xaxes = TRUE)
-  mtext("a", side = 3, adj = -0.23, line = -0.9, font = 2, cex = par()$cex.lab)
+  mtext("a", side = 3, adj = -0.26, line = -0.75, font = 2, cex = 4 / 3)
 
   par(mar = c(0, 0, 0, 0))
   plot(1, type = "n", axes = FALSE, xlab = "", ylab = "")
@@ -788,8 +796,8 @@ makeFigure04 <- function() {
   lg <- c("Pre-ind. distribution\n(1000-1800 CE)", "Gaussian fit\n",
           "p = 0.95\n", "p = 0.99\n", "2001-2011 CE\naverage")
 
-  legend("topleft", legend = lg, lty = c(1, 1, 6, 5, 1),
-         lwd = c(10, 2, 1, 1, 2.5),
+  legend("topleft", legend = lg, lty = c(1, 1, 4, 2, 1), xpd = NA,
+         lwd = Lwd(c(10, 2, 1, 1, 3)), cex = 1, inset = c(-0.1, 0),
          col = c(adjustcolor("black", 0.2),
                  "black", "black", "black", "orange2"),
          bty = "n", adj = c(0, 0.8), y.intersp = 1.5, seg.len = 2.5)

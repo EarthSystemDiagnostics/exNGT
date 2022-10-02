@@ -119,46 +119,44 @@ label2 <- expression(bold("b"))
 n.crit.lower <- 1
 n.crit.upper <- length(which(spectraNGT$signal$freq > f2))
 
-grfxtools::Quartz(file = "./fig/supplement-ngt-snr.pdf",
-                  height = 4.5, width = 12, mfcol = c(1, 2),
-                  oma = c(5, 0, 0.5, 5.5), mar = c(0, 5.5, 0, 0))
+natfig(file = "./fig/supplement-ngt-snr.pdf",
+       height = 4.5, width = 12, mfcol = c(1, 2),
+       oma = c(4, 0, 0.5, 5), mar = c(0, 5, 0, 0))
 
 proxysnr:::LPlot(spectraNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
                  xlab = "", ylab = "", xlim = xlim, ylim = ylim1)
 
-axis(1)
-axis(2)
+axisLwd(1)
+axisLwd(2)
 
-mtext(xlab, 1, 3.5, cex = par()$cex.lab)
-mtext(ylab1, 2, 3.75, cex = par()$cex.lab, las = 0)
-mtext(label1, side = 3, line = -1.5, cex = par()$cex.lab,
-      adj = 0.02, padj = 0.2)
+mtext(xlab, 1, 2.75, cex = par()$cex.lab)
+mtext(ylab1, 2, 3.25, cex = par()$cex.lab, las = 0)
+mtext(label1, side = 3, line = -1.3, cex = 4 / 3, adj = 0.02)
 
 grfxtools::Polyplot(c(diffThreshold, 5), rep(ylim1[1], 2), rep(ylim1[2], 2),
                     col = "firebrick4")
 
-proxysnr:::LLines(spectraNGT$signal, bPeriod = TRUE, lwd = 2,
+proxysnr:::LLines(spectraNGT$signal, bPeriod = TRUE, lwd = Lwd(2),
                   removeFirst = n.crit.lower, removeLast = n.crit.upper)
 
 proxysnr:::LPlot(spectraNGT$signal, bPeriod = TRUE, bNoPlot = TRUE, axes = FALSE,
                  xlab = "", ylab = "", xlim = xlim, ylim = ylim2)
-axis(1)
-axis(2, at = yat.snr)
-axis(4, at = yat.r^2 / (1 - yat.r^2), labels = sprintf("%1.2f", yat.r))
+axisLwd(1)
+axisLwd(2, at = yat.snr)
+axisLwd(4, at = yat.r^2 / (1 - yat.r^2), labels = sprintf("%1.2f", yat.r))
 
-mtext(xlab, 1, 3.5, cex = par()$cex.lab)
-mtext(ylab2, 2, 3.5, cex = par()$cex.lab, las = 0)
-text(1.85, sqrt(prod(range(yat.snr))), ylab3, xpd = NA, srt = -90,
+mtext(xlab, 1, 2.75, cex = par()$cex.lab)
+mtext(ylab2, 2, 3.25, cex = par()$cex.lab, las = 0)
+text(1.6, sqrt(prod(range(yat.snr))), ylab3, xpd = NA, srt = -90,
      cex = par()$cex.lab)
-mtext(label2, side = 3, line = -1.5, cex = par()$cex.lab,
-      adj = 0.02, padj = 0.2)
+mtext(label2, side = 3, line = -1.3, cex = 4 / 3, adj = 0.02)
 
 grfxtools::Polyplot(c(diffThreshold, 5), rep(ylim2[1], 2), rep(ylim2[2], 2),
                     col = "firebrick4")
 
 grfxtools::Polyplot(1 / snrNGT.min$freq, snrNGT.min$spec, snrNGT.max$spec)
-proxysnr:::LLines(snrNGT.min, bPeriod = TRUE, lwd = 1)
-proxysnr:::LLines(snrNGT.max, bPeriod = TRUE, lwd = 1)
-proxysnr:::LLines(snrNGT.mean, bPeriod = TRUE, lwd = 2)
+proxysnr:::LLines(snrNGT.min, bPeriod = TRUE, lwd = Lwd(1))
+proxysnr:::LLines(snrNGT.max, bPeriod = TRUE, lwd = Lwd(1))
+proxysnr:::LLines(snrNGT.mean, bPeriod = TRUE, lwd = Lwd(2))
 
 dev.off()
