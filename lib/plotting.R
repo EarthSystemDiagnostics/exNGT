@@ -762,7 +762,15 @@ makeFigure01 <- function(filter.window = 11, permil2temperature = 1 / 0.67) {
 
   lines(c(x11, xm1), c(y1, ym1), lwd = Lwd(2), col = "dimgrey", xpd = NA)
   lines(c(xm2, x12), c(ym2, y2), lwd = Lwd(2), col = "dimgrey", xpd = NA)
-  lines(c(x21, x22), c(y1, y2), lwd = Lwd(2), col = "dimgrey", xpd = NA)
+
+  m <- (y2 - y1) / (x22 - x21)
+  xm1 <- 0.04
+  xm2 <- 0.85
+  ym1 <- m * (xm1 - x21) + y1
+  ym2 <- m * (xm2 - x21) + y1
+
+  lines(c(x21, xm1), c(y1, ym1), lwd = Lwd(2), col = "dimgrey", xpd = NA)
+  lines(c(xm2, x22), c(ym2, y2), lwd = Lwd(2), col = "dimgrey", xpd = NA)
 
   par(op.usr)
 
