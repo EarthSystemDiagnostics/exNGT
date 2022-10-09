@@ -46,22 +46,16 @@ compileDataset <- function(path, filename) {
   NGT <- getPangaeaData()
 
   # ----------------------------------------------------------------------------
-  # read published annual data of GISP2 and NGRIP cores
+  # read published annual data of GISP2, NGRIP and NEEM cores
 
   gisp2 <- getGISP2()
   ngrip <- getNGRIP()
+  neem  <- getNEEM()
 
   # ----------------------------------------------------------------------------
   # process annual data for NEGIS
 
   negis <- calculateAnnualMeansNEGIS()
-
-  # ----------------------------------------------------------------------------
-  # read annual NEEM core data provided by Bo Vinther
-
-  neem <- readr::read_csv(file.path(path, "data-raw/in-other",
-                                    "NEEM_AnnualMean.csv"),
-                          col_types = cols())
 
   # ----------------------------------------------------------------------------
   # compile to single data frame and save
