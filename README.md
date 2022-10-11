@@ -1,6 +1,6 @@
 # exNGT
 
-### version 0.1
+### version 1.0.0
 
 ---
 
@@ -13,9 +13,9 @@ dataset. This project includes the compilation and the processing of all relevan
 as well as all analyses related to the new NGT-2012 stack, including the
 comparison with other climate datasets for the Arctic region.
 
-This software (v0.1) and the included analyses are the basis for the manuscript
-"Exceptional temperatures in central-north Greenland ice cores" by M. Hörhold et
-al., which is under review for publication in _Nature_.
+This software (v1.0.0) and the included analyses are the basis for the
+publication "Exceptional temperatures in central-north Greenland relative to the
+last millennium" by Maria Hörhold et al. in _Nature_.
 
 ## Installation
 
