@@ -4,16 +4,16 @@
 ## relation:
 ##   NGT paper; https://github.com/EarthSystemDiagnostics/exNGT
 ##
-## Thomas Muench, AWI, 2021
+## Thomas Muench, AWI, 2022
 ##
 
 #' Compile exNGT 2012 annual isotope data set
 #'
 #' This function calculates the annual mean isotope data of the new extended NGT
-#' 2012 cores (namely, B18_2012, B21_2012, B23_2012, B26_2012, and NGRIP_2012),
-#' reads all other published North Greenland annual mean isotope time series,
-#' and compiles all data into a single data set which is saved to disk in the
-#' ./data folder.
+#' 2012 cores (namely, B18_2012, B21_2012, B23_2012, B26_2012, and NGRIP_2012)
+#' and of the published NEGIS core, reads all other published North Greenland
+#' annual mean isotope time series, and compiles all data into a single data set
+#' which is saved to disk in the ./data folder.
 #'
 #' @param path path to your copy of the 'exNGT' repository containing the
 #'   relevant data and source files needed.
@@ -46,20 +46,16 @@ compileDataset <- function(path, filename) {
   NGT <- getPangaeaData()
 
   # ----------------------------------------------------------------------------
-  # read published annual data of GISP2 and NGRIP cores
+  # read published annual data of GISP2, NGRIP and NEEM cores
 
   gisp2 <- getGISP2()
   ngrip <- getNGRIP()
+  neem  <- getNEEM()
 
   # ----------------------------------------------------------------------------
-  # read annual NEGIS and NEEM core data provided by Bo Vinther
+  # process annual data for NEGIS
 
-  negis <- readr::read_csv(file.path(path, "data-raw/in-other",
-                                     "NEGIS_AnnualMean.csv"),
-                           col_types = cols())
-  neem <- readr::read_csv(file.path(path, "data-raw/in-other",
-                                    "NEEM_AnnualMean.csv"),
-                          col_types = cols())
+  negis <- calculateAnnualMeansNEGIS()
 
   # ----------------------------------------------------------------------------
   # compile to single data frame and save

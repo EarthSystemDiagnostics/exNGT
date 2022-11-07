@@ -5,7 +5,7 @@
 ## relation:
 ##   NGT paper; https://github.com/EarthSystemDiagnostics/exNGT
 ##
-## Thomas Muench, AWI, 2021
+## Thomas Muench, AWI, 2022
 ##
 
 #' Calculate exNGT 2012 annual means
@@ -86,6 +86,60 @@ calculateAnnualMeansExNGT2012 <- function(path, update = FALSE) {
 
   dated %>%
     lapply(function(x) {round(x, 2)}) %>%
+    invisible()
+
+}
+
+#' Calculate NEGIS annual means
+#'
+#' Calculate the annual mean d18O values for the NEGIS core, based on the
+#' published raw isotope depth profile and age-depth relationship.
+#'
+#' @return invisibly the processed annnual mean data as a data frame.
+#' @author Thomas Münch
+calculateAnnualMeansNEGIS <- function() {
+
+  require(readr)
+  require(dplyr)
+  require(tibble)
+
+  # ----------------------------------------------------------------------------
+  # read published age-depth relationship and raw isotope depth profile
+
+  con <- "https://www.ncei.noaa.gov/pub/data/paleo/icecore/greenland/"
+
+  dat <- paste0(con, "negis2012age.txt") %>%
+    readr::read_tsv(skip = 104, col_types = readr::cols()) %>%
+    setNames(c("depth_bottom", "thickness", "Year", "YearBP")) %>%
+    dplyr::mutate(depth_top = depth_bottom - thickness) %>%
+    dplyr::select(Year, depth_top, depth_bottom) %>%
+    dplyr::slice(-1)
+
+  dat <- dat %>%
+    dplyr::add_row(Year = rev(dat$Year)[1] - 1,
+                   depth_top = rev(dat$depth_bottom)[1],
+                   depth_bottom = NA)
+
+  raw <-   paste0(con, "negis2012chem.txt") %>%
+    read.table(header = TRUE, skip = 107, sep = "\t") %>%
+    setNames(c("depth_center", "d18O", "dxs", "dust", "cond", "na", "nh4")) %>%
+    dplyr::select(depth_center, d18O)
+
+  # ----------------------------------------------------------------------------
+  # calculate annual means
+
+  dated <- AvgToBin(x = raw$depth_center,
+                    y = raw$d18O,
+                    breaks = dat$depth_top,
+                    right = FALSE) %>%
+    .[-1] %>%
+    tibble::as_tibble() %>%
+    dplyr::mutate(Year = rev(rev(dat$Year)[-1])) %>%
+    dplyr::select(Year, avg) %>%
+    setNames(c("Year", "NEGIS"))
+
+  dated %>%
+    round(2) %>%
     invisible()
 
 }

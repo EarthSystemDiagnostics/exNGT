@@ -144,3 +144,34 @@ getNGRIP <- function(tmpdir = "/tmp") {
   return(parsed)
 
 }
+
+#' Download and parse NEEM annual isotope data from U Copenhagen archive
+#'
+#' @param tmpdir directory in which to temporarily store the downloaded data
+#'   file; the file will be deleted from there once the function has parsed the
+#'   data.
+#' @return a tibble with two variables: time in years CE and annual isotope
+#'   value in permil.
+#' @author Thomas Münch
+getNEEM <- function(tmpdir = "/tmp") {
+
+  require(readxl)
+  require(dplyr)
+
+  con <- "https://www.iceandclimate.nbi.ku.dk/data"
+  file <- "NEEM_ShallowCore_Pit_Annual_d18O.xlsx"
+
+  file_path <- file.path(tmpdir, file)
+
+  download.file(url = file.path(con, file), destfile = file_path)
+
+  parsed <- readxl::read_xlsx(path = file_path, range = "A22:B310") %>%
+    setNames(c("Year", "NEEM")) %>%
+    round(digits = 2)
+
+  # remove input file
+  system(sprintf("rm %s", file_path))
+
+  return(parsed)
+
+}

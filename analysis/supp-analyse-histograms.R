@@ -22,40 +22,43 @@ xmain = c("a. NGT main stack",
           "d. NGT simple stack",
           "e. NGT simple stack (forward diffused)")
 
-grfxtools::Quartz(file = "./fig/supplement-histograms.pdf",
-                  height = 8, width = 12,
-                  mfrow = c(2, 3), mar = c(5, 5, 4, 0.5))
+asp <- 2 / 3
+w <- 18
+natfig(file = "./fig/supplement-histograms.pdf",
+       height = asp * w, width = w,
+       mfrow = c(2, 3), mar = c(5, 5, 4, 0.5))
+par(cex = 1)
 
 # 1. Main method
 plotHistogram(stack.method = "main", filter.window = filter.window,
-              plot.legend = FALSE, xmain = xmain[1])
+              plot.legend = FALSE, xmain = xmain[1], q.lty = 2)
 
 # 2. Main stack after full forward diffusion
 plotHistogram(stack.method = "main", filter.window = filter.window,
-              diffuse = TRUE, plot.legend = FALSE, xmain = xmain[2])
+              diffuse = TRUE, plot.legend = FALSE, xmain = xmain[2], q.lty = 2)
 
 # 3. Main stack for constant number of records (n = 5)
 plotHistogram(stack.method = "fix_N", filter.window = filter.window,
-              nfix = 5, plot.legend = FALSE, xmain = xmain[3])
+              nfix = 5, plot.legend = FALSE, xmain = xmain[3], q.lty = 2)
 
 # 4. Simply stack all records
 plotHistogram(stack.method = "stack_all", filter.window = filter.window,
-              plot.legend = FALSE, xmain = xmain[4])
+              plot.legend = FALSE, xmain = xmain[4], q.lty = 2)
 
 # 5. Simply stack with full forward diffusion
 plotHistogram(stack.method = "stack_all", filter.window = filter.window,
-              diffuse = TRUE, plot.legend = FALSE, xmain = xmain[5])
+              diffuse = TRUE, plot.legend = FALSE, xmain = xmain[5], q.lty = 2)
 
 op <- par(cex = 1, mar = c(0, 0, 0, 0))
 plot(1, type = "n", axes = FALSE, xlab = "", ylab = "")
 
-lg <- c("Pre-industrial distribution\n(1000-1800 CE)", "Gaussian fit",
-        "2.5, 50, 97.5 %\nquantiles", "Recent value\n(2001-2011 CE)")
+lg <- c("Pre-industrial distribution\n(1000-1800 CE)", "Gaussian fit\n",
+        "p = 0.95 and p = 0.99\n", "2001-2011 CE\naverage")
 
-legend("topleft", legend = lg, lty = c(1, 1, 5, 1), lwd = c(10, 2, 1, 2.5),
-       col = c(adjustcolor("black", 0.2), "black", "black", "firebrick4"),
-       bty = "n", adj = c(0, 0.75), y.intersp = 1.5, seg.len = 2.5,
-       inset = c(0.1, -0.05))
+legend("topleft", legend = lg, lty = c(1, 1, 2, 1), lwd = Lwd(c(10, 2, 1, 3)),
+       col = c(adjustcolor("black", 0.2), "black", "black", "orange2"),
+       bty = "n", adj = c(0, 0.8), y.intersp = 1.5, seg.len = 2.5,
+       inset = c(0.2, -0.05), cex = 7 / 6)
 
 par(op)
 dev.off()

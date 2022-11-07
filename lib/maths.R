@@ -439,3 +439,85 @@ estimateRunningCorrelation <- function(data, signal, nmc = 1000,
   return(res)
 
 }
+
+#' Spectral coherence estimate
+#'
+#' This functions calculates the magnitude-squared coherence between two time
+#' series using the smoothed periodogram with confidence level estimated from
+#' a Monte Carlo procedure.
+#'
+#' @param x1 numerical vector with timeseries one.
+#' @param x2 numerical vector with timeseries two of the same length as
+#'   \code{x1}.
+#' @param spans vector of odd integers giving the widths of modified Daniell
+#'   smoothers to be used to smooth the periodogram.
+#' @param nmc number of Monte Carlo realizations used for estimating the
+#'   confidence level.
+#' @param p significance threshold (p value) used for the confidence level.
+#' @return a list of three elements: frequency vector and vector of associated
+#'   magnitude-squared coherence estimates and the global confidence level
+#'   (single number).
+#' @author Thomas Laepple
+#'
+coherence <- function(x1, x2, spans, nmc = 100, p = 0.95) {
+
+  if (length(x1) != length(x2)) {
+    stop("'x1' and 'x2' need to have the same length.")
+  }
+
+  coh   <- spectrum(cbind(x1, x2), spans = spans, plot = FALSE)
+  cohCL <- mcCoherence(x1, x2, spans = spans, nmc = nmc, p = p)
+
+  return(list(freq = coh$freq, coh = c(coh$coh), confLevel = cohCL))
+
+}
+
+#' Confidence level for spectral coherence
+#'
+#' This functions estimates the confidence level for the magnitude-squared
+#' coherence between two time series by replacing the time series with red noise
+#' surrogates, calculating the coherence between these surrogates and returning
+#' the desired quantile of the resulting coherence estimates as the confidence
+#' level.
+#'
+#' @param x1 numerical vector with timeseries one.
+#' @param x2 numerical vector with timeseries two of the same length as
+#'   \code{x1}.
+#' @param spans vector of odd integers giving the widths of modified Daniell
+#'   smoothers to be used to smooth the periodogram.
+#' @param nmc number of Monte Carlo realizations (i.e. the number of created
+#'   red-noise surrogate pairs) used for estimating the confidence level.
+#' @param p significance threshold (p value) used for the confidence level.
+#' @return the confidence level for the squared coherence based on the desired
+#'   significance value.
+#' @author Thomas Laepple
+#'
+mcCoherence <- function(x1, x2, spans, nmc = 100, p = 0.95) {
+
+  if (length(x1) != length(x2)) {
+    stop("'x1' and 'x2' need to have the same length.")
+  }
+
+  getA1 <- function(x) {
+    acf(c(x), plot = FALSE)$acf[2]
+  }
+
+  red <- function(a1, n) {
+    c(arima.sim(list(ar = a1), n))
+  }
+
+  x1.a1 <- getA1(x1)
+  x2.a1 <- getA1(x2)
+
+  foo <- spectrum(x1, plot = FALSE)
+  mcCohMatrix <- matrix(NA, nmc, length(foo$freq))
+
+  mcCohMatrix <- sapply(1 : nmc, function(n) {
+    spectrum(cbind(red(x1.a1, length(x1)), red(x2.a1, length(x2))),
+             spans = spans, plot = FALSE)$coh
+  })
+
+  # return mean confidence level since level is independent of frequency
+  mean(apply(mcCohMatrix, 2, quantile, probs = p))
+
+}

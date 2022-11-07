@@ -51,7 +51,7 @@ filteredStackedNGT <- processNGT() %>%
   stackNGT()
 ```
 
-Load the Arctic2k, weather station and MAR data and filter it:
+Load the Arctic2k, weather station, MAR and GBI data and filter it:
 ```{r}
 Arctic2k <- readArctic2k() %>%
   extendWithHadCrut() %>%
@@ -68,6 +68,9 @@ filteredDMI <- readDMI() %>%
   filterData(window = filter.window)
 
 filteredMAR <- readMAR() %>%
+  filterData(window = filter.window)
+
+filteredGBI <- readGBI() %>%
   filterData(window = filter.window)
 ```
 
@@ -241,18 +244,125 @@ danmarkshavn <- dplyr::select(filteredDMI, "Year", "Danmarkshavn")
   sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
 ```
 
-## Comparison of NGT-2012 isotope stack with MAR3.12 temperature data
+## Comparison of NGT-2012 isotope stack with MAR3.5 and GBI data
 
-We calculate the correlation of the NGT isotope stack with the annual 2m surface
-air temperature from the regional climate model MAR version 3.12, extracted from
-the NGT-2012 firn core locations and averaged, using 11-yr running mean time
-series over the common period from 1950 to 2011 CE.
+We calculate the correlation of the NGT isotope stack with data from the
+regional climate model MAR version 3.5; specifically, with the annual 2m surface
+air temperature extracted and averaged over the NGT-2012 firn core locations, and
+with the Greenland-wide melt runoff rate, using 11-yr running mean time series
+over the common period from 1871 to 2011 CE in both cases. We also analyse how
+much weaker the correlation is for annual mean data.
+
+* Correlation with MAR temperature:
 ```{r}
-  res <- estimateCorrelation(stackedNGT, filteredStackedNGT, filteredMAR,
+
+  # filtered data
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                             filteredMAR[, c("Year", "t2m")],
                              filter.window = filter.window,
-                             analysis.period = 2011 : 1950,
+                             analysis.period = 2011 : 1871,
                              nmc = 10000)
   sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+
+  # annual data
+  mar <- readMAR()
+  res <- estimateCorrelation(stackedNGT, stackedNGT,
+                             mar[, c("Year", "t2m")], filter.window = 1,
+                             analysis.period = 2011 : 1871, nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+```
+* Correlation with MAR melt runoff:
+```{r}
+  # filtered data
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                             filteredMAR[, c("Year", "melt")],
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1871,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+  # annual data
+  res <- estimateCorrelation(stackedNGT, stackedNGT,
+                             mar[, c("Year", "melt")], filter.window = 1,
+                             analysis.period = 2011 : 1871, nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+
+```
+
+Additionally, we correlate both the NGT isotope data and the MAR melt runoff
+rate with the Greenland Blocking Index (GBI), where we compare the correlation
+for melt runoff between annual mean GBI and summer GBI values.
+
+* Correlation between NGT and annual mean GBI:
+```{r}
+
+  # filtered data
+  res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                             filteredGBI[, c("Year", "annual")],
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1851,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+
+  # annual data
+  gbi <- readGBI()
+  res <- estimateCorrelation(stackedNGT, stackedNGT,
+                             gbi[, c("Year", "annual")], filter.window = 1,
+                             analysis.period = 2011 : 1851, nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+```
+* Correlation between MAR melt runoff and annual mean GBI:
+```{r}
+
+  # filtered data
+  res <- estimateCorrelation(mar[, c("Year", "melt")],
+                             filteredMAR[, c("Year", "melt")],
+                             filteredGBI[, c("Year", "annual")],
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1871,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+
+  # annual data
+  res <- estimateCorrelation(mar[, c("Year", "melt")], mar[, c("Year", "melt")],
+                             gbi[, c("Year", "annual")], filter.window = 1,
+                             analysis.period = 2011 : 1871, nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+```
+* Correlation between MAR melt runoff and summer GBI:
+```{r}
+
+  # filtered data
+  res <- estimateCorrelation(mar[, c("Year", "melt")],
+                             filteredMAR[, c("Year", "melt")],
+                             filteredGBI[, c("Year", "summer")],
+                             filter.window = filter.window,
+                             analysis.period = 2011 : 1871,
+                             nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+
+  # annual data
+  res <- estimateCorrelation(mar[, c("Year", "melt")], mar[, c("Year", "melt")],
+                             gbi[, c("Year", "summer")], filter.window = 1,
+                             analysis.period = 2011 : 1871, nmc = 10000)
+  sprintf("r = %1.2f (p = %1.3f)", res$r, res$p)
+```
+
+## Comparison of NGT-2012 isotope and accumulation stack
+
+We obtain the correlation between the NGT-2012 isotope stack and the NGT-2012
+accumulation stack over their common time interval, i.e. from 1500 CE to 2011
+CE:
+
+```{r}
+filteredStackedAccumulation <- processAccumulation() %>%
+  filterData(window = filter.window) %>%
+  stackAllCores()
+
+res <- estimateCorrelation(stackedNGT, filteredStackedNGT,
+                           filteredStackedAccumulation,
+                           filter.window = filter.window,
+                           analysis.period = 2011 : 1500, nmc = 10000)
+sprintf("r = %1.2f (p = %1.2f)", res$r, res$p)
 ```
 
 ## Temperature increase of recent 11 years relative to past
