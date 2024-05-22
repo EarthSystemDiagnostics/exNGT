@@ -14,8 +14,9 @@ as well as all analyses related to the new NGT-2012 stack, including the
 comparison with other climate datasets for the Arctic region.
 
 This software (v1.0.0) and the included analyses are the basis for the
-publication "Exceptional temperatures in central-north Greenland relative to the
-last millennium" by Maria Hörhold et al. in _Nature_.
+publication ["Modern temperatures in central–north Greenland warmest in past
+millennium"](https://doi.org/10.1038/s41586-022-05517-z) by [Maria Hörhold et
+al. (2024)](#references) in _Nature_.
 
 ## Installation
 
@@ -30,3 +31,10 @@ For working with **exNGT** you need to source the initialization script
 `source("init.R")` in R. This loads all relevant R packages and the **exNGT**
 function library in `lib/`, thereby preparing everything to start any of the
 analyses provided under `analysis/`.
+
+## References
+
+Hörhold, M., Münch, T., Weißbach, S., Kipfstuhl, S., Freitag, J., Sasgen, I.,
+Lohmann, G., Vinther, B., and Laepple, T.: Modern temperatures in central–north
+Greenland warmest in past millennium, Nature, 613(7944), 503–507, doi:
+[10.1038/s41586-022-05517-z](https://doi.org/10.1038/s41586-022-05517-z), 2023.
