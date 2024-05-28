@@ -473,7 +473,7 @@ plot.NGT.MAR_DE <- function(filter.window = 11) {
 
 asp <- 2 / 3
 w <- 18.3
-natfig(height = asp * w, width = w, file = "zzz/warnsignale_fig_test.pdf")
+natfig(height = asp * w, width = w, file = "non-paper/warnsignale_fig2.pdf")
 
 # sub-figure placement specifiers
 x1 <- 0.5
@@ -528,11 +528,11 @@ dev.off()
 
 w <- 8.5
 h <- 5.25
-natfig(height = h, width = w, file = "zzz/warnsignale_fig3a_test.pdf")
+natfig(height = h, width = w, file = "non-paper/warnsignale_fig3a.pdf")
 
 op <- par(mar = c(5, 7.25, 3, 7.25))
 plot.NGT.MAR_DE(filter.window = 11)
-mtext("c", side = 3, adj = -0.3, line = 2, font = 2, cex = 4 / 3)
+mtext("a", side = 3, adj = -0.3, line = 2, font = 2, cex = 4 / 3)
 par(op)
 
 dev.off()
