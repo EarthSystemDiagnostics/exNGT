@@ -1,7 +1,9 @@
 ##
 ## aim:
-##   create figure for chapter in Reklim book series "Warnsignale Klima", which
-##   combines parts of paper figures 1 and 4.
+##   create figures for chapter in Reklim book series "Warnsignale Klima":
+##   - combine paper figures 1a (NGT-2012 part only) and 4a = book fig. 2;
+##   - paper figure 1c as standalone version = book fig. 3a;
+##   - all with German labels.
 ## relation:
 ##   NGT paper: <https://doi.org/10.1038/s41586-022-05517-z>
 ##   <https://github.com/EarthSystemDiagnostics/exNGT>
@@ -378,10 +380,96 @@ plotHistogram_DE <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
 
 }
 
+plot.NGT.MAR_DE <- function(filter.window = 11) {
 
+  if (filter.window < 1) {
+    stop("Running mean filter window needs to be >= 1.", call. = FALSE)
+  }
+
+  if ((filter.window %% 2) == 0) {
+    warning("Running mean filter window should be odd.", call. = FALSE)
+  }
+
+  # ----------------------------------------------------------------------------
+  # Load time series data
+
+  permil2temperature.mid <- 1 / 0.67 # Greenland spatial slope
+  permil2temperature.low <- 1 / 1.1  # Masson-Delmotte et al. (2015)
+  permil2temperature.hig <- 2.1      # Vinther et al. (2009)
+
+  filteredStackedNGT <- processNGT() %>%
+    filterData(window = filter.window) %>%
+    stackNGT() %>%
+    dplyr::filter(Year >= 1871)
+
+  filteredStackedTemperatureNGT.mid <- filteredStackedNGT %>%
+    dplyr::mutate(stack = permil2temperature.mid * stack)
+  filteredStackedTemperatureNGT.low <- filteredStackedNGT %>%
+    dplyr::mutate(stack = permil2temperature.low * stack)
+  filteredStackedTemperatureNGT.hig <- filteredStackedNGT %>%
+    dplyr::mutate(stack = permil2temperature.hig * stack)
+
+  filteredMAR <- readMAR() %>%
+    filterData(window = filter.window)
+
+  # ----------------------------------------------------------------------------
+  # Make plots
+
+  xlab  <- "Jahr n.d.Z."
+  ylab1 <- "Anomalie des\nSchmelzwasserabfluss (Gt pro Jahr)"
+  ylab2a <- "NGT-2012"
+  ylab2b <- grfxtools::LabelAxis("Temperatur-Anomalie", unit = "celsius")
+
+  xlim <- c(1870, 2012)
+  ylim1 <- c(-75, 330)
+  ylim2 <- c(-2.5, 3.5)
+
+  x1 <- 2045
+  x2 <- 2056
+  y1 <- 0.5
+
+  xanml <- c(1870.5,  2011.5)
+  yanml <- c(0, 0)
+
+  col <- c("black", "#d95f02")
+
+  plot(filteredMAR$Year, filteredMAR$melt, type = "l", axes = FALSE,
+       xlim = xlim, ylim = ylim1, xlab = "", ylab = "")
+
+  lines(xanml, yanml, lty = 2, lwd = Lwd(1.5), col = col[2])
+  lines(filteredMAR$Year, filteredMAR$melt, lwd = Lwd(3), col = col[2])
+
+  axisLwd(1, at = seq(1870, 2010, 35), line = 0.5)
+  axisLwd(2, at = seq(-50, 300, 50), col = col[2], col.axis = col[2])
+  mtext(xlab, 1, 3.5, cex = par()$cex.lab)
+  mtext(ylab1, 2, 3.6, col = col[2], cex = par()$cex.lab, las = 0,
+        adj = 0.5)
+
+  par(new = TRUE)
+
+  plot(filteredStackedTemperatureNGT.mid, type = "n", axes = FALSE,
+       xlab = "", ylab = "", xlim = xlim, ylim = ylim2)
+
+  lines(xanml, yanml, lty = 2, lwd = Lwd(1.5), col = "darkgrey")
+  rect(1870.5, -2.6, 2011.5, 3.25, border = "dimgrey", lwd = Lwd(2), xpd = NA)
+
+  axisLwd(4)
+  text(x2, y1, ylab2a, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex)
+  text(x1, y1, ylab2b, srt = -90, xpd = NA, cex = par()$cex.lab * par()$cex)
+
+  lines(filteredStackedTemperatureNGT.mid, lwd = Lwd(3), col = col[1])
+
+  grfxtools::Polyplot(filteredStackedTemperatureNGT.mid$Year,
+                      filteredStackedTemperatureNGT.low$stack,
+                      filteredStackedTemperatureNGT.hig$stack,
+                      col = col[1], alpha = 0.2)
+  lines(filteredStackedTemperatureNGT.low, lwd = Lwd(1), col = col[1])
+  lines(filteredStackedTemperatureNGT.hig, lwd = Lwd(1), col = col[1])
+
+}
 
 # ------------------------------------------------------------------------------
-# Plot Reklim figure
+# Plot Reklim figure 2
 
 asp <- 2 / 3
 w <- 18.3
@@ -431,6 +519,20 @@ legend("topleft", legend = lg, lty = c(1, 1, 2, 1), lwd = Lwd(c(10, 2, 1, 3)),
        col = c(adjustcolor("black", 0.2), "black", "black", "orange2"),
        bty = "n", adj = c(0, 0.75), y.intersp = 0.5, seg.len = 2.5,
        inset = c(0.15, -0.15), cex = 7 / 6)
+par(op)
+
+dev.off()
+
+# ------------------------------------------------------------------------------
+# Plot Reklim figure 3a
+
+w <- 8.5
+h <- 5.25
+natfig(height = h, width = w, file = "zzz/warnsignale_fig3a_test.pdf")
+
+op <- par(mar = c(5, 7.25, 3, 7.25))
+plot.NGT.MAR_DE(filter.window = 11)
+mtext("c", side = 3, adj = -0.3, line = 2, font = 2, cex = 4 / 3)
 par(op)
 
 dev.off()
