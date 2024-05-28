@@ -68,10 +68,6 @@ plotNGT <- function(filter.window = 11,
   xanml1 <- c(800, 2050)
   yanml <- rep(0, 2)
 
-  startNew <- 1993
-  i <- match(startNew, stackedNGT$Year)
-  n <- nrow(stackedNGT)
-
   x1 <- 845
   x2 <- 2180
   y1 <- 0.
@@ -98,8 +94,7 @@ plotNGT <- function(filter.window = 11,
 
   lines(stackedNGT, col = "darkgrey")
 
-  lines(filteredStackedNGT[i : n, ], col = col[1], lwd = Lwd(2.5))
-  lines(filteredStackedNGT[1 : i, ], col = "firebrick3", lwd = Lwd(2.5))
+  lines(filteredStackedNGT, col = col[1], lwd = Lwd(2.5))
 
   axisLwd(2, at = seq(-2, 2, 1))
   axisLwd(4, labels = seq(-3, 3, 1), at = seq(-3, 3, 1) / permil2temperature)
@@ -286,7 +281,7 @@ plotHistogram_DE <- function(piPeriod = 1000 : 1800, endRecentPeriod = 2011,
     axy <- axisLwd(2)
 
     mtext(ylab, side = 2, line = 3.25, cex = par()$cex.lab * par()$cex, las = 0,
-          adj = 0.2)
+          adj = 0.215)
 
     if (plot.2xaxes) {
 
@@ -401,6 +396,8 @@ y2 <- y1 - 0.05
 # plot NGT time series
 op <- par(mar = c(0, 0, 0, 0), oma = c(4.25, 5, 0, 5), fig = c(0, x1, y1, 1))
 plotNGT()
+mtext("a", side = 3, adj = -0.12, line = -1.5, font = 2, cex = 4 / 3)
+mtext("b", side = 3, adj = 1.28, line = -1.5, font = 2, cex = 4 / 3)
 par(op)
 
 # plot histogram
